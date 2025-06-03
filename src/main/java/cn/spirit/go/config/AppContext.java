@@ -6,8 +6,14 @@ import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.redis.client.*;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AppContext {
+
+    private static final Logger log = LoggerFactory.getLogger(AppContext.class);
+
+    public static String TABLE_PREFIX = "t_";
 
     public static Pool SQL_POOL;
 
@@ -32,7 +38,6 @@ public class AppContext {
 
 
         Redis client = Redis.createClient(vertx, new RedisOptions().addConnectionString("redis://localhost:6379"));
-
         REDIS = RedisAPI.api(client);
     }
 }

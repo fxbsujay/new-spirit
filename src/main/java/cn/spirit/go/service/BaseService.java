@@ -4,22 +4,30 @@ import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.config.AppContext;
 import cn.spirit.go.model.entity.BaseEntity;
 import io.vertx.core.Future;
+import io.vertx.mysqlclient.MySQLClient;
+import io.vertx.sqlclient.PropertyKind;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.SqlResult;
 import io.vertx.sqlclient.Tuple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Field;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public abstract class BaseService<T extends BaseEntity> {
 
-    public Class<T> clazz;
+    private static final Logger log = LoggerFactory.getLogger(BaseService.class);
+
+    private final Class<T> clazz;
+
+    private final String tableName;
 
     protected final Collector<Row, ?, List<T>> COLLECTOR = Collectors.mapping(this::mapping, Collectors.toList());
 
     public T mapping(Row row) {
-
         T obj;
         try {
             obj = clazz.getConstructor().newInstance();
@@ -45,21 +53,49 @@ public abstract class BaseService<T extends BaseEntity> {
                 }
             }
         }
-
         return obj;
+    }
+
+    public Map<String, Object> mapping(T entity) {
+        Map<String, Object> map = new HashMap<>();
+        Field[] fields = clazz.getFields();
+        try {
+            for (Field field : fields) {
+                String fieldName = StringUtils.camelToSnake(field.getName(), '_');
+                Object o = field.get(entity);
+                if (o != null) {
+                    map.put(fieldName, o);
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return map;
+    }
+
+    public String formatParams(Collection<?> list) {
+        StringBuilder sb = new StringBuilder("(");
+        for (int i = 0; i < list.size(); i++) {
+            if (i == list.size() - 1) {
+                sb.append("?)");
+            } else {
+                sb.append("?,");
+            }
+        }
+        return sb.toString();
+    }
+
+    public String placeholderParams(Integer size) {
+        return "(" + "?,".repeat(Math.max(0, size)) + ")";
     }
 
     public BaseService(Class<T> clazz) {
         this.clazz = clazz;
-    }
-
-    public String tableName() {
-        return clazz.getSimpleName();
+        this.tableName = AppContext.TABLE_PREFIX + StringUtils.camelToSnake(clazz.getSimpleName(), '_');
     }
 
     public Future<List<T>> selectList(Tuple tuple) {
-        String sql = "SELECT * FROM " + tableName();
-
+        String sql = "SELECT * FROM " + tableName;
         return AppContext.SQL_POOL.getConnection()
                 .flatMap(conn -> {
                     if (tuple == null || tuple.size() == 0) {
@@ -75,7 +111,7 @@ public abstract class BaseService<T extends BaseEntity> {
     }
 
     public Future<T> selectById(Integer id) {
-        String sql = "SELECT * FROM " + tableName() + " WHERE id = ?";
+        String sql = "SELECT * FROM " + tableName + " WHERE id = ?";
         return selectOne(sql, Tuple.of(id));
     }
 
@@ -87,7 +123,31 @@ public abstract class BaseService<T extends BaseEntity> {
                     }
                     return conn.preparedQuery(sql).mapping(this::mapping).execute(tuple).onComplete(ar -> conn.close());
                 })
-                .flatMap(rs -> rs.size() == 1 ?  Future.succeededFuture(rs.iterator().next()) : Future.failedFuture("The SQL query is for " + rs.size() + " records."));
+                .flatMap(rs -> {
+                    if (rs.size() == 1) {
+                        return Future.succeededFuture(rs.iterator().next());
+                    } else if (rs.size() == 0) {
+                        return Future.succeededFuture(null);
+                    } else {
+                        return Future.failedFuture("The SQL query is for " + rs.size() + " records.");
+                    }
+                });
     }
 
+    public Future<Long> insert(T entity) {
+        Map<String, Object> params = mapping(entity);
+        String sql = "INSERT INTO " + tableName + formatParams(params.keySet()) +" VALUES " + placeholderParams(params.size());
+        return insert(sql, Tuple.of(params.values()));
+    }
+
+    public Future<Long> insert(String sql, Tuple tuple) {
+        log.info("SQL Template: {} , params: {}", sql, tuple.deepToString());
+        return AppContext.SQL_POOL.getConnection()
+                .flatMap(conn -> conn.preparedQuery(sql)
+                        .collecting(Collector.of(() -> null, (v, row) -> {}, (a, b) -> null))
+                        .execute(tuple)
+                        .onComplete(ar -> conn.close())
+                )
+                .map(row -> row.property(MySQLClient.LAST_INSERTED_ID));
+    }
 }

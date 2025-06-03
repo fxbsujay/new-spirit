@@ -38,27 +38,14 @@ public class Application extends VerticleBase {
         AuthController controller = new AuthController();
 
         router.post("/api/auth/signin").handler(controller::signIn);
+        router.post("/api/auth/signup").handler(controller::signUp);
 
         router.errorHandler(500, ctx -> {
             ctx.response().setStatusCode(500).end();
         });
 
         return vertx.createHttpServer().requestHandler(router).listen(8899).onSuccess(http -> {
-            log.info("HTTP server started on port 8888");
-            log.error("HTTP server started on port 8888");
-            log.debug("HTTP server started on port 8888");
-            log.warn("HTTP server started on port 8888");
-            Thread thread = new Thread(() -> {
-                log.info("HTTP server started on port 8888");
-
-                try {
-                    int i = 10 / 0;
-                } catch (Exception e) {
-                    log.error("Exception", e);
-                }
-            });
-            thread.setName("134243214534534534532534534532");
-            thread.start();
+            log.info("HTTP server started on port {}",  http.actualPort());
         });
     }
 }
