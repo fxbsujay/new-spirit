@@ -13,10 +13,13 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.http.Cookie;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.mail.MailMessage;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 
 public class AuthController extends BaseController {
@@ -97,8 +100,6 @@ public class AuthController extends BaseController {
      * 注册
      */
     public void signUp(RoutingContext ctx) {
-
-
         JsonObject body = ctx.body().asJsonObject();
         String username = body.getString("username");
         String password = body.getString("password");
@@ -127,8 +128,25 @@ public class AuthController extends BaseController {
             entity.password = SecurityUtils.bCrypt(password);
             entity.status = UserStatus.INACTIVE;
 
-            service.insert(entity).onSuccess(id -> {
+            service.insert(entity)
+                    .onSuccess(id -> {
+                String key = Base64.getEncoder().encodeToString(String.valueOf(id).getBytes(StandardCharsets.UTF_8));
+
                 success(ctx, null);
+
+                String link = "http://localhost:8891/auth/signup/verify/" + key;
+                String html = "您好啊<b>" +
+                        username +
+                        "</b>，点击下发链接加入Spirit Go。<br/><a href=\"" +
+                        link +
+                        "\">" +
+                        link +
+                        "</a><br/>（无法点击链接？试着将它粘贴到你的浏览器！）<br/>点击 --- 联系我们";
+
+                AppContext.sendMail("sendMail", email, html, true).onSuccess(res -> {
+                    log.info("sen mail success: {}", res);
+                });
+
             }).onFailure(e -> {
                 log.error(e.getMessage(), e.getCause());
                 fail(ctx);
@@ -137,6 +155,6 @@ public class AuthController extends BaseController {
             log.error(e.getMessage(), e.getCause());
             fail(ctx);
         });
-
     }
+
 }

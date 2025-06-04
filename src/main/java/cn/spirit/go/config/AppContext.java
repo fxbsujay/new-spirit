@@ -1,6 +1,8 @@
 package cn.spirit.go.config;
 
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.ext.mail.*;
 import io.vertx.mysqlclient.MySQLBuilder;
 import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.redis.client.*;
@@ -13,11 +15,11 @@ public class AppContext {
 
     private static final Logger log = LoggerFactory.getLogger(AppContext.class);
 
-    public static String TABLE_PREFIX = "t_";
-
     public static Pool SQL_POOL;
 
     public static RedisAPI REDIS;
+
+    public static MailClient MAIL;
 
     public static void init(Vertx vertx) {
 
@@ -36,8 +38,37 @@ public class AppContext {
                 .using(vertx)
                 .build();
 
+        log.info("mysql connection {}:{}/{}", conOpt.getHost(), conOpt.getPort(), conOpt.getDatabase());
 
         Redis client = Redis.createClient(vertx, new RedisOptions().addConnectionString("redis://localhost:6379"));
         REDIS = RedisAPI.api(client);
+        log.info("redis connection {}", "redis://localhost:6379");
+
+
+        MailConfig mailConfig = new MailConfig()
+                .setHostname("smtp.163.com")
+                .setPort(465)
+                .setSsl(true)
+                .setStarttls(StartTLSOptions.REQUIRED)
+                .setUsername("fsusured@163.com")
+                .setPassword("JDUXN3hwa4GDLywg");
+
+        MAIL = MailClient.createShared(vertx, mailConfig);
+        log.info("mail connection {}:{}", mailConfig.getHostname(), mailConfig.getPort());
+
+        Future<MailResult> mailResultFuture = MAIL.sendMail(null);
+    }
+
+    public static Future<MailResult> sendMail(String subject, String to, String content, boolean html) {
+        MailMessage message = new MailMessage()
+                .setFrom("fsusured@163.com")
+                .setTo(to)
+                .setSubject(subject);
+        if (html) {
+            message.setHtml(content);
+        } else {
+            message.setText(content);
+        }
+        return MAIL.sendMail(message);
     }
 }

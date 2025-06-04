@@ -5,13 +5,11 @@ import cn.spirit.go.config.AppContext;
 import cn.spirit.go.model.entity.BaseEntity;
 import io.vertx.core.Future;
 import io.vertx.mysqlclient.MySQLClient;
-import io.vertx.sqlclient.PropertyKind;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.SqlResult;
 import io.vertx.sqlclient.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collector;
@@ -56,46 +54,48 @@ public abstract class BaseService<T extends BaseEntity> {
         return obj;
     }
 
-    public Map<String, Object> mapping(T entity) {
-        Map<String, Object> map = new HashMap<>();
+    public Object[] mapping(T entity) {
         Field[] fields = clazz.getFields();
+
+        StringBuilder column = new StringBuilder("(");
+        StringBuilder placeholder = new StringBuilder("(");
+        Object[] values = new Object[fields.length];
+        int length = 0;
+
         try {
             for (Field field : fields) {
-                String fieldName = StringUtils.camelToSnake(field.getName(), '_');
                 Object o = field.get(entity);
                 if (o != null) {
-                    map.put(fieldName, o);
+                    if (length != 0) {
+                        column.append(",");
+                        placeholder.append(",");
+                    }
+                    column.append(StringUtils.camelToSnake(field.getName(), '_'));
+                    placeholder.append("?");
+                    values[length] = o;
+                    length++;
                 }
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        return map;
-    }
 
-    public String formatParams(Collection<?> list) {
-        StringBuilder sb = new StringBuilder("(");
-        for (int i = 0; i < list.size(); i++) {
-            if (i == list.size() - 1) {
-                sb.append("?)");
-            } else {
-                sb.append("?,");
-            }
+        column.append(")");
+        placeholder.append(")");
+
+        if (length != values.length) {
+           values = Arrays.copyOf(values, length);
         }
-        return sb.toString();
+
+        return new Object[]{column, placeholder, Tuple.from(values)};
     }
 
-    public String placeholderParams(Integer size) {
-        return "(" + "?,".repeat(Math.max(0, size)) + ")";
-    }
-
-    public BaseService(Class<T> clazz) {
+    public BaseService(Class<T> clazz, String tableName) {
         this.clazz = clazz;
-        this.tableName = AppContext.TABLE_PREFIX + StringUtils.camelToSnake(clazz.getSimpleName(), '_');
+        this.tableName = tableName;
     }
 
-    public Future<List<T>> selectList(Tuple tuple) {
-        String sql = "SELECT * FROM " + tableName;
+    public Future<List<T>> selectList(String sql, Tuple tuple) {
         return AppContext.SQL_POOL.getConnection()
                 .flatMap(conn -> {
                     if (tuple == null || tuple.size() == 0) {
@@ -107,7 +107,7 @@ public abstract class BaseService<T extends BaseEntity> {
     }
 
     public Future<List<T>> selectList() {
-        return selectList(null);
+        return selectList( "SELECT * FROM " + tableName, null);
     }
 
     public Future<T> selectById(Integer id) {
@@ -116,6 +116,7 @@ public abstract class BaseService<T extends BaseEntity> {
     }
 
     public Future<T> selectOne(String sql, Tuple tuple) {
+        log.info("Select One SQL Template: {} , params: {}", sql, tuple.deepToString());
         return AppContext.SQL_POOL.getConnection()
                 .flatMap(conn -> {
                     if (tuple == null || tuple.size() == 0) {
@@ -135,13 +136,13 @@ public abstract class BaseService<T extends BaseEntity> {
     }
 
     public Future<Long> insert(T entity) {
-        Map<String, Object> params = mapping(entity);
-        String sql = "INSERT INTO " + tableName + formatParams(params.keySet()) +" VALUES " + placeholderParams(params.size());
-        return insert(sql, Tuple.of(params.values()));
+        Object[] mapping = mapping(entity);
+        String sql = "INSERT INTO " + tableName + mapping[0] +" VALUES " + mapping[1];
+        return insert(sql, (Tuple) mapping[2]);
     }
 
     public Future<Long> insert(String sql, Tuple tuple) {
-        log.info("SQL Template: {} , params: {}", sql, tuple.deepToString());
+        log.info("Insert SQL Template: {} , params: {}", sql, tuple.deepToString());
         return AppContext.SQL_POOL.getConnection()
                 .flatMap(conn -> conn.preparedQuery(sql)
                         .collecting(Collector.of(() -> null, (v, row) -> {}, (a, b) -> null))

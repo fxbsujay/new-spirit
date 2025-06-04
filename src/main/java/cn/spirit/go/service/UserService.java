@@ -8,15 +8,12 @@ import io.vertx.sqlclient.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class UserService extends BaseService<UserEntity> {
 
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     public UserService() {
-        super(UserEntity.class);
+        super(UserEntity.class, "t_user");
     }
 
     @Override
@@ -32,39 +29,6 @@ public class UserService extends BaseService<UserEntity> {
         entity.createdAt = row.getLocalDateTime("created_at");
         entity.updatedAt = row.getLocalDateTime("updated_at");
         return entity;
-    }
-
-    @Override
-    public Map<String, Object> mapping(UserEntity entity) {
-        Map<String, Object> map = new HashMap<>();
-        if(entity.id != null) {
-            map.put("id", entity.id);
-        }
-        if(entity.avatar != null) {
-            map.put("id", entity.avatar);
-        }
-        if(entity.username != null) {
-            map.put("id", entity.username);
-        }
-        if(entity.email != null) {
-            map.put("id", entity.email);
-        }
-        if(entity.password != null) {
-            map.put("id", entity.password);
-        }
-        if(entity.status != null) {
-            map.put("id", entity.status);
-        }
-        if(entity.nickname != null) {
-            map.put("id", entity.nickname);
-        }
-        if(entity.createdAt != null) {
-            map.put("id", entity.createdAt);
-        }
-        if(entity.updatedAt != null) {
-            map.put("id", entity.updatedAt);
-        }
-        return map;
     }
 
     public Future<Long> insert(UserEntity entity) {

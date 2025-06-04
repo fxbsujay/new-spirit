@@ -6,6 +6,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Base64;
 
 /**
  * <p>Description: Text encryption too</p>
@@ -468,6 +469,11 @@ public class SecurityUtils {
         }
     }
 
+    public static String encodeBase64(String content) {
+
+        return "";
+    }
+
     public static void main(String[] args) {
         String content = "22222222";
         String encoded = bCrypt(content);
@@ -481,5 +487,7 @@ public class SecurityUtils {
         String encodeBase64 = encodeBase64(content);
         System.out.println("64编码==" + encodeBase64);
         System.out.println("64解码==" + decodeBase64(encodeBase64));
+        String s = Base64.getEncoder().encodeToString(content.getBytes());
+        System.out.println(s);
     }
 }
