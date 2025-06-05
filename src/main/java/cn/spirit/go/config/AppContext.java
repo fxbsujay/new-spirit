@@ -1,5 +1,6 @@
 package cn.spirit.go.config;
 
+import cn.spirit.go.service.BaseService;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.ext.mail.*;
@@ -11,6 +12,9 @@ import io.vertx.sqlclient.PoolOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class AppContext {
 
     private static final Logger log = LoggerFactory.getLogger(AppContext.class);
@@ -20,6 +24,17 @@ public class AppContext {
     public static RedisAPI REDIS;
 
     public static MailClient MAIL;
+
+    private static Map<Class<?>, BaseService<?>> beans = new HashMap<>();
+
+
+    public static void addBean(BaseService<?> bean) {
+        beans.put(bean.getClass(), bean);
+    }
+
+    public static <T> T getBean(Class<T> clazz) {
+        return (T) beans.get(clazz);
+    }
 
     public static void init(Vertx vertx) {
 

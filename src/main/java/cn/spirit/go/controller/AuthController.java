@@ -25,7 +25,7 @@ public class AuthController extends BaseController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
-    public UserService service = new UserService();
+    private final UserService userService = AppContext.getBean(UserService.class);
 
     /**
      * 登录
@@ -44,9 +44,9 @@ public class AuthController extends BaseController {
 
         Future<UserEntity> future;
         if (RegexUtils.matches(username, RegexUtils.EMAIL)) {
-            future = service.selectByEmail(username);
+            future = userService.selectByEmail(username);
         } else if (RegexUtils.matches(password, RegexUtils.USERNAME)) {
-            future = service.selectByUsername(username);
+            future = userService.selectByUsername(username);
         } else {
             fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
@@ -57,7 +57,6 @@ public class AuthController extends BaseController {
                 fail(ctx, RestStatus.ACCOUNT_NOT_EXIST);
                 return;
             }
-
             if (user.status == UserStatus.BANNED) {
                 fail(ctx, RestStatus.PASSWORD_WRONG);
                 return;
@@ -107,7 +106,7 @@ public class AuthController extends BaseController {
             return;
         }
 
-        service.selectByUsernameOrEmail(dto.username, dto.email).onSuccess(user -> {
+        userService.selectByUsernameOrEmail(dto.username, dto.email).onSuccess(user -> {
             if (user != null) {
                 if (user.username.equals(dto.username)) {
                     fail(ctx, RestStatus.USERNAME_IS_EXIST);
@@ -127,7 +126,7 @@ public class AuthController extends BaseController {
                     entity.nickname = dto.username;
                     entity.password = SecurityUtils.bCrypt(dto.password);
                     entity.status = UserStatus.NORMAL;
-                    service.insert(entity).onSuccess(id -> {
+                    userService.insert(entity).onSuccess(id -> {
                         success(ctx, null);
                         AppContext.REDIS.del(List.of(key));
                     }).onFailure(e -> {
@@ -137,9 +136,7 @@ public class AuthController extends BaseController {
                 } else {
                     fail(ctx, RestStatus.SIGNUP_CODE_ERROR);
                 }
-            }).onFailure(e -> {
-                fail(ctx, RestStatus.SIGNUP_CODE_INVALID);
-            });
+            }).onFailure(e -> fail(ctx, RestStatus.SIGNUP_CODE_INVALID));
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
             fail(ctx);
@@ -159,7 +156,7 @@ public class AuthController extends BaseController {
             return;
         }
 
-        service.selectByUsernameOrEmail(dto.username, dto.email).onSuccess(user -> {
+        userService.selectByUsernameOrEmail(dto.username, dto.email).onSuccess(user -> {
             if (user != null) {
                 if (user.username.equals(dto.username)) {
                     fail(ctx, RestStatus.USERNAME_IS_EXIST);
