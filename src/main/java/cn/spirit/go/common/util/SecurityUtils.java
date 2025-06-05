@@ -77,7 +77,8 @@ public class SecurityUtils {
     }
 
     public static String bCrypt(String content) {
-        return bCrypt(content.getBytes(DEFAULT_CHARSET), genSalt(SALT_$2A, 10));
+        String salt = genSalt(SALT_$2A, 10);
+        return bCrypt(content.getBytes(DEFAULT_CHARSET), salt);
     }
 
     /**
@@ -469,13 +470,16 @@ public class SecurityUtils {
         }
     }
 
-    public static String encodeBase64(String content) {
+    public static String doubleBase64Encode(String content) {
+        return Base64.getUrlEncoder().encodeToString(encodeBase64(content).getBytes(DEFAULT_CHARSET));
+    }
 
-        return "";
+    public static String doubleBase64Decode(String content) {
+        return decodeBase64(new String(Base64.getUrlDecoder().decode(content), DEFAULT_CHARSET));
     }
 
     public static void main(String[] args) {
-        String content = "22222222";
+        String content = "1263,WWNF8X";
         String encoded = bCrypt(content);
 
         // $2a$2a$2a$10$MZQ/h3LIrbil7wC5fGms4.oNss8Ga11CedJKynLmKUPQ/zj/mqSaC
@@ -487,7 +491,9 @@ public class SecurityUtils {
         String encodeBase64 = encodeBase64(content);
         System.out.println("64编码==" + encodeBase64);
         System.out.println("64解码==" + decodeBase64(encodeBase64));
-        String s = Base64.getEncoder().encodeToString(content.getBytes());
-        System.out.println(s);
+
+        encodeBase64 = doubleBase64Encode(content);
+        System.out.println("双倍64编码==" + encodeBase64);
+        System.out.println("双倍64解码==" + doubleBase64Decode(encodeBase64));
     }
 }

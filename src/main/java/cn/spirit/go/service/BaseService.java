@@ -116,12 +116,8 @@ public abstract class BaseService<T extends BaseEntity> {
     }
 
     public Future<T> selectOne(String sql, Tuple tuple) {
-        log.info("Select One SQL Template: {} , params: {}", sql, tuple.deepToString());
         return AppContext.SQL_POOL.getConnection()
                 .flatMap(conn -> {
-                    if (tuple == null || tuple.size() == 0) {
-                        return conn.query(sql).mapping(this::mapping).execute().onComplete(ar -> conn.close());
-                    }
                     return conn.preparedQuery(sql).mapping(this::mapping).execute(tuple).onComplete(ar -> conn.close());
                 })
                 .flatMap(rs -> {
@@ -142,7 +138,6 @@ public abstract class BaseService<T extends BaseEntity> {
     }
 
     public Future<Long> insert(String sql, Tuple tuple) {
-        log.info("Insert SQL Template: {} , params: {}", sql, tuple.deepToString());
         return AppContext.SQL_POOL.getConnection()
                 .flatMap(conn -> conn.preparedQuery(sql)
                         .collecting(Collector.of(() -> null, (v, row) -> {}, (a, b) -> null))

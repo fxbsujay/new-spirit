@@ -11,6 +11,10 @@ public enum RestStatus {
     EMAIL_CODE_IS_INVALID(10004, "密码错误"),
 
     PASSWORD_WRONG(10005, "账户已被封禁"),
+
+    SIGNUP_CODE_INVALID(10006, "验证码过期或已失效"),
+
+    SIGNUP_CODE_ERROR(10007, "验证码错误"),
     ;
 
     /**

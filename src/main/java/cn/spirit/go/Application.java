@@ -39,6 +39,7 @@ public class Application extends VerticleBase {
 
         router.post("/api/auth/signin").handler(controller::signIn);
         router.post("/api/auth/signup").handler(controller::signUp);
+        router.post("/api/auth/signup/code").handler(controller::sendSignUpCode);
 
         router.errorHandler(500, ctx -> {
             ctx.response().setStatusCode(500).end();

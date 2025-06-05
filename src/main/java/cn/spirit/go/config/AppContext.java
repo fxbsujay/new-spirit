@@ -38,12 +38,8 @@ public class AppContext {
                 .using(vertx)
                 .build();
 
-        log.info("mysql connection {}:{}/{}", conOpt.getHost(), conOpt.getPort(), conOpt.getDatabase());
-
         Redis client = Redis.createClient(vertx, new RedisOptions().addConnectionString("redis://localhost:6379"));
         REDIS = RedisAPI.api(client);
-        log.info("redis connection {}", "redis://localhost:6379");
-
 
         MailConfig mailConfig = new MailConfig()
                 .setHostname("smtp.163.com")
@@ -54,14 +50,11 @@ public class AppContext {
                 .setPassword("JDUXN3hwa4GDLywg");
 
         MAIL = MailClient.createShared(vertx, mailConfig);
-        log.info("mail connection {}:{}", mailConfig.getHostname(), mailConfig.getPort());
-
-        Future<MailResult> mailResultFuture = MAIL.sendMail(null);
     }
 
     public static Future<MailResult> sendMail(String subject, String to, String content, boolean html) {
         MailMessage message = new MailMessage()
-                .setFrom("fsusured@163.com")
+                .setFrom("fsusured@163.com (Spirit Go)")
                 .setTo(to)
                 .setSubject(subject);
         if (html) {
@@ -69,6 +62,7 @@ public class AppContext {
         } else {
             message.setText(content);
         }
+        log.info("Send email subject: {}, to: {}, content: {}", subject, to, content);
         return MAIL.sendMail(message);
     }
 }
