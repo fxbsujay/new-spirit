@@ -98,7 +98,7 @@ public abstract class BaseService<T extends BaseEntity> {
     public Future<List<T>> selectList(String sql, Tuple tuple) {
         return AppContext.SQL_POOL.getConnection()
                 .flatMap(conn -> {
-                    if (tuple == null || tuple.size() == 0) {
+                    if (null == tuple || tuple.size() == 0) {
                         return conn.query(sql).collecting(COLLECTOR).execute().onComplete(ar -> conn.close());
                     }
                     return conn.preparedQuery(sql).collecting(COLLECTOR).execute(tuple).onComplete(ar -> conn.close());

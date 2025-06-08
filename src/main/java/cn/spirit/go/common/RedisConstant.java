@@ -16,4 +16,9 @@ public interface RedisConstant {
      * 验证码过期时间 5 分钟
      */
     String CODE_EXPIRE = "300000";
+
+    /**
+     * 游戏对局
+     */
+    String GAME_INFO = "GAME_INFO:";
 }

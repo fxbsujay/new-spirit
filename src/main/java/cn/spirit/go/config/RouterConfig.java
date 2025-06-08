@@ -1,6 +1,8 @@
 package cn.spirit.go.config;
 
 import cn.spirit.go.controller.AuthController;
+import cn.spirit.go.controller.GameController;
+import cn.spirit.go.service.GameService;
 import cn.spirit.go.service.UserService;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -14,15 +16,22 @@ public class RouterConfig {
     public void scanBean() {
         UserService userService = new UserService();
         AppContext.addBean(userService);
+        GameService gameService = new GameService();
+        AppContext.addBean(gameService);
     }
 
     public void init(Router router) {
         scanBean();
 
         router.route().handler(BodyHandler.create());
-        router.route("/api/*").handler(ctx -> {
-            log.info("Request path: {}, remote addr: {}", ctx.request().path(), ctx.request().remoteAddress());
-            ctx.next();
+        router.route().handler(ctx -> {
+            if (ctx.request().path().startsWith("/api/auth/")) {
+                log.info("Auth Request path: {}, remote addr: {}", ctx.request().path(), ctx.request().remoteAddress());
+                ctx.next();
+            } else {
+                log.info("Other Request path: {}, remote addr: {}", ctx.request().path(), ctx.request().remoteAddress());
+                ctx.next();
+            }
         });
 
         router.errorHandler(500, ctx -> {
@@ -35,10 +44,12 @@ public class RouterConfig {
 
     private void authController(Router router) {
 
-        AuthController controller = new AuthController();
+        AuthController authController = new AuthController();
+        GameController gameController = new GameController();
 
-        router.post("/api/auth/signin").handler(controller::signIn);
-        router.post("/api/auth/signup").handler(controller::signUp);
-        router.post("/api/auth/signup/code").handler(controller::sendSignUpCode);
+        router.post("/api/auth/signin").handler(authController::signIn);
+        router.post("/api/auth/signup").handler(authController::signUp);
+        router.post("/api/auth/signup/code").handler(authController::sendSignUpCode);
+        router.post("/api/game/create").handler(gameController::createGame);
     }
 }

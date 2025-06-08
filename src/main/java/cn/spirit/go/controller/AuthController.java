@@ -45,7 +45,7 @@ public class AuthController extends BaseController {
         Future<UserEntity> future;
         if (RegexUtils.matches(username, RegexUtils.EMAIL)) {
             future = userService.selectByEmail(username);
-        } else if (RegexUtils.matches(password, RegexUtils.USERNAME)) {
+        } else if (RegexUtils.matches(username, RegexUtils.USERNAME)) {
             future = userService.selectByUsername(username);
         } else {
             fail(ctx, HttpResponseStatus.BAD_REQUEST);
@@ -53,7 +53,7 @@ public class AuthController extends BaseController {
         }
 
         future.onSuccess(user -> {
-            if (user == null) {
+            if (null == user) {
                 fail(ctx, RestStatus.ACCOUNT_NOT_EXIST);
                 return;
             }
@@ -136,7 +136,9 @@ public class AuthController extends BaseController {
                 } else {
                     fail(ctx, RestStatus.SIGNUP_CODE_ERROR);
                 }
-            }).onFailure(e -> fail(ctx, RestStatus.SIGNUP_CODE_INVALID));
+            }).onFailure(e -> {
+                fail(ctx, RestStatus.SIGNUP_CODE_INVALID);
+            });
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
             fail(ctx);

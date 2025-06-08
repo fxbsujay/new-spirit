@@ -11,7 +11,6 @@ import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,14 +18,35 @@ public class AppContext {
 
     private static final Logger log = LoggerFactory.getLogger(AppContext.class);
 
+    /**
+     * 机器编码
+     */
+    public static String MAC_CODE = "1";
+
+    /**
+     * 数据库连接池
+     */
     public static Pool SQL_POOL;
 
+    /**
+     * Redis Api
+     */
     public static RedisAPI REDIS;
 
+    /**
+     * Redis 客户端
+     */
+    public static Redis REDIS_CLIENT;
+
+    /**
+     * 邮件客户端
+     */
     public static MailClient MAIL;
 
+    /**
+     * 单例对象
+     */
     private static Map<Class<?>, BaseService<?>> beans = new HashMap<>();
-
 
     public static void addBean(BaseService<?> bean) {
         beans.put(bean.getClass(), bean);
@@ -45,7 +65,8 @@ public class AppContext {
                 .setUser("root")
                 .setPassword("F521.wojiaofxb");
 
-        PoolOptions poolOpt = new PoolOptions().setMaxSize(5);
+        PoolOptions poolOpt = new PoolOptions()
+                .setMaxSize(10);
         SQL_POOL = MySQLBuilder
                 .pool()
                 .with(poolOpt)
@@ -53,8 +74,9 @@ public class AppContext {
                 .using(vertx)
                 .build();
 
-        Redis client = Redis.createClient(vertx, new RedisOptions().addConnectionString("redis://localhost:6379"));
-        REDIS = RedisAPI.api(client);
+        REDIS_CLIENT = Redis.createClient(vertx, new RedisOptions().addConnectionString("redis://localhost:6379"));
+
+        REDIS = RedisAPI.api(REDIS_CLIENT);
 
         MailConfig mailConfig = new MailConfig()
                 .setHostname("smtp.163.com")

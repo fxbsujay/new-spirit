@@ -40,12 +40,12 @@ public class RegexUtils {
     /**
      * 账户号 英文字母、数字
      */
-    public static final String USERNAME = "[a-zA-Z0-9]{6,20}";
+    public static final String USERNAME = "[a-zA-Z0-9]{2,20}";
 
     /**
-     * 账户密码 英文字符、数字、@、_、%
+     * 账户密码 英文字符、数字、!$^.*_%
      */
-    public static final String PASSWORD = "^[a-zA-Z0-9@_%]{6,20}$";
+    public static final String PASSWORD = "^[a-zA-Z0-9@!$^.*_%]{6,30}$";
 
     public static boolean matches(String line, String pattern) {
         if (line == null || line.trim().isBlank()) {
@@ -55,7 +55,7 @@ public class RegexUtils {
     }
 
     public static void main(String[] args) {
-        System.out.println(matches("234223%", PASSWORD));
+        System.out.println(matches("234223@", PASSWORD));
     }
 
 }
