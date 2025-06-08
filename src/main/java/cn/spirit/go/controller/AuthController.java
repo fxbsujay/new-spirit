@@ -71,7 +71,7 @@ public class AuthController extends BaseController {
             String key = RedisConstant.AUTH_SESSION + sessionId;
             AppContext.REDIS
                     .hset(List.of(key, "session", sessionId, "username", username))
-                    .compose(v -> AppContext.REDIS.expire(List.of(key, "3000")))
+                    .compose(v -> AppContext.REDIS.expire(List.of(key, RedisConstant.AUTH_SESSION_EXPIRE)))
                     .onSuccess(v -> {
                         Cookie cookie = Cookie.cookie("sessionId", sessionId);
                         cookie.setHttpOnly(true);
