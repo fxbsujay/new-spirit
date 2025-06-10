@@ -1,6 +1,7 @@
 package cn.spirit.go.controller;
 
 import cn.spirit.go.common.RedisConstant;
+import cn.spirit.go.common.RestContext;
 import cn.spirit.go.common.enums.RestStatus;
 import cn.spirit.go.common.enums.UserStatus;
 import cn.spirit.go.common.util.RandomUtils;
@@ -21,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.List;
 
-public class AuthController extends BaseController {
+public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
@@ -38,7 +39,7 @@ public class AuthController extends BaseController {
         String password = body.getString("password");
 
         if (!RegexUtils.matches(password, RegexUtils.PASSWORD)) {
-            fail(ctx, HttpResponseStatus.BAD_REQUEST);
+            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
 
@@ -48,22 +49,22 @@ public class AuthController extends BaseController {
         } else if (RegexUtils.matches(username, RegexUtils.USERNAME)) {
             future = userService.selectByUsername(username);
         } else {
-            fail(ctx, HttpResponseStatus.BAD_REQUEST);
+            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
 
         future.onSuccess(user -> {
             if (null == user) {
-                fail(ctx, RestStatus.ACCOUNT_NOT_EXIST);
+                RestContext.fail(ctx, RestStatus.ACCOUNT_NOT_EXIST);
                 return;
             }
             if (user.status == UserStatus.BANNED) {
-                fail(ctx, RestStatus.PASSWORD_WRONG);
+                RestContext.fail(ctx, RestStatus.PASSWORD_WRONG);
                 return;
             }
 
             if (!SecurityUtils.matchesBCrypt(password, user.password)) {
-                fail(ctx, RestStatus.EMAIL_CODE_IS_INVALID);
+                RestContext.fail(ctx, RestStatus.EMAIL_CODE_IS_INVALID);
                 return;
             }
 
@@ -81,15 +82,14 @@ public class AuthController extends BaseController {
                         u.email = user.email;
                         u.nickname = user.nickname;
                         u.username = user.username;
-                        success(ctx, u);
+                        RestContext.success(ctx, u);
                     }).onFailure(e -> {
-                        fail(ctx);
+                        RestContext.fail(ctx);
                         log.error(e.getMessage(), e.getCause());
                     });
-
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
-            fail(ctx);
+            RestContext.fail(ctx);
         });
     }
 
@@ -102,16 +102,16 @@ public class AuthController extends BaseController {
         if (!RegexUtils.matches(dto.password, RegexUtils.PASSWORD) ||
                 !RegexUtils.matches(dto.email, RegexUtils.EMAIL) ||
                 !RegexUtils.matches(dto.username, RegexUtils.USERNAME) || StringUtils.isBlank(dto.code)) {
-            fail(ctx, HttpResponseStatus.BAD_REQUEST);
+            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
 
         userService.selectByUsernameOrEmail(dto.username, dto.email).onSuccess(user -> {
             if (user != null) {
                 if (user.username.equals(dto.username)) {
-                    fail(ctx, RestStatus.USERNAME_IS_EXIST);
+                    RestContext.fail(ctx, RestStatus.USERNAME_IS_EXIST);
                 } else {
-                    fail(ctx, RestStatus.EMAIL_IS_EXIST);
+                    RestContext.fail(ctx, RestStatus.EMAIL_IS_EXIST);
                 }
                 return;
             }
@@ -127,21 +127,21 @@ public class AuthController extends BaseController {
                     entity.password = SecurityUtils.bCrypt(dto.password);
                     entity.status = UserStatus.NORMAL;
                     userService.insert(entity).onSuccess(id -> {
-                        success(ctx, null);
+                        RestContext.success(ctx, null);
                         AppContext.REDIS.del(List.of(key));
                     }).onFailure(e -> {
                         log.error(e.getMessage(), e.getCause());
-                        fail(ctx);
+                        RestContext.fail(ctx);
                     });
                 } else {
-                    fail(ctx, RestStatus.SIGNUP_CODE_ERROR);
+                    RestContext.fail(ctx, RestStatus.SIGNUP_CODE_ERROR);
                 }
             }).onFailure(e -> {
-                fail(ctx, RestStatus.SIGNUP_CODE_INVALID);
+                RestContext.fail(ctx, RestStatus.SIGNUP_CODE_INVALID);
             });
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
-            fail(ctx);
+            RestContext.fail(ctx);
         });
     }
 
@@ -154,31 +154,31 @@ public class AuthController extends BaseController {
         if (!RegexUtils.matches(dto.password, RegexUtils.PASSWORD) ||
                 !RegexUtils.matches(dto.email, RegexUtils.EMAIL) ||
                 !RegexUtils.matches(dto.username, RegexUtils.USERNAME)) {
-            fail(ctx, HttpResponseStatus.BAD_REQUEST);
+            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
 
         userService.selectByUsernameOrEmail(dto.username, dto.email).onSuccess(user -> {
             if (user != null) {
                 if (user.username.equals(dto.username)) {
-                    fail(ctx, RestStatus.USERNAME_IS_EXIST);
+                    RestContext.fail(ctx, RestStatus.USERNAME_IS_EXIST);
                 } else {
-                    fail(ctx, RestStatus.EMAIL_IS_EXIST);
+                    RestContext.fail(ctx, RestStatus.EMAIL_IS_EXIST);
                 }
                 return;
             }
 
             String code = RandomUtils.getRandom(5, true);
             AppContext.REDIS.setex(RedisConstant.AUTH_CODE_SIGNUP + dto.email, RedisConstant.CODE_EXPIRE, code).onSuccess(v -> {
-                success(ctx, null);
+                RestContext.success(ctx, null);
                 AppContext.sendMail("注册验证码", dto.email, code, false);
             }).onFailure(e -> {
                 log.error(e.getMessage(), e.getCause());
-                fail(ctx);
+                RestContext.fail(ctx);
             });
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
-            fail(ctx);
+            RestContext.fail(ctx);
         });
     }
 

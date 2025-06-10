@@ -96,14 +96,10 @@ public abstract class BaseService<T extends BaseEntity> {
     }
 
     public Future<List<T>> selectList(String sql, Tuple tuple) {
-        return AppContext.SQL_POOL.getConnection()
-                .flatMap(conn -> {
-                    if (null == tuple || tuple.size() == 0) {
-                        return conn.query(sql).collecting(COLLECTOR).execute().onComplete(ar -> conn.close());
-                    }
-                    return conn.preparedQuery(sql).collecting(COLLECTOR).execute(tuple).onComplete(ar -> conn.close());
-                })
-                .map(SqlResult::value);
+        if (null == tuple || tuple.size() == 0) {
+            return AppContext.SQL_POOL.query(sql).collecting(COLLECTOR).execute().map(SqlResult::value);
+        }
+        return AppContext.SQL_POOL.preparedQuery(sql).collecting(COLLECTOR).execute(tuple).map(SqlResult::value);
     }
 
     public Future<List<T>> selectList() {
@@ -116,19 +112,15 @@ public abstract class BaseService<T extends BaseEntity> {
     }
 
     public Future<T> selectOne(String sql, Tuple tuple) {
-        return AppContext.SQL_POOL.getConnection()
-                .flatMap(conn -> {
-                    return conn.preparedQuery(sql).mapping(this::mapping).execute(tuple).onComplete(ar -> conn.close());
-                })
-                .flatMap(rs -> {
-                    if (rs.size() == 1) {
-                        return Future.succeededFuture(rs.iterator().next());
-                    } else if (rs.size() == 0) {
-                        return Future.succeededFuture(null);
-                    } else {
-                        return Future.failedFuture("The SQL query is for " + rs.size() + " records.");
-                    }
-                });
+        return AppContext.SQL_POOL.preparedQuery(sql).mapping(this::mapping).execute(tuple).flatMap(rs -> {
+            if (rs.size() == 1) {
+                return Future.succeededFuture(rs.iterator().next());
+            } else if (rs.size() == 0) {
+                return Future.succeededFuture(null);
+            } else {
+                return Future.failedFuture("The SQL query is for " + rs.size() + " records.");
+            }
+        });
     }
 
     public Future<Long> insert(T entity) {
@@ -138,12 +130,10 @@ public abstract class BaseService<T extends BaseEntity> {
     }
 
     public Future<Long> insert(String sql, Tuple tuple) {
-        return AppContext.SQL_POOL.getConnection()
-                .flatMap(conn -> conn.preparedQuery(sql)
-                        .collecting(Collector.of(() -> null, (v, row) -> {}, (a, b) -> null))
-                        .execute(tuple)
-                        .onComplete(ar -> conn.close())
-                )
+        return AppContext.SQL_POOL.preparedQuery(sql)
+                .collecting(Collector.of(() -> null, (v, row) -> {}, (a, b) -> null))
+                .execute(tuple)
                 .map(row -> row.property(MySQLClient.LAST_INSERTED_ID));
+
     }
 }

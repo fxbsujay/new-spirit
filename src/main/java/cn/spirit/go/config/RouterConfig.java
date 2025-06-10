@@ -1,5 +1,6 @@
 package cn.spirit.go.config;
 
+import cn.spirit.go.common.RestContext;
 import cn.spirit.go.controller.AuthController;
 import cn.spirit.go.controller.GameController;
 import cn.spirit.go.service.GameService;
@@ -47,6 +48,9 @@ public class RouterConfig {
         AuthController authController = new AuthController();
         GameController gameController = new GameController();
 
+        router.get("/api/ping").handler(ctx -> {
+            RestContext.success(ctx, true);
+        });
         router.post("/api/auth/signin").handler(authController::signIn);
         router.post("/api/auth/signup").handler(authController::signUp);
         router.post("/api/auth/signup/code").handler(authController::sendSignUpCode);

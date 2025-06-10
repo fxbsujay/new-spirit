@@ -110,7 +110,7 @@ public class StringUtils {
      * @param regex 指定的字符
      */
     public static String firstLetterBig(String str, char regex) {
-        if (isEmpty(str)){
+        if (isEmpty(str)) {
             return str;
         }
         char[] cs = dispelBlank(str).toCharArray();

@@ -1,5 +1,6 @@
 package cn.spirit.go.service;
 
+import cn.spirit.go.common.RestContext;
 import cn.spirit.go.common.enums.ChessPiece;
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameStatus;
@@ -12,9 +13,12 @@ import cn.spirit.go.model.entity.GameReadyEntity;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.Tuple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GameService extends BaseService<GameEntity> {
 
+    private static final Logger log = LoggerFactory.getLogger(GameService.class);
     private Integer dailyGameCount = 0;
 
     private String dailyTime = DateUtils.getTime("yyyyMMdd");
@@ -57,7 +61,18 @@ public class GameService extends BaseService<GameEntity> {
     /**
      * 创建对局
      */
-    public Future<Boolean> createGame(GameDTO dto) {
+    public void createGame(RestContext<GameDTO, Boolean> ctx) {
+        GameDTO dto = ctx.param();
+
+
+        AppContext.SQL_POOL.preparedQuery("SELECT COUNT(*) FROM t_game_ready WHERE user_id = ?")
+                .execute(Tuple.of(1)).map(rows -> {
+                    return 0;
+                }).onSuccess(integer -> {
+
+                }).onFailure(e -> {
+
+                });
 
         GameReadyEntity entity = new GameReadyEntity();
         entity.name = dto.name;
@@ -70,14 +85,12 @@ public class GameService extends BaseService<GameEntity> {
         entity.stepDuration = dto.stepDuration;
         entity.userId = dto.userId;
 
-        return insertReady(entity).flatMap(id -> {
-            if (id != null) {
-               return Future.succeededFuture(true);
-            } else {
-                return Future.succeededFuture(false);
-            }
+        insertReady(entity).onSuccess(id -> {
+            ctx.success(true);
+        }).onFailure(e -> {
+            log.error("create game failed {}", e.getMessage());
+            ctx.fail();
         });
-
     }
 
     /**
