@@ -1,10 +1,7 @@
 package cn.spirit.go.service;
 
 import cn.spirit.go.common.RestContext;
-import cn.spirit.go.common.enums.ChessPiece;
-import cn.spirit.go.common.enums.GameMode;
-import cn.spirit.go.common.enums.GameStatus;
-import cn.spirit.go.common.enums.GameType;
+import cn.spirit.go.common.enums.*;
 import cn.spirit.go.common.util.DateUtils;
 import cn.spirit.go.config.AppContext;
 import cn.spirit.go.model.dto.GameDTO;
@@ -64,31 +61,29 @@ public class GameService extends BaseService<GameEntity> {
     public void createGame(RestContext<GameDTO, Boolean> ctx) {
         GameDTO dto = ctx.param();
 
-
-        AppContext.SQL_POOL.preparedQuery("SELECT COUNT(*) FROM t_game_ready WHERE user_id = ?")
-                .execute(Tuple.of(1)).map(rows -> {
-                    return 0;
-                }).onSuccess(integer -> {
-
-                }).onFailure(e -> {
-
-                });
-
-        GameReadyEntity entity = new GameReadyEntity();
-        entity.name = dto.name;
-        entity.code = generateCode();
-        entity.status = GameStatus.READY;
-        entity.type = dto.type;
-        entity.mode = dto.mode;
-        entity.boardSize = dto.boardSize;
-        entity.duration = dto.duration;
-        entity.stepDuration = dto.stepDuration;
-        entity.userId = dto.userId;
-
-        insertReady(entity).onSuccess(id -> {
+        selectCount("SELECT COUNT(*) FROM t_game_ready WHERE user_id = ?", Tuple.of(1)).compose(size -> {
+            if (size > 0) {
+                return Future.succeededFuture(null);
+            }
+            GameReadyEntity entity = new GameReadyEntity();
+            entity.name = dto.name;
+            entity.code = generateCode();
+            entity.status = GameStatus.READY;
+            entity.type = dto.type;
+            entity.mode = dto.mode;
+            entity.boardSize = dto.boardSize;
+            entity.duration = dto.duration;
+            entity.stepDuration = dto.stepDuration;
+            entity.userId = dto.userId;
+            return insertReady(entity);
+        }).onSuccess(id -> {
+            if (id == null) {
+                ctx.fail(RestStatus.GAME_CREATED);
+                return;
+            }
             ctx.success(true);
         }).onFailure(e -> {
-            log.error("create game failed {}", e.getMessage());
+            log.error(e.getMessage(), e);
             ctx.fail();
         });
     }

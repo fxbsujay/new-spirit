@@ -15,6 +15,8 @@ public enum RestStatus {
     SIGNUP_CODE_INVALID(10006, "验证码过期或已失效"),
 
     SIGNUP_CODE_ERROR(10007, "验证码错误"),
+
+    GAME_CREATED(20001, "已创建对局"),
     ;
 
     /**

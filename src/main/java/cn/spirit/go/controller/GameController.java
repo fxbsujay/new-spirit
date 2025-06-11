@@ -36,6 +36,7 @@ public class GameController {
             return;
         }
 
+
         if (!GameType.NONE.equals(dto.type)) {
             if (null == dto.duration || dto.duration <= 0 || null == dto.stepDuration || dto.stepDuration <= 0) {
                 ctx.fail(HttpResponseStatus.BAD_REQUEST);

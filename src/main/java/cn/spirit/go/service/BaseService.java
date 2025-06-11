@@ -123,6 +123,20 @@ public abstract class BaseService<T extends BaseEntity> {
         });
     }
 
+    public Future<Long> selectCount(String name, Object value) {
+        String sql = "SELECT COUNT(*) FROM " + tableName + " WHERE " + name + " = ?";
+        return selectCount(sql, Tuple.of(value));
+    }
+
+    public Future<Long> selectCount() {
+        String sql = "SELECT COUNT(*) FROM " + tableName;
+        return AppContext.SQL_POOL.preparedQuery(sql).execute().map(rows -> rows.iterator().next().getLong(0));
+    }
+
+    public Future<Long> selectCount(String sql, Tuple tuple) {
+        return AppContext.SQL_POOL.preparedQuery(sql).execute(tuple).map(rows -> rows.iterator().next().getLong(0));
+    }
+
     public Future<Long> insert(T entity) {
         Object[] mapping = mapping(entity);
         String sql = "INSERT INTO " + tableName + mapping[0] +" VALUES " + mapping[1];
