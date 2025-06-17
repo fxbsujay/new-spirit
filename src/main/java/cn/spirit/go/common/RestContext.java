@@ -1,43 +1,54 @@
 package cn.spirit.go.common;
 
 import cn.spirit.go.common.enums.RestStatus;
+import cn.spirit.go.common.enums.UserIdentity;
+import cn.spirit.go.model.dto.SessionDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.Session;
 
 public class RestContext<P, T> {
 
     private final RoutingContext ctx;
 
-    private P param;
+    private P body;
 
     public RestContext(RoutingContext ctx, Class<P> cls) {
         this.ctx = ctx;
         if (cls != null) {
-            params(cls);
+            body = body(cls);
         }
+    }
+
+    public RoutingContext getContext() {
+        return ctx;
+    }
+
+    public String params(String name) {
+        return ctx.queryParams().get(name);
     }
 
     public RestContext(RoutingContext ctx) {
         this(ctx, null);
     }
 
-    public P param() {
-        return param;
+    public P body() {
+        return body;
     }
 
-    public P params(Class<P> cls) {
-        if (param == null) {
-            param = ctx.body().asPojo(cls);
+    public P body(Class<P> cls) {
+        if (null == body) {
+            body = ctx.body().asPojo(cls);
         }
-        return param;
+        return body;
     }
 
-    public void setParams(P param) {
-        this.param = param;
+    public void setBody(P param) {
+        this.body = param;
     }
 
     public void success(T data) {
@@ -111,5 +122,55 @@ public class RestContext<P, T> {
 
     public static void fail(RoutingContext ctx) {
         fail(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    public static void setLogged(RoutingContext ctx, Integer id, String username, String nickname, Integer score) {
+        Session session = ctx.session();
+        session.put("identity", UserIdentity.Logged);
+        session.put("id", id);
+        session.put("username", username);
+        session.put("nickname", nickname);
+        session.put("score", score);
+        session.put("time", System.currentTimeMillis());
+    }
+
+    public static SessionDTO sessionUser(RoutingContext ctx) {
+        SessionDTO dto = new SessionDTO();
+        Session session = ctx.session();
+
+        UserIdentity identity = session.get("identity");
+        if (null == identity) {
+            identity = UserIdentity.TOURIST;
+            session.put("identity", identity);
+        }
+
+        String username = session.get("username");
+        if (null == username) {
+            username = "匿名用户";
+            session.put("username", username);
+        }
+
+        String nickname = session.get("nickname");
+        if (null == nickname) {
+            nickname = "匿名用户";
+            session.put("nickname", nickname);
+        }
+
+        Integer score = session.get("score");
+        if (null == score) {
+            score = 700;
+            session.put("score", score);
+        }
+
+        dto.identity = identity;
+        dto.id = session.get("id");
+        dto.username = username;
+        dto.nickname = nickname;
+        dto.source = score;
+        return dto;
+    }
+
+    public SessionDTO sessionUser() {
+        return sessionUser(ctx);
     }
 }

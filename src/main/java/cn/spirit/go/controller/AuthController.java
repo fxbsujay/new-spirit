@@ -10,13 +10,11 @@ import cn.spirit.go.common.util.SecurityUtils;
 import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.config.AppContext;
 import cn.spirit.go.model.dto.SignDTO;
-import cn.spirit.go.model.dto.UserDTO;
 import cn.spirit.go.model.entity.UserEntity;
+import cn.spirit.go.model.vo.SignInVO;
 import cn.spirit.go.service.UserService;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
-import io.vertx.core.http.Cookie;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,10 +31,10 @@ public class AuthController {
      */
     public void signIn(RoutingContext ctx) {
 
-        JsonObject body = ctx.body().asJsonObject();
+        SignDTO dto = ctx.body().asPojo(SignDTO.class);
 
-        String username = body.getString("username");
-        String password = body.getString("password");
+        String username = dto.username;
+        String password = dto.password;
 
         if (!RegexUtils.matches(password, RegexUtils.PASSWORD)) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
@@ -68,25 +66,14 @@ public class AuthController {
                 return;
             }
 
-            String sessionId = StringUtils.uuid();
-            String key = RedisConstant.AUTH_SESSION + sessionId;
-            AppContext.REDIS
-                    .hset(List.of(key, "session", sessionId, "username", username))
-                    .compose(v -> AppContext.REDIS.expire(List.of(key, RedisConstant.AUTH_SESSION_EXPIRE)))
-                    .onSuccess(v -> {
-                        Cookie cookie = Cookie.cookie("sessionId", sessionId);
-                        cookie.setHttpOnly(true);
-                        ctx.response().addCookie(cookie);
-                        UserDTO u = new UserDTO();
-                        u.avatar = user.avatar;
-                        u.email = user.email;
-                        u.nickname = user.nickname;
-                        u.username = user.username;
-                        RestContext.success(ctx, u);
-                    }).onFailure(e -> {
-                        RestContext.fail(ctx);
-                        log.error(e.getMessage(), e.getCause());
-                    });
+            RestContext.setLogged(ctx, user.id, username, user.nickname,  1200);
+
+            SignInVO vo = new SignInVO();
+            vo.username = username;
+            vo.nickname = user.nickname;
+            vo.avatar = user.avatar;
+            vo.email = user.email;
+            RestContext.success(ctx, vo);
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
             RestContext.fail(ctx);

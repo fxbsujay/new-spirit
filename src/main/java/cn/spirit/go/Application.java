@@ -25,9 +25,8 @@ public class Application extends VerticleBase {
         DatabindCodec.mapper().registerModule(new JavaTimeModule());
 
         AppContext.init(vertx);
-        Router router = Router.router(vertx);
         RouterConfig routerConfig = new RouterConfig();
-        routerConfig.init(router);
+        Router router = routerConfig.init(vertx);
 
         return vertx.createHttpServer().requestHandler(router).listen(8899).onSuccess(http -> {
             log.info("HTTP server started on port {}",  http.actualPort());

@@ -1,5 +1,7 @@
 package cn.spirit.go.common.enums;
 
+import cn.spirit.go.common.util.StringUtils;
+
 public enum GameMode {
 
     /**
@@ -17,5 +19,17 @@ public enum GameMode {
     /**
      * 好友
      */
-    FRIEND
+    FRIEND;
+
+    public static GameMode convert(final String name) {
+        if (StringUtils.isBlank(name)) {
+            return null;
+        }
+        for (GameMode value : values()) {
+            if (value.toString().equals(name)) {
+                return value;
+            }
+        }
+        return null;
+    }
 }

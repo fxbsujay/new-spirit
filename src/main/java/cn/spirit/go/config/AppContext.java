@@ -1,6 +1,5 @@
 package cn.spirit.go.config;
 
-import cn.spirit.go.service.BaseService;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.ext.mail.*;
@@ -46,9 +45,9 @@ public class AppContext {
     /**
      * 单例对象
      */
-    private static Map<Class<?>, BaseService<?>> beans = new HashMap<>();
+    private static final Map<Class<?>, Object> beans = new HashMap<>();
 
-    public static void addBean(BaseService<?> bean) {
+    public static void addBean(Object bean) {
         beans.put(bean.getClass(), bean);
     }
 

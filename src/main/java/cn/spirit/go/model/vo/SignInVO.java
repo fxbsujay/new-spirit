@@ -1,6 +1,6 @@
-package cn.spirit.go.model.dto;
+package cn.spirit.go.model.vo;
 
-public class UserDTO {
+public class SignInVO {
 
     /**
      * 用户头像
