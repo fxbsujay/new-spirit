@@ -7,7 +7,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.Future;
 import io.vertx.core.json.jackson.DatabindCodec;
+import io.vertx.core.shareddata.Lock;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 
@@ -26,6 +28,9 @@ public class RestContext<P, T> {
 
     public RoutingContext getContext() {
         return ctx;
+    }
+
+    public void lock(String name) {
     }
 
     public String params(String name) {

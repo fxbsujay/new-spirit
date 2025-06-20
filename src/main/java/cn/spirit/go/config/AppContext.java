@@ -1,5 +1,9 @@
 package cn.spirit.go.config;
 
+import cn.spirit.go.dao.GameDao;
+import cn.spirit.go.dao.GameReadyDao;
+import cn.spirit.go.service.GameService;
+import cn.spirit.go.service.UserService;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.ext.mail.*;
@@ -33,11 +37,6 @@ public class AppContext {
     public static RedisAPI REDIS;
 
     /**
-     * Redis 客户端
-     */
-    public static Redis REDIS_CLIENT;
-
-    /**
      * 邮件客户端
      */
     public static MailClient MAIL;
@@ -56,7 +55,6 @@ public class AppContext {
     }
 
     public static void init(Vertx vertx) {
-
         MySQLConnectOptions conOpt = new MySQLConnectOptions()
                 .setHost("8.133.248.55")
                 .setPort(3306)
@@ -73,9 +71,9 @@ public class AppContext {
                 .using(vertx)
                 .build();
 
-        REDIS_CLIENT = Redis.createClient(vertx, new RedisOptions().addConnectionString("redis://localhost:6379"));
+        Redis client = Redis.createClient(vertx, new RedisOptions().addConnectionString("redis://localhost:6379"));
 
-        REDIS = RedisAPI.api(REDIS_CLIENT);
+        REDIS = RedisAPI.api(client);
 
         MailConfig mailConfig = new MailConfig()
                 .setHostname("smtp.163.com")
@@ -86,7 +84,14 @@ public class AppContext {
                 .setPassword("JDUXN3hwa4GDLywg");
 
         MAIL = MailClient.createShared(vertx, mailConfig);
+
+        addBean(new GameDao());
+        addBean(new GameReadyDao());
+        addBean(new UserService());
+        addBean(new GameService());
     }
+
+
 
     public static Future<MailResult> sendMail(String subject, String to, String content, boolean html) {
         MailMessage message = new MailMessage()
@@ -101,4 +106,5 @@ public class AppContext {
         log.info("Send email subject: {}, to: {}, content: {}", subject, to, content);
         return MAIL.sendMail(message);
     }
+
 }

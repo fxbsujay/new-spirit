@@ -24,6 +24,7 @@ public class Application extends VerticleBase {
 
         DatabindCodec.mapper().registerModule(new JavaTimeModule());
 
+
         AppContext.init(vertx);
         RouterConfig routerConfig = new RouterConfig();
         Router router = routerConfig.init(vertx);

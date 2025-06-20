@@ -1,6 +1,5 @@
 package cn.spirit.go.service;
 
-import cn.spirit.go.common.RedisConstant;
 import cn.spirit.go.common.RestContext;
 import cn.spirit.go.common.enums.*;
 import cn.spirit.go.common.util.DateUtils;
@@ -41,13 +40,16 @@ public class GameService {
     public void joinGame(RestContext<String, Boolean> ctx) {
 
         String code = ctx.body();
-
         gameReadyDao.selectOneByCode(code).onSuccess(game -> {
 
         }).onFailure(e -> {
             log.error(e.getMessage(), e);
             ctx.fail(RestStatus.GAME_NOT_EXIST);
         });
+    }
+
+    public void cancelGame(RestContext<String, Boolean> ctx) {
+
     }
 
     /**

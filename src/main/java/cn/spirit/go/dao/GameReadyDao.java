@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 
 public class GameReadyDao {
 
-
     private GameReadyEntity mapping(Row row) {
         GameReadyEntity entity = new GameReadyEntity();
         entity.id = row.getInteger("id");
@@ -78,6 +77,12 @@ public class GameReadyDao {
     }
 
 
+    /**
+     * 根据编号查询对局
+     *
+     * @param code 游戏编号
+     * @return 查询到条数为1返回对局，否则返回错误
+     */
     public Future<GameReadyEntity> selectOneByCode(String code) {
         return AppContext.SQL_POOL.preparedQuery("SELECT * FROM `t_game_ready` WHERE code = ?")
                 .mapping(this::mapping)

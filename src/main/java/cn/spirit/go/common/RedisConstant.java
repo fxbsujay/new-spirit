@@ -5,7 +5,7 @@ public interface RedisConstant {
     /**
      * 验证码过期时间 5 分钟
      */
-    String CODE_EXPIRE = "300000";
+    public static String CODE_EXPIRE = "300000";
 
     /**
      * 注册验证码
