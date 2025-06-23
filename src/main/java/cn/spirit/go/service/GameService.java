@@ -10,6 +10,7 @@ import cn.spirit.go.model.dto.SessionDTO;
 import cn.spirit.go.model.entity.GameReadyEntity;
 import cn.spirit.go.model.dto.SearchGameDTO;
 import io.vertx.core.Future;
+import io.vertx.core.shareddata.Lock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.List;
@@ -24,6 +25,7 @@ public class GameService {
 
     private final GameReadyDao gameReadyDao = AppContext.getBean(GameReadyDao.class);
 
+
     public void searchGame(RestContext<Void, List<SearchGameDTO>> ctx) {
         SessionDTO session = ctx.sessionUser();
         gameReadyDao.searchPage(
@@ -37,9 +39,17 @@ public class GameService {
                 });
     }
 
+
+
     public void joinGame(RestContext<String, Boolean> ctx) {
 
         String code = ctx.body();
+        Future<Lock> lock = ctx.lock("").onComplete(lockResult -> {
+            if (lockResult.failed()) {
+
+            }
+        });
+
         gameReadyDao.selectOneByCode(code).onSuccess(game -> {
 
         }).onFailure(e -> {

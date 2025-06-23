@@ -30,7 +30,8 @@ public class RestContext<P, T> {
         return ctx;
     }
 
-    public void lock(String name) {
+    public Future<Lock> lock(String name) {
+        return ctx.vertx().sharedData().getLockWithTimeout(name, 3000L);
     }
 
     public String params(String name) {

@@ -7,7 +7,6 @@ import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.SessionHandler;
-import io.vertx.ext.web.sstore.ClusteredSessionStore;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +19,7 @@ public class RouterConfig {
         Router router = Router.router(vertx);
 
         router.route().handler(BodyHandler.create());
-        SessionHandler sessionHandler = SessionHandler.create(ClusteredSessionStore.create(vertx));
+        SessionHandler sessionHandler = SessionHandler.create(LocalSessionStore.create(vertx));
         sessionHandler.setSessionCookieName("session");
         router.route().handler(sessionHandler);
         router.route().handler(ctx -> {
