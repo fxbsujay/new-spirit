@@ -13,6 +13,8 @@ import io.vertx.core.shareddata.Lock;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 
+import java.util.function.Supplier;
+
 public class RestContext<P, T> {
 
     private final RoutingContext ctx;
@@ -32,6 +34,10 @@ public class RestContext<P, T> {
 
     public Future<Lock> lock(String name) {
         return ctx.vertx().sharedData().getLockWithTimeout(name, 3000L);
+    }
+
+    public void withLock(String name,  Supplier<Future<T>> block) {
+        ctx.vertx().sharedData().withLock(name, block);
     }
 
     public String params(String name) {
@@ -130,10 +136,9 @@ public class RestContext<P, T> {
         fail(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
     }
 
-    public static void setLogged(RoutingContext ctx, Integer id, String username, String nickname, Integer score) {
+    public static void setLogged(RoutingContext ctx, String username, String nickname, Integer score) {
         Session session = ctx.session();
         session.put("identity", UserIdentity.Logged);
-        session.put("id", id);
         session.put("username", username);
         session.put("nickname", nickname);
         session.put("score", score);
@@ -169,7 +174,6 @@ public class RestContext<P, T> {
         }
 
         dto.identity = identity;
-        dto.id = session.get("id");
         dto.username = username;
         dto.nickname = nickname;
         dto.source = score;

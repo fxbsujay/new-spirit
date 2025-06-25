@@ -70,8 +70,9 @@ public class GameController {
     public void joinGame(RoutingContext context) {
         String code = context.pathParam("code");
 
-        if (RegexUtils.matches(code, "[A-Z0-9]{5,}")) {
+        if (!RegexUtils.matches(code, "[A-Z0-9]{5,}")) {
             RestContext.fail(context, HttpResponseStatus.BAD_REQUEST);
+            return;
         }
 
         RestContext<String, Boolean> ctx = new RestContext<>(context);

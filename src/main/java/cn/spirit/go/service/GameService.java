@@ -10,10 +10,9 @@ import cn.spirit.go.model.dto.SessionDTO;
 import cn.spirit.go.model.entity.GameReadyEntity;
 import cn.spirit.go.model.dto.SearchGameDTO;
 import io.vertx.core.Future;
-import io.vertx.core.shareddata.Lock;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.util.List;
+import org.slf4j.LoggerFactory;
 
 public class GameService {
 
@@ -25,29 +24,35 @@ public class GameService {
 
     private final GameReadyDao gameReadyDao = AppContext.getBean(GameReadyDao.class);
 
-
     public void searchGame(RestContext<Void, List<SearchGameDTO>> ctx) {
         SessionDTO session = ctx.sessionUser();
         gameReadyDao.searchPage(
-                        ctx.params("name"),
-                        GameMode.convert(ctx.params("mode")),
-                        GameType.convert(ctx.params("type")),
-                        UserIdentity.Logged == session.identity ? session.id : null
-                ).onSuccess(ctx::success).onFailure(e -> {
-                    log.error(e.getMessage(), e);
-                    ctx.fail();
-                });
+                ctx.params("name"),
+                GameMode.convert(ctx.params("mode")),
+                GameType.convert(ctx.params("type")),
+                UserIdentity.Logged == session.identity ? session.username : null
+        ).onSuccess(ctx::success).onFailure(e -> {
+            log.error(e.getMessage(), e);
+            ctx.fail();
+        });
     }
 
-
-
     public void joinGame(RestContext<String, Boolean> ctx) {
-
         String code = ctx.body();
-        Future<Lock> lock = ctx.lock("").onComplete(lockResult -> {
-            if (lockResult.failed()) {
-
+        ctx.lock("GAME:" + code).onComplete(res -> {
+            if (res.succeeded()) {
+                log.info("拿到锁了");
+                res.result().release();
+                log.info("释放锁");
+            } else {
+                log.info("没有拿到锁了");
             }
+        });
+
+        ctx.getContext().vertx().sharedData().withLock("GAME:" + code, () -> {
+            log.info("开始执行----");
+            ctx.success(true);
+            return Future.succeededFuture();
         });
 
         gameReadyDao.selectOneByCode(code).onSuccess(game -> {
@@ -81,7 +86,7 @@ public class GameService {
             entity.boardSize = dto.boardSize;
             entity.duration = dto.duration;
             entity.stepDuration = dto.stepDuration;
-            entity.userId = session.id;
+            entity.username = session.username;
             entity.score = session.source;
             return gameReadyDao.insert(entity);
         }).onSuccess(id -> {
@@ -113,6 +118,7 @@ public class GameService {
 
     public static void main(String[] args) {
         GameService service = new GameService();
-        System.out.println(service.generateCode());;
+        System.out.println(service.generateCode());
+        ;
     }
 }

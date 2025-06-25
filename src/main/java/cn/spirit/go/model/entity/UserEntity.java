@@ -1,8 +1,15 @@
 package cn.spirit.go.model.entity;
 
 import cn.spirit.go.common.enums.UserStatus;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.LocalDateTime;
 
-public class UserEntity extends BaseEntity {
+public class UserEntity {
+
+  /**
+   * 用户账号
+   */
+  public String username;
 
   /**
    * 用户头像
@@ -25,14 +32,14 @@ public class UserEntity extends BaseEntity {
   public UserStatus status;
 
   /**
-   * 用户账号
-   */
-  public String username;
-
-
-  /**
    * 用户密码
    */
   public String password;
+
+  /**
+   * 创建时间
+   */
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+  public LocalDateTime createdAt;
 
 }

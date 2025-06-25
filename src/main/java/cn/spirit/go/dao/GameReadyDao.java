@@ -8,7 +8,6 @@ import cn.spirit.go.config.AppContext;
 import cn.spirit.go.model.dto.SearchGameDTO;
 import cn.spirit.go.model.entity.GameReadyEntity;
 import io.vertx.core.Future;
-import io.vertx.mysqlclient.MySQLClient;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.SqlResult;
 import io.vertx.sqlclient.Tuple;
@@ -20,7 +19,6 @@ public class GameReadyDao {
 
     private GameReadyEntity mapping(Row row) {
         GameReadyEntity entity = new GameReadyEntity();
-        entity.id = row.getInteger("id");
         entity.name = row.getString("name");
         entity.code = row.getString("code");
         entity.status = GameStatus.valueOf(row.getString("status"));
@@ -29,18 +27,18 @@ public class GameReadyDao {
         entity.mode = GameMode.valueOf(row.getString("mode"));
         entity.duration = row.getInteger("duration");
         entity.stepDuration = row.getInteger("step_duration");
-        entity.userId = row.getInteger("user_id");
+        entity.username = row.getString("username");
         entity.score = row.getInteger("score");
         return entity;
     }
 
-    public Future<List<SearchGameDTO>> searchPage(String name, GameMode mode, GameType type, Integer userId) {
-        String sql = "SELECT g.*, u.username, u.nickname FROM (SELECT * FROM t_game_ready WHERE status = ?";
+    public Future<List<SearchGameDTO>> searchPage(String name, GameMode mode, GameType type, String username) {
+        String sql = "SELECT g.*, u.nickname FROM (SELECT * FROM t_game_ready WHERE status = ?";
         Tuple tuple = Tuple.of(GameStatus.READY);
 
-        if (null != userId) {
-            sql += " AND user_id != ?";
-            tuple.addInteger(userId);
+        if (StringUtils.isNotBlank(username)) {
+            sql += " AND username != ?";
+            tuple.addString(username);
         }
         if (StringUtils.isNotBlank(name)) {
             sql += " AND `name` LIKE ?";
@@ -55,7 +53,7 @@ public class GameReadyDao {
             tuple.addValue(type);
         }
 
-        sql = sql + " ORDER BY RAND()  LIMIT 10 ) g LEFT JOIN t_user u ON u.id = g.user_id";
+        sql = sql + " ORDER BY RAND()  LIMIT 10 ) g LEFT JOIN t_user u ON u.username = g.username";
 
         return AppContext.SQL_POOL.preparedQuery(sql)
                 .collecting(Collectors.mapping(row -> {
@@ -100,11 +98,11 @@ public class GameReadyDao {
     }
 
 
-    public Future<Long> insert(GameReadyEntity entity) {
-        return AppContext.SQL_POOL.preparedQuery("INSERT INTO `t_game_ready` (name, code, board_size, type, mode, duration, step_duration, user_id, status, score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    public Future<String> insert(GameReadyEntity entity) {
+        return AppContext.SQL_POOL.preparedQuery("INSERT INTO `t_game_ready` (name, code, board_size, type, mode, duration, step_duration, username, status, score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
                  .collecting(Collector.of(() -> null, (v, row) -> {}, (a, b) -> null))
-                .execute(Tuple.of(entity.name, entity.code, entity.boardSize, entity.type, entity.mode, entity.duration, entity.stepDuration, entity.userId, entity.status, entity.score))
-                 .map(row -> row.property(MySQLClient.LAST_INSERTED_ID));
+                .execute(Tuple.of(entity.name, entity.code, entity.boardSize, entity.type, entity.mode, entity.duration, entity.stepDuration, entity.username, entity.status, entity.score))
+                 .map(row -> entity.code);
     }
 
 }

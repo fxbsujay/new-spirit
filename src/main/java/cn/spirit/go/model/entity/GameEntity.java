@@ -5,7 +5,7 @@ import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 import java.time.LocalDateTime;
 
-public class GameEntity extends BaseEntity {
+public class GameEntity {
 
   /**
    * 编号
@@ -43,7 +43,7 @@ public class GameEntity extends BaseEntity {
   public LocalDateTime startTime;
 
   /**
-   * 开始时间
+   * 结束时间
    */
   public LocalDateTime endTime;
 
@@ -60,10 +60,10 @@ public class GameEntity extends BaseEntity {
   /**
    * 对手ID
    */
-  public Integer opponentId;
+  public String contender;
 
   /**
    * 所属人
    */
-  public Integer userId;
+  public String creator;
 }

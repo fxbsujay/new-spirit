@@ -21,6 +21,7 @@ public class Application extends VerticleBase {
 
     @Override
     public Future<?> start() {
+        log.info("Application starting...");
         DatabindCodec.mapper().registerModule(new JavaTimeModule());
 
         AppContext.init(vertx);

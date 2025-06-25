@@ -9,10 +9,10 @@ import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.common.util.SecurityUtils;
 import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.config.AppContext;
+import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.dto.SignDTO;
 import cn.spirit.go.model.entity.UserEntity;
 import cn.spirit.go.model.vo.SignInVO;
-import cn.spirit.go.service.UserService;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.ext.web.RoutingContext;
@@ -24,7 +24,7 @@ public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
-    private final UserService userService = AppContext.getBean(UserService.class);
+    private final UserDao userDao = AppContext.getBean(UserDao.class);
 
     /**
      * 登录
@@ -43,9 +43,9 @@ public class AuthController {
 
         Future<UserEntity> future;
         if (RegexUtils.matches(username, RegexUtils.EMAIL)) {
-            future = userService.selectByEmail(username);
+            future = userDao.selectByEmail(username);
         } else if (RegexUtils.matches(username, RegexUtils.USERNAME)) {
-            future = userService.selectByUsername(username);
+            future = userDao.selectByUsername(username);
         } else {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
@@ -66,7 +66,7 @@ public class AuthController {
                 return;
             }
 
-            RestContext.setLogged(ctx, user.id, username, user.nickname,  1200);
+            RestContext.setLogged(ctx, username, user.nickname,  1200);
 
             SignInVO vo = new SignInVO();
             vo.username = username;
@@ -93,7 +93,7 @@ public class AuthController {
             return;
         }
 
-        userService.selectByUsernameOrEmail(dto.username, dto.email).onSuccess(user -> {
+        userDao.selectByUsernameOrEmail(dto.username, dto.email).onSuccess(user -> {
             if (user != null) {
                 if (user.username.equals(dto.username)) {
                     RestContext.fail(ctx, RestStatus.USERNAME_IS_EXIST);
@@ -113,8 +113,8 @@ public class AuthController {
                     entity.nickname = dto.username;
                     entity.password = SecurityUtils.bCrypt(dto.password);
                     entity.status = UserStatus.NORMAL;
-                    userService.insert(entity).onSuccess(id -> {
-                        RestContext.success(ctx, null);
+                    userDao.insert(entity).onSuccess(username -> {
+                        RestContext.success(ctx, username);
                         AppContext.REDIS.del(List.of(key));
                     }).onFailure(e -> {
                         log.error(e.getMessage(), e.getCause());
@@ -123,9 +123,7 @@ public class AuthController {
                 } else {
                     RestContext.fail(ctx, RestStatus.SIGNUP_CODE_ERROR);
                 }
-            }).onFailure(e -> {
-                RestContext.fail(ctx, RestStatus.SIGNUP_CODE_INVALID);
-            });
+            }).onFailure(e -> RestContext.fail(ctx, RestStatus.SIGNUP_CODE_INVALID));
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
             RestContext.fail(ctx);
@@ -145,7 +143,7 @@ public class AuthController {
             return;
         }
 
-        userService.selectByUsernameOrEmail(dto.username, dto.email).onSuccess(user -> {
+        userDao.selectByUsernameOrEmail(dto.username, dto.email).onSuccess(user -> {
             if (user != null) {
                 if (user.username.equals(dto.username)) {
                     RestContext.fail(ctx, RestStatus.USERNAME_IS_EXIST);

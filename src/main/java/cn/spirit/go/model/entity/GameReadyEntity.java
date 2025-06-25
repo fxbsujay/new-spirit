@@ -4,17 +4,17 @@ import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameStatus;
 import cn.spirit.go.common.enums.GameType;
 
-public class GameReadyEntity extends BaseEntity {
-
-  /**
-   * 名称
-   */
-  public String name;
+public class GameReadyEntity {
 
   /**
    * 编号
    */
   public String code;
+
+  /**
+   * 名称
+   */
+  public String name;
 
   /**
    * 棋盘大小
@@ -54,6 +54,6 @@ public class GameReadyEntity extends BaseEntity {
   /**
    * 所属人
    */
-  public Integer userId;
+  public String username;
 
 }

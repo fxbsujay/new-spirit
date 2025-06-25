@@ -23,7 +23,7 @@ public class RouterConfig {
         sessionHandler.setSessionCookieName("session");
         router.route().handler(sessionHandler);
         router.route().handler(ctx -> {
-            // RestContext.setLogged(ctx, 1, "ceee", "134123", 100);
+            RestContext.setLogged(ctx, "admin", "adminAAA", 100);
             if (ctx.request().path().startsWith("/api/auth/")) {
                 log.info("Auth Request path: {}, remote addr: {}", ctx.request().path(), ctx.request().remoteAddress());
                 ctx.next();

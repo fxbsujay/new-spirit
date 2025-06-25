@@ -2,6 +2,7 @@ package cn.spirit.go.config;
 
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.GameReadyDao;
+import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.service.GameService;
 import cn.spirit.go.service.UserService;
 import io.vertx.core.Future;
@@ -85,13 +86,12 @@ public class AppContext {
 
         MAIL = MailClient.createShared(vertx, mailConfig);
 
+        addBean(new UserDao());
         addBean(new GameDao());
         addBean(new GameReadyDao());
         addBean(new UserService());
         addBean(new GameService());
     }
-
-
 
     public static Future<MailResult> sendMail(String subject, String to, String content, boolean html) {
         MailMessage message = new MailMessage()
