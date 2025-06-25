@@ -8,14 +8,18 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
-import io.vertx.core.json.jackson.DatabindCodec;
+import io.vertx.core.json.Json;
 import io.vertx.core.shareddata.Lock;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.function.Supplier;
 
 public class RestContext<P, T> {
+
+    private static final Logger log = LoggerFactory.getLogger(RestContext.class);
 
     private final RoutingContext ctx;
 
@@ -34,6 +38,16 @@ public class RestContext<P, T> {
 
     public Future<Lock> lock(String name) {
         return ctx.vertx().sharedData().getLockWithTimeout(name, 3000L);
+    }
+
+    public void lock(String name, Runnable runnable) {
+        ctx.vertx().sharedData().withLock(name,() -> {
+            runnable.run();
+            return Future.succeededFuture(name);
+        }).onFailure(e -> {
+            log.error("{}: {}", e.getMessage(), name);
+            fail(HttpResponseStatus.LOCKED);
+        });
     }
 
     public void withLock(String name,  Supplier<Future<T>> block) {
@@ -84,13 +98,9 @@ public class RestContext<P, T> {
     }
 
     private static void defaultResponse(RoutingContext ctx, RestResponse data) {
-        String json;
-        try {
-            json = DatabindCodec.mapper().writeValueAsString(data);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        ctx.response().putHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.APPLICATION_JSON + ";charset=utf-8").end(json);
+        ctx.response()
+                .putHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.APPLICATION_JSON + ";charset=utf-8")
+                .end(Json.encode(data));
     }
 
     private static class RestResponse {

@@ -39,24 +39,14 @@ public class GameService {
 
     public void joinGame(RestContext<String, Boolean> ctx) {
         String code = ctx.body();
-        ctx.lock("GAME:" + code).onComplete(res -> {
-            if (res.succeeded()) {
-                log.info("拿到锁了");
-                res.result().release();
-                log.info("释放锁");
-            } else {
-                log.info("没有拿到锁了");
-            }
-        });
-
-        ctx.getContext().vertx().sharedData().withLock("GAME:" + code, () -> {
-            log.info("开始执行----");
-            ctx.success(true);
-            return Future.succeededFuture();
-        });
-
         gameReadyDao.selectOneByCode(code).onSuccess(game -> {
+            if (GameStatus.READY != game.status) {
+                ctx.fail(RestStatus.GAME_STARTED);
+                return;
+            }
+            ctx.lock("GAME:" + code, () -> {
 
+            });
         }).onFailure(e -> {
             log.error(e.getMessage(), e);
             ctx.fail(RestStatus.GAME_NOT_EXIST);

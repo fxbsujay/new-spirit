@@ -2,6 +2,8 @@ package cn.spirit.go.common.enums;
 
 public enum RestStatus {
 
+    // ===================== 账户相关 =====================
+
     EMAIL_IS_EXIST(10001, "邮箱已被注册"),
 
     USERNAME_IS_EXIST(10002, "用户名已被注册"),
@@ -16,9 +18,13 @@ public enum RestStatus {
 
     SIGNUP_CODE_ERROR(10007, "验证码错误"),
 
+    // ===================== 游戏相关 =====================
+
     GAME_CREATED(20001, "已创建对局"),
 
     GAME_NOT_EXIST(20001, "对局不存在"),
+
+    GAME_STARTED(20002, "对局已开始"),
     ;
 
     /**
