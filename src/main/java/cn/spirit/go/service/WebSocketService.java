@@ -1,5 +1,6 @@
 package cn.spirit.go.service;
 
+import cn.spirit.go.common.RestContext;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.RoutingContext;
@@ -19,7 +20,7 @@ public class WebSocketService {
     public void routerHandle(RoutingContext ctx) {
         ctx.request().toWebSocket().onSuccess(ws -> {
             // WebSocket 连接建立成功
-            log.info("WebSocket connection established");
+            log.info("WebSocket connection established: {}", RestContext.sessionUser(ctx).username);
             ws.textMessageHandler(text -> {
                 log.info("WebSocket text message: {}", text);
                 if (text.equals("end")) {
@@ -47,4 +48,5 @@ public class WebSocketService {
             });
         });
     }
+
 }

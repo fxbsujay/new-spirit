@@ -35,7 +35,7 @@ public class RouterConfig {
         sessionHandler.setSessionCookieName("session");
         router.route().handler(sessionHandler);
         router.route().handler(ctx -> {
-            RestContext.setLogged(ctx, "admin", "adminAAA", 100);
+           // RestContext.setLogged(ctx, "admin", "adminAAA", 100);
             if (ctx.request().path().startsWith("/api/auth/")) {
                 log.info("Auth Request path: {}, remote addr: {}", ctx.request().path(), ctx.request().remoteAddress());
                 ctx.next();
@@ -52,9 +52,8 @@ public class RouterConfig {
 
         authController(router);
 
-        router.get("/api/ws").handler(ctx -> {
-
-        });
+        WebSocketService webSocketService = new WebSocketService();
+        router.get("/api/ws").handler(webSocketService::routerHandle);
         return router;
     }
 

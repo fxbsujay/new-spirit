@@ -5,6 +5,7 @@ import cn.spirit.go.dao.GameReadyDao;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.service.GameService;
 import cn.spirit.go.service.UserService;
+import cn.spirit.go.socket.ClientManger;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.ext.mail.*;
@@ -85,6 +86,8 @@ public class AppContext {
                 .setPassword("JDUXN3hwa4GDLywg");
 
         MAIL = MailClient.createShared(vertx, mailConfig);
+
+        addBean(new ClientManger());
 
         addBean(new UserDao());
         addBean(new GameDao());

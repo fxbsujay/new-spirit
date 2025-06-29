@@ -183,6 +183,7 @@ public class RestContext<P, T> {
             session.put("score", score);
         }
 
+        dto.sessionId = session.id();
         dto.identity = identity;
         dto.username = username;
         dto.nickname = nickname;
