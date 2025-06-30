@@ -2,6 +2,7 @@ package cn.spirit.go.common;
 
 import cn.spirit.go.common.enums.RestStatus;
 import cn.spirit.go.common.enums.UserIdentity;
+import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.model.dto.SessionDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -167,7 +168,7 @@ public class RestContext<P, T> {
 
         String username = session.get("username");
         if (null == username) {
-            username = "匿名用户";
+            username = StringUtils.uuid();
             session.put("username", username);
         }
 

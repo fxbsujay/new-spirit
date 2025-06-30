@@ -2,6 +2,7 @@ package cn.spirit.go;
 
 import cn.spirit.go.config.AppContext;
 import cn.spirit.go.config.RouterConfig;
+import cn.spirit.go.socket.SocketHandler;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.vertx.core.Future;
 import io.vertx.core.VerticleBase;
@@ -28,7 +29,9 @@ public class Application extends VerticleBase {
         RouterConfig routerConfig = new RouterConfig();
         Router router = routerConfig.init(vertx);
 
-        return vertx.createHttpServer().requestHandler(router).listen(8899).onSuccess(http -> {
+        SocketHandler socketHandler = new SocketHandler();
+
+        return vertx.createHttpServer().webSocketHandler(socketHandler::handle).requestHandler(router).listen(8899).onSuccess(http -> {
             log.info("HTTP server started on port {}",  http.actualPort());
         });
     }

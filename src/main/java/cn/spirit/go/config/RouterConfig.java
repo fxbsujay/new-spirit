@@ -3,25 +3,13 @@ package cn.spirit.go.config;
 import cn.spirit.go.common.RestContext;
 import cn.spirit.go.controller.AuthController;
 import cn.spirit.go.controller.GameController;
-import cn.spirit.go.service.WebSocketService;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 public class RouterConfig {
 
@@ -52,10 +40,9 @@ public class RouterConfig {
 
         authController(router);
 
-        WebSocketService webSocketService = new WebSocketService();
-        router.get("/api/ws").handler(webSocketService::routerHandle);
         return router;
     }
+
 
     private void authController(Router router) {
 
