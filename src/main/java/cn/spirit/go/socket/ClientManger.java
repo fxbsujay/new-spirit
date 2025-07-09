@@ -50,32 +50,34 @@ public class ClientManger {
     }
 
     /**
-     * 关闭连接
-     * @param info 客户端 Session
-     * @param isClear 是否清空用户的所有连接，否则则只清空sessionID对应的连接
+     * 注销连接
+     * @param info      客户端 Session
      */
-    public void close(SessionDTO info, boolean isClear) {
-        if (isClear) {
-            List<String> sessionIds = clients.remove(info.username);
-            if (sessionIds != null) {
-                for (String sessionId : sessionIds) {
-                    WebSocket webSocket = sockets.remove(sessionId);
-                    if (webSocket != null) {
-                        webSocket.close();
-                    }
-                }
-            }
-            log.info("WebSocket clear successful with username  {}", info.username);
-        } else {
-            List<String> sessionIds = clients.get(info.username);
-            if (sessionIds != null && sockets.containsKey(info.sessionId)) {
-                WebSocket webSocket = sockets.remove(info.sessionId);
-                webSocket.close();
-                log.info("WebSocket close successful with session ID {}", info.sessionId);
+    public void cancel(SessionDTO info) {
+        List<String> sessionIds = clients.get(info.username);
+        if (sessionIds != null && sessionIds.contains(info.sessionId)) {
+            if (sessionIds.size() > 1) {
+                sessionIds.remove(info.sessionId);
             } else {
-                log.warn("WebSocket with session ID {} not found", info.sessionId);
+                clients.remove(info.username);
             }
+            log.info("WebSocket cancel successful with session ID {}", info.sessionId);
+            sockets.remove(info.sessionId);
+        } else {
+            log.warn("WebSocket with session ID {} not found", info.sessionId);
         }
+    }
+
+    /**
+     * 关闭连接
+     * @param info      客户端 Session
+     */
+    public void close(SessionDTO info) {
+        WebSocket webSocket = sockets.get(info.sessionId);
+        if (webSocket != null) {
+            webSocket.close();
+        }
+        log.info("WebSocket close successful with session ID {}", info.sessionId);
     }
 
     /**

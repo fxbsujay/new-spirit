@@ -29,9 +29,7 @@ public class Application extends VerticleBase {
         RouterConfig routerConfig = new RouterConfig();
         Router router = routerConfig.init(vertx);
 
-        SocketHandler socketHandler = new SocketHandler();
-
-        return vertx.createHttpServer().webSocketHandler(socketHandler::handle).requestHandler(router).listen(8899).onSuccess(http -> {
+        return vertx.createHttpServer().requestHandler(router).listen(8899).onSuccess(http -> {
             log.info("HTTP server started on port {}",  http.actualPort());
         });
     }

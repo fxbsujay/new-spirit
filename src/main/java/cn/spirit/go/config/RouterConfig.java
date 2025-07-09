@@ -3,6 +3,7 @@ package cn.spirit.go.config;
 import cn.spirit.go.common.RestContext;
 import cn.spirit.go.controller.AuthController;
 import cn.spirit.go.controller.GameController;
+import cn.spirit.go.socket.SocketHandler;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -38,6 +39,12 @@ public class RouterConfig {
             ctx.response().setStatusCode(500).end();
         });
 
+        SocketHandler socketHandler = new SocketHandler();
+
+        router.get("/api/ws").handler(ctx -> {
+            ctx.request().toWebSocket().onSuccess(ws -> socketHandler.handle(RestContext.sessionUser(ctx), ws));
+        });
+
         authController(router);
 
         return router;
@@ -45,7 +52,6 @@ public class RouterConfig {
 
 
     private void authController(Router router) {
-
         AuthController authController = new AuthController();
         GameController gameController = new GameController();
 

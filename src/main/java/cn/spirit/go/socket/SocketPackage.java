@@ -2,13 +2,13 @@ package cn.spirit.go.socket;
 
 public class SocketPackage<T> {
 
-    public Integer type;
+    public PackageType type;
 
     public T data;
 
     public String sender;
 
-    public Long timestamp;
+    public Long timestamp = System.currentTimeMillis();
 
     @Override
     public String toString() {
