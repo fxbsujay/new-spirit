@@ -1,0 +1,86 @@
+@import "@/assets/css/variable.less";
+
+.content-box {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.card {
+  position: relative;
+  background-color: #fff;
+  box-shadow: rgba(0, 0, 0, 0.05) 0 1.25rem 1.6875rem 0;
+  border-radius: 5px;
+  width: 100%;
+  max-width: 400px;
+  padding: 2rem 2.5rem;
+}
+
+.form-wrap {
+  transition: transform 300ms, box-shadow 300ms;
+  z-index: 1;
+
+  .title {
+    font-weight: 500;
+    font-size: 2.5rem;
+    color: @titleColor;
+    margin-bottom: 3rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  button {
+    margin: 1rem 0 10px 0;
+  }
+
+  form {
+    position: relative;
+    z-index: 3;
+  }
+
+  .form-help {
+    font-size: 12px;
+    color: @labelColor;
+    margin-top: 0.25rem;
+  }
+
+  .code-help {
+    cursor: pointer;
+    color: #1b78d0;
+  }
+}
+
+.password-complexity {
+  margin-top: -1rem;
+}
+.password-complexity-meter {
+  display: flex;
+  grid-gap: .25rem;
+  height: .4rem;
+  margin-top: 1rem;
+
+  & > span {
+    background-color: gray;
+    width: 25%;
+    &.action {
+      background-color: green;
+    }
+  }
+}
+
+
+li {
+  color: @titleColor;
+  margin: 1em 0;
+  list-style: inside decimal;
+
+  p {
+    display: inline;
+    color: #4D4D4D;
+  }
+}
+

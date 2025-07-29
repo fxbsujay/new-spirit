@@ -1,0 +1,310 @@
+@import "@/assets/css/variable.less";
+
+@gap: 1rem;
+@textColor: #545050;
+.main-container {
+  max-width: 1560px;
+  margin: auto;
+  display: flex;
+  height: 100%;
+  gap: @gap;
+  .side {
+    flex: 1;
+    display: flex;
+    width: 0;
+    flex-direction: column;
+  }
+  .A {
+    height: 100%;
+    width: 42.5vw;
+    background-color: #67c23a;
+  }
+  .controller-side {
+   justify-content: center;
+  }
+  .board {
+  }
+}
+
+.game-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+
+  .mode-icon {
+    height: auto;
+    width: 46px;
+  }
+
+  .info {
+    font-size: 14px;
+    color: @textColor;
+    flex: 1;
+    padding: 0 4px;
+  }
+}
+
+.player {
+  color: @textColor;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+
+  .player-icon {
+    width: 20px;
+    height: auto;
+  }
+
+  .player-name {
+    margin: 0 4px;
+    flex: 1;
+  }
+}
+
+.chat-wrap {
+  margin-top: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+
+  .header {
+    color: @textColor;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(84, 80, 80, 0.1);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .message-box {
+    flex: 1;
+    .message-item {
+      display: flex;
+      margin-bottom: 1rem;
+      --color: rgba(238, 238, 238, 0.6);
+
+      .info {
+        margin-left: -4px;
+        flex: 1;
+        max-width: calc(100% - 4rem);
+      }
+      .avatar {
+        width: 2rem;
+        height: 2rem;
+        margin-top: .5rem;
+      }
+      .username {
+        margin-left: 16px;
+        font-size: 12px;
+        color: rgb(117, 115, 115);
+      }
+
+      .content {
+        display: flex;
+        align-items: center;
+        margin-top: 2px;
+        .text {
+          word-wrap: break-word;
+          word-break: break-all;
+          overflow-wrap: break-word;
+          white-space: normal;
+          display: inline-block;
+          font-size: 14px;
+          padding: 6px 10px;
+          border-radius: 2px;
+          background-color: var(--color);
+          max-width: 100%;
+        }
+
+        .tag {
+          display: inline-block;
+          width: 0;
+          height: 0;
+          margin-top: -2px;
+          border: 8px solid;
+          border-color: transparent var(--color) transparent transparent;
+        }
+      }
+
+      &.receive {
+        flex-direction: row-reverse;
+        .username {
+          text-align: right;
+          margin-left: 0;
+          margin-right: 16px;
+        }
+        .info {
+          margin-left: 0;
+          margin-right: -4px;
+        }
+
+        .content {
+          flex-direction: row-reverse;
+          .tag {
+            border-color: transparent transparent transparent  var(--color);
+          }
+        }
+      }
+    }
+  }
+
+  .send-input {
+    margin-top: 8px;
+    padding: 4px;
+    background-color: #fff;
+    display: flex;
+    .input {
+      height: 2rem;
+      padding: 0 6px;
+      flex: 1;
+      outline: none;
+      border: none;
+      background: #F7F7F7;
+    }
+
+    .icon-box {
+      background-color: @titleColor;
+      cursor: pointer;
+      width: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        background-color: @actionButtonColor;
+      }
+    }
+  }
+}
+
+
+.game-time {
+  display: flex;
+  align-items: center;
+
+  .time {
+    padding: 8px 12px;
+    font-size: 24px;
+    letter-spacing: 3px;
+    font-weight: bold;
+    background-color: #fff;
+    margin-right: auto;
+  }
+
+  .icon-box {
+    background-color: @titleColor;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    margin-left: 4px;
+
+    &:hover {
+      background-color: @actionButtonColor;
+    }
+
+    .icon {
+      fill: #fff;
+    }
+  }
+}
+.time-progress {
+  height: 3px;
+  width: 100%;
+  background-color: #6DCC00;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  background-color: #fff;
+  .avatar {
+    width: 25px;
+    height: 25px;
+  }
+  .username {
+    font-size: 14px;
+    color: #222B45;
+    font-weight: bold;
+    margin-right: auto;
+    margin-left: 4px;
+  }
+  .source-label {
+    color: rgba(172, 177, 192, 1);
+    font-size: 12px;
+  }
+  .source-value {
+    margin-left: 4px;
+    font-weight: bold;
+    font-size: 12px;
+  }
+}
+
+.controller {
+  margin: 1rem 0;
+  background-color: #fff;
+
+  .buttons {
+    display: flex;
+    text-align: center;
+    align-items: center;
+    border-bottom: 1px solid rgba(204, 204, 204, 0.53);
+    .btn {
+      cursor: pointer;
+      height: 33px;
+      flex: 1;
+      padding: 4px 0;
+
+      &:hover {
+        background-color: #16BA16;
+        .icon {
+          fill: #fff;
+        }
+      }
+
+      .icon {
+        fill: #16BA16;
+        width: 25px;
+        height: 25px;
+      }
+    }
+  }
+}
+
+.step-wrap {
+  height: 150px;
+  overflow: auto;
+  font-size: 14px;
+  color: @labelColor;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  .step {
+    display: flex;
+
+    .number {
+      text-align: center;
+      width: 3rem;
+      background-color: #F7F6F5;
+    }
+    .pos {
+      padding-inline-start: 1rem;
+      flex: 1;
+
+      &:hover {
+        cursor: pointer;
+        background-color: #D0E4F5;
+      }
+    }
+  }
+}
+.card {
+  padding: 12px;
+  background-color: #fff;
+}

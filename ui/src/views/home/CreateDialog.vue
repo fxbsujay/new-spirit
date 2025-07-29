@@ -1,0 +1,209 @@
+<script setup>
+
+import Slider from '@/components/slider/index.vue'
+import Dialog from '@/components/dialog/index.vue'
+import { reactive, ref } from 'vue'
+
+const visible = ref(false)
+
+const ModeConstant = [
+  { label: '休闲', value: 'CASUAL' },
+  { label: '排放', value: 'RANK' },
+]
+
+const TypeConstant = [
+  { label: '实时棋局', value: 'SHORT' },
+  { label: '通讯棋', value: 'LONG' },
+  { label: '无限制', value: 'NONE' },
+]
+
+const BoardSizeConstant = [
+  { label: '9x9', value: 9 },
+  { label: '13x13', value: 13 },
+  { label: '19x19', value: 19 },
+  { label: '21x21', value: 21 },
+  { label: '25x25', value: 25 },
+]
+
+const formState = reactive({
+  name: '',
+  boardSize: 21,
+  type: 'SHORT',
+  mode: 'CASUAL',
+  duration: 10,
+  stepDuration: 0
+})
+
+const open = () => {
+  visible.value = true
+}
+
+const close = () => {
+  visible.value = false
+  Object.assign(formState, {
+    name: '',
+    boardSize: 21,
+    type: 'SHORT',
+    mode: 'CASUAL',
+    duration: 10,
+    stepDuration: 0
+  })
+}
+
+const submitHandle = () => {
+
+}
+
+defineExpose({ open, close })
+
+</script>
+
+<template>
+  <Dialog :visible="visible" @close="close">
+    <div class="create-game-dialog">
+      <div class="header">
+        <h2 class="title">创建对局</h2>
+      </div>
+
+      <form class="form" @submit.prevent="submitHandle">
+        <div class="form-group">
+          <div class="float-input-wrap">
+            <input class="input" required v-model="formState.name" placeholder=" "/>
+            <label class="label" >
+              对局名称
+            </label>
+          </div>
+        </div>
+        <div class="row input-row">
+          <div class="form-group col">
+            <label class="form-label" >
+              时间限制
+            </label>
+            <select v-model="formState.type" class="select">
+              <option v-for="item in TypeConstant" :value="item.value">{{ item.label }}</option>
+            </select>
+          </div>
+          <div class="form-group col">
+            <label class="form-label" >
+              棋盘尺寸
+            </label>
+            <select v-model="formState.boardSize" class="select">
+              <option v-for="item in BoardSizeConstant" :value="item.value">{{ item.label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" >
+            各方限时（分钟）：{{ formState.duration }}
+          </label>
+          <Slider v-model="formState.duration" :step="1" :min="0" :max="100"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" >
+            每步加时（分钟）：{{ formState.stepDuration }}
+          </label>
+          <Slider v-model="formState.stepDuration" :step="1" :min="0" :max="100"/>
+        </div>
+
+        <div class="form-group">
+          <div class="row toggles">
+            <button class=" button" type="button" v-for="item in ModeConstant" :class="`${formState.mode === item.value ? 'active' : ''}`" @click="formState.mode = item.value">
+              {{ item.label }}
+            </button>
+          </div>
+        </div>
+
+        <div class="form-footer">
+          <button class="button border" @click="close" >取消</button>
+          <button class="button primary submit-btn" type="submit" >创建</button>
+        </div>
+      </form>
+    </div>
+  </Dialog>
+</template>
+
+<style scoped lang="less">
+@import "@/assets/css/variable.less";
+
+.create-game-dialog {
+  padding: 2rem 2rem 1rem 2rem;
+  position: relative;
+  width: 600px;
+  max-width: 100%;
+
+  .header {
+    .close-icon {
+      height: calc(1.2em + 8px);
+      padding: 4px;
+      cursor: pointer;
+      display: inline;
+      position: absolute;
+      right: 0;
+      top: 0;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+      }
+    }
+
+    .title {
+      color: @titleColor;
+    }
+  }
+
+  .form {
+    margin: 1rem 0;
+  }
+
+  .form-label {
+    display: block;
+  }
+
+  .input-row {
+    gap: 1rem;
+  }
+
+  .toggles {
+    margin: .5rem 0;
+    justify-content: center;
+    .button {
+      font-weight: normal;
+      border-radius: 0;
+      background-color: #F5F5F5;
+      width: 180px;
+      max-width: 50%;
+      height: 2.6rem;
+
+
+      &:not(.active):hover {
+        background-color: #e6e5e5;
+      }
+    }
+
+    .active {
+      box-shadow: 0 2px 4px  rgba(0, 0, 0, 0.25);
+      color: #fff;
+      background-color: hsl(88, 62%, 37%);
+    }
+  }
+
+  .form-footer {
+    margin-top: 4rem;
+    border-top: 1px solid #ddd;
+    padding-top: 2rem;
+    display: flex;
+    gap: 1rem;
+
+    .submit-btn {
+      background-color: #4A4D4F;
+    }
+
+    .button {
+      min-width: 0;
+      border-radius: 2px;
+    }
+  }
+
+}
+</style>
