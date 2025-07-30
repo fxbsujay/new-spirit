@@ -8,6 +8,7 @@ import io.vertx.core.Future;
 import io.vertx.core.VerticleBase;
 import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.launcher.application.VertxApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,10 +27,11 @@ public class Application extends VerticleBase {
         DatabindCodec.mapper().registerModule(new JavaTimeModule());
 
         AppContext.init(vertx);
-        RouterConfig routerConfig = new RouterConfig();
-        Router router = routerConfig.init(vertx);
 
-        return vertx.createHttpServer().requestHandler(router).listen(8899).onSuccess(http -> {
+        LocalSessionStore sessionStore = LocalSessionStore.create(vertx);
+        Router router = RouterConfig.init(vertx, sessionStore);
+
+        return vertx.createHttpServer().requestHandler(router).webSocketHandler(new SocketHandler(sessionStore)).listen(8899).onSuccess(http -> {
             log.info("HTTP server started on port {}",  http.actualPort());
         });
     }

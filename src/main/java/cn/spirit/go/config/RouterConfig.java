@@ -3,12 +3,12 @@ package cn.spirit.go.config;
 import cn.spirit.go.common.RestContext;
 import cn.spirit.go.controller.AuthController;
 import cn.spirit.go.controller.GameController;
-import cn.spirit.go.socket.SocketHandler;
 import io.vertx.core.Vertx;
+import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.SessionHandler;
-import io.vertx.ext.web.sstore.LocalSessionStore;
+import io.vertx.ext.web.sstore.SessionStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,15 +16,16 @@ public class RouterConfig {
 
     private static final Logger log = LoggerFactory.getLogger(RouterConfig.class);
 
-    public Router init(Vertx vertx) {
+    public static Router init(Vertx vertx, SessionStore sessionStore) {
         Router router = Router.router(vertx);
 
         router.route().handler(BodyHandler.create());
-        SessionHandler sessionHandler = SessionHandler.create(LocalSessionStore.create(vertx));
-        sessionHandler.setSessionCookieName("session");
-        router.route().handler(sessionHandler);
+        router.route().handler(SessionHandler.create(sessionStore).setSessionCookieName("session"));
+
         router.route().handler(ctx -> {
-           // RestContext.setLogged(ctx, "admin", "adminAAA", 100);
+            SocketAddress socketAddress = ctx.request().remoteAddress();
+            log.info("socketAddress: {}", socketAddress);
+            // RestContext.setLogged(ctx, "admin", "adminAAA", 100);
             if (ctx.request().path().startsWith("/api/auth/")) {
                 log.info("Auth Request path: {}, remote addr: {}", ctx.request().path(), ctx.request().remoteAddress());
                 ctx.next();
@@ -39,19 +40,13 @@ public class RouterConfig {
             ctx.response().setStatusCode(500).end();
         });
 
-        SocketHandler socketHandler = new SocketHandler();
-
-        router.get("/api/ws").handler(ctx -> {
-            ctx.request().toWebSocket().onSuccess(ws -> socketHandler.handle(RestContext.sessionUser(ctx), ws));
-        });
-
         authController(router);
 
         return router;
     }
 
 
-    private void authController(Router router) {
+    private static void authController(Router router) {
         AuthController authController = new AuthController();
         GameController gameController = new GameController();
 

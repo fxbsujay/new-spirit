@@ -19,85 +19,63 @@ public class ClientManger {
     private static final Logger log = LoggerFactory.getLogger(ClientManger.class);
 
     /**
-     * 用户与Session
-     * <用户名, SessionId>
-     */
-    private final Map<String, List<String>> clients = new ConcurrentHashMap<>();
-
-    /**
      * 客户端
      * <sessionId, socket>
      */
     private final Map<String, WebSocket> sockets = new ConcurrentHashMap<>();
 
-
     /**
      * 创建连接
-     * @param info      客户端 Session
+     * @param sessionId 客户端 Session
      * @param socket    客户端
      * @return          是否注册成功
      */
-    public boolean connect(SessionDTO info, WebSocket socket) {
-        List<String> sessionIds = clients.computeIfAbsent(info.username, k -> new ArrayList<>());
-        if (sessionIds.contains(info.sessionId)) {
-            log.warn("WebSocket with session ID {} has already been registered", info.sessionId);
+    public boolean connect(String sessionId, WebSocket socket) {
+        if (sockets.containsKey(sessionId)) {
             return false;
         }
-        log.info("WebSocket registration successful with session ID {}", info.sessionId);
-        sessionIds.add(info.sessionId);
-        sockets.put(info.sessionId, socket);
+        sockets.put(sessionId, socket);
         return true;
     }
 
     /**
      * 注销连接
-     * @param info      客户端 Session
+     * @param sessionId 客户端 Session
      */
-    public void cancel(SessionDTO info) {
-        List<String> sessionIds = clients.get(info.username);
-        if (sessionIds != null && sessionIds.contains(info.sessionId)) {
-            if (sessionIds.size() > 1) {
-                sessionIds.remove(info.sessionId);
-            } else {
-                clients.remove(info.username);
-            }
-            log.info("WebSocket cancel successful with session ID {}", info.sessionId);
-            sockets.remove(info.sessionId);
+    public void cancel(String sessionId) {
+        WebSocket s = sockets.remove(sessionId);
+        if (s != null) {
+            log.info("WebSocket cancel successful with session ID {}",sessionId);
         } else {
-            log.warn("WebSocket with session ID {} not found", info.sessionId);
+            log.warn("WebSocket with session ID {} not found", sessionId);
         }
     }
 
     /**
      * 关闭连接
-     * @param info      客户端 Session
+     * @param sessionId 客户端 Session
      */
-    public void close(SessionDTO info) {
-        WebSocket webSocket = sockets.get(info.sessionId);
+    public void close(String sessionId) {
+        WebSocket webSocket = sockets.get(sessionId);
         if (webSocket != null) {
             webSocket.close();
         }
-        log.info("WebSocket close successful with session ID {}", info.sessionId);
+        log.info("WebSocket close successful with session ID {}",sessionId);
     }
 
     /**
      * 发送消息
      *
-     * @param pack      消息包
-     * @param receivers 接收方
+     * @param pack          消息包
+     * @param sessionIds    接收方
      */
-    public void send(SocketPackage<?> pack, String ...receivers) {
+    public void send(SocketPackage<?> pack, String ...sessionIds) {
         String msg = Json.encode(pack);
-        log.info("Sending message to {}, package: {}", Arrays.toString(receivers), msg);
-        for (String receiver : receivers) {
-            List<String> sessionIds = clients.get(receiver);
-            if (sessionIds != null) {
-                for (String sessionId : sessionIds) {
-                    WebSocket webSocket = sockets.get(sessionId);
-                    if (webSocket != null) {
-                        webSocket.writeFinalTextFrame(msg);
-                    }
-                }
+        log.info("Sending message to {}, package: {}", Arrays.toString(sessionIds), msg);
+        for (String sessionId : sessionIds) {
+            WebSocket webSocket = sockets.get(sessionId);
+            if (null != webSocket) {
+                webSocket.writeFinalTextFrame(msg);
             }
         }
     }

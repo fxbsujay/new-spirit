@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 public class GameService {
 
-    private static final Logger log = LoggerFactory.getLogger(GameService.class);
+    private final Logger log = LoggerFactory.getLogger(GameService.class);
 
     private Integer dailyGameCount = 0;
 
