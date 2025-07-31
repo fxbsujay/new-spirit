@@ -1,13 +1,11 @@
-package cn.spirit.go.socket;
+package cn.spirit.go.web.socket;
 
-import cn.spirit.go.model.dto.SessionDTO;
 import io.vertx.core.http.WebSocket;
 import io.vertx.core.json.Json;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.ArrayList;
+
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

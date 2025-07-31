@@ -1,11 +1,11 @@
-package cn.spirit.go.config;
+package cn.spirit.go.web.config;
 
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.GameReadyDao;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.service.GameService;
 import cn.spirit.go.service.UserService;
-import cn.spirit.go.socket.ClientManger;
+import cn.spirit.go.web.socket.ClientManger;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.ext.mail.*;

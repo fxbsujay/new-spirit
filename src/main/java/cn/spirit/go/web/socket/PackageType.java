@@ -1,4 +1,4 @@
-package cn.spirit.go.socket;
+package cn.spirit.go.web.socket;
 
 public enum PackageType {
 

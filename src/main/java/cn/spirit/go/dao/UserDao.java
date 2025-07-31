@@ -1,10 +1,9 @@
 package cn.spirit.go.dao;
 
 import cn.spirit.go.common.enums.UserStatus;
-import cn.spirit.go.config.AppContext;
+import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.model.entity.UserEntity;
 import io.vertx.core.Future;
-import io.vertx.mysqlclient.MySQLClient;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.Tuple;
 import java.util.stream.Collector;

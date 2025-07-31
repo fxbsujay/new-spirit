@@ -4,7 +4,7 @@ import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameStatus;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.util.StringUtils;
-import cn.spirit.go.config.AppContext;
+import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.model.dto.SearchGameDTO;
 import cn.spirit.go.model.entity.GameReadyEntity;
 import io.vertx.core.Future;

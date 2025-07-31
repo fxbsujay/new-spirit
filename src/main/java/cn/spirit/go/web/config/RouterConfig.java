@@ -1,14 +1,13 @@
-package cn.spirit.go.config;
+package cn.spirit.go.web.config;
 
 import cn.spirit.go.common.RestContext;
 import cn.spirit.go.controller.AuthController;
 import cn.spirit.go.controller.GameController;
+import cn.spirit.go.web.RedisSession;
 import io.vertx.core.Vertx;
 import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.web.handler.SessionHandler;
-import io.vertx.ext.web.sstore.SessionStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,11 +15,10 @@ public class RouterConfig {
 
     private static final Logger log = LoggerFactory.getLogger(RouterConfig.class);
 
-    public static Router init(Vertx vertx, SessionStore sessionStore) {
+    public static Router init(Vertx vertx, RedisSession session) {
         Router router = Router.router(vertx);
-
         router.route().handler(BodyHandler.create());
-        router.route().handler(SessionHandler.create(sessionStore).setSessionCookieName("session"));
+        router.route().handler(session);
 
         router.route().handler(ctx -> {
             SocketAddress socketAddress = ctx.request().remoteAddress();
@@ -41,15 +39,12 @@ public class RouterConfig {
         });
 
         authController(router);
-
         return router;
     }
-
 
     private static void authController(Router router) {
         AuthController authController = new AuthController();
         GameController gameController = new GameController();
-
         router.get("/api/ping").handler(ctx -> {
             RestContext.success(ctx, true);
         });

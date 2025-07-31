@@ -3,7 +3,7 @@ package cn.spirit.go.service;
 import cn.spirit.go.common.RestContext;
 import cn.spirit.go.common.enums.*;
 import cn.spirit.go.common.util.DateUtils;
-import cn.spirit.go.config.AppContext;
+import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.dao.GameReadyDao;
 import cn.spirit.go.model.dto.GameDTO;
 import cn.spirit.go.model.dto.SessionDTO;

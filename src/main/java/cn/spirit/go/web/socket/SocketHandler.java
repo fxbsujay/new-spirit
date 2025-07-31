@@ -1,9 +1,9 @@
-package cn.spirit.go.socket;
+package cn.spirit.go.web.socket;
 
 import cn.spirit.go.common.util.StringUtils;
-import cn.spirit.go.config.AppContext;
+import cn.spirit.go.web.RedisSession;
+import cn.spirit.go.web.config.AppContext;
 import io.vertx.core.Handler;
-import io.vertx.core.http.Http2Settings;
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.ext.web.sstore.SessionStore;
 import org.slf4j.Logger;
@@ -13,12 +13,12 @@ public class SocketHandler implements Handler<ServerWebSocket> {
 
     private final Logger log = LoggerFactory.getLogger(SocketHandler.class);
 
-    private final SessionStore sessionStore;
+    private final RedisSession session;
 
     private final ClientManger clientManger = AppContext.getBean(ClientManger.class);
 
-    public SocketHandler(SessionStore sessionStore) {
-        this.sessionStore = sessionStore;
+    public SocketHandler(RedisSession session) {
+        this.session = session;
     }
 
     public void handle(ServerWebSocket ws) {
@@ -32,13 +32,14 @@ public class SocketHandler implements Handler<ServerWebSocket> {
             ws.close();
             return;
         }
-        sessionStore.get(sessionId).onSuccess(session -> {
+        session.get(sessionId).onSuccess(session -> {
+
 
         }).onFailure(event -> {
             log.error(event.getMessage());
             ws.close();
         });
-        
+
 //        if (clientManger.connect(session, ws)) {
 //            ws.textMessageHandler(text -> {
 //                SocketPackage<?> pck;

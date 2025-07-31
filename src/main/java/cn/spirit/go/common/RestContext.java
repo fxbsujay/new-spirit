@@ -4,7 +4,6 @@ import cn.spirit.go.common.enums.RestStatus;
 import cn.spirit.go.common.enums.UserIdentity;
 import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.model.dto.SessionDTO;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -15,7 +14,6 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.function.Supplier;
 
 public class RestContext<P, T> {
@@ -157,9 +155,12 @@ public class RestContext<P, T> {
     }
 
     public static SessionDTO sessionUser(RoutingContext ctx) {
-        SessionDTO dto = new SessionDTO();
         Session session = ctx.session();
+        return sessionUser(session);
+    }
 
+    public static SessionDTO sessionUser(Session session) {
+        SessionDTO dto = new SessionDTO();
         UserIdentity identity = session.get("identity");
         if (null == identity) {
             identity = UserIdentity.TOURIST;

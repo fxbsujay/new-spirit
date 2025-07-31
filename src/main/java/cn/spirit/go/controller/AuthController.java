@@ -8,7 +8,7 @@ import cn.spirit.go.common.util.RandomUtils;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.common.util.SecurityUtils;
 import cn.spirit.go.common.util.StringUtils;
-import cn.spirit.go.config.AppContext;
+import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.dto.SignDTO;
 import cn.spirit.go.model.entity.UserEntity;

@@ -3,10 +3,9 @@ package cn.spirit.go.dao;
 import cn.spirit.go.common.enums.ChessPiece;
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
-import cn.spirit.go.config.AppContext;
+import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.model.entity.GameEntity;
 import io.vertx.core.Future;
-import io.vertx.mysqlclient.MySQLClient;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.Tuple;
 

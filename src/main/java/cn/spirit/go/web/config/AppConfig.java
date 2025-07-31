@@ -1,4 +1,4 @@
-package cn.spirit.go.config;
+package cn.spirit.go.web.config;
 
 public class AppConfig {
 

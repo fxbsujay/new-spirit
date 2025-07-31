@@ -1,14 +1,14 @@
 package cn.spirit.go;
 
-import cn.spirit.go.config.AppContext;
-import cn.spirit.go.config.RouterConfig;
-import cn.spirit.go.socket.SocketHandler;
+import cn.spirit.go.web.RedisSession;
+import cn.spirit.go.web.config.AppContext;
+import cn.spirit.go.web.config.RouterConfig;
+import cn.spirit.go.web.socket.SocketHandler;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.vertx.core.Future;
 import io.vertx.core.VerticleBase;
 import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.launcher.application.VertxApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +28,14 @@ public class Application extends VerticleBase {
 
         AppContext.init(vertx);
 
-        LocalSessionStore sessionStore = LocalSessionStore.create(vertx);
-        Router router = RouterConfig.init(vertx, sessionStore);
+        RedisSession session = new RedisSession();
+        Router router = RouterConfig.init(vertx, session);
 
-        return vertx.createHttpServer().requestHandler(router).webSocketHandler(new SocketHandler(sessionStore)).listen(8899).onSuccess(http -> {
+        return vertx.createHttpServer()
+                .requestHandler(router)
+                .webSocketHandler(new SocketHandler(session))
+                .listen(8899)
+                .onSuccess(http -> {
             log.info("HTTP server started on port {}",  http.actualPort());
         });
     }

@@ -5,7 +5,7 @@ import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.common.util.StringUtils;
-import cn.spirit.go.config.AppContext;
+import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.model.dto.GameDTO;
 import cn.spirit.go.model.dto.SearchGameDTO;
 import cn.spirit.go.service.GameService;
