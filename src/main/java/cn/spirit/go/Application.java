@@ -18,12 +18,13 @@ public class Application extends VerticleBase {
     private static final Logger log = LoggerFactory.getLogger(Application.class);
 
     public static void main(String[] args) {
+        log.info("Application starting...");
         VertxApplication.main(new String[]{Application.class.getName()});
     }
 
     @Override
     public Future<?> start() {
-        log.info("Application starting...");
+
         DatabindCodec.mapper().registerModule(new JavaTimeModule());
 
         AppContext.init(vertx);
