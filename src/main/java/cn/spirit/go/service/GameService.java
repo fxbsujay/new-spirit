@@ -25,12 +25,12 @@ public class GameService {
     private final GameReadyDao gameReadyDao = AppContext.getBean(GameReadyDao.class);
 
     public void searchGame(RestContext<Void, List<SearchGameDTO>> ctx) {
-        SessionDTO session = ctx.sessionUser();
+
         gameReadyDao.searchPage(
                 ctx.params("name"),
                 GameMode.convert(ctx.params("mode")),
                 GameType.convert(ctx.params("type")),
-                UserIdentity.Logged == session.identity ? session.username : null
+                 null
         ).onSuccess(ctx::success).onFailure(e -> {
             log.error(e.getMessage(), e);
             ctx.fail();
@@ -62,7 +62,7 @@ public class GameService {
      */
     public void createGame(RestContext<GameDTO, Boolean> ctx) {
         GameDTO dto = ctx.body();
-        SessionDTO session = ctx.sessionUser();
+        SessionDTO session = null;
         gameReadyDao.selectCountByUsername(session.username).compose(size -> {
             if (size > 0) {
                 return Future.succeededFuture(null);

@@ -1,9 +1,7 @@
 package cn.spirit.go.common;
 
 import cn.spirit.go.common.enums.RestStatus;
-import cn.spirit.go.common.enums.UserIdentity;
-import cn.spirit.go.common.util.StringUtils;
-import cn.spirit.go.model.dto.SessionDTO;
+import cn.spirit.go.web.RedisSession;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -11,7 +9,6 @@ import io.vertx.core.Future;
 import io.vertx.core.json.Json;
 import io.vertx.core.shareddata.Lock;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.function.Supplier;
@@ -24,11 +21,14 @@ public class RestContext<P, T> {
 
     private P body;
 
+    private String sessionId;
+
     public RestContext(RoutingContext ctx, Class<P> cls) {
         this.ctx = ctx;
         if (cls != null) {
             body = body(cls);
         }
+        this.sessionId = RedisSession.getSessionId(ctx);
     }
 
     public RoutingContext getContext() {
@@ -70,6 +70,10 @@ public class RestContext<P, T> {
             body = ctx.body().asPojo(cls);
         }
         return body;
+    }
+
+    public String sessionId() {
+        return sessionId;
     }
 
     public void setBody(P param) {
@@ -143,57 +147,5 @@ public class RestContext<P, T> {
 
     public static void fail(RoutingContext ctx) {
         fail(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    public static void setLogged(RoutingContext ctx, String username, String nickname, Integer score) {
-        Session session = ctx.session();
-        session.put("identity", UserIdentity.Logged);
-        session.put("username", username);
-        session.put("nickname", nickname);
-        session.put("score", score);
-        session.put("time", System.currentTimeMillis());
-    }
-
-    public static SessionDTO sessionUser(RoutingContext ctx) {
-        Session session = ctx.session();
-        return sessionUser(session);
-    }
-
-    public static SessionDTO sessionUser(Session session) {
-        SessionDTO dto = new SessionDTO();
-        UserIdentity identity = session.get("identity");
-        if (null == identity) {
-            identity = UserIdentity.TOURIST;
-            session.put("identity", identity);
-        }
-
-        String username = session.get("username");
-        if (null == username) {
-            username = StringUtils.uuid();
-            session.put("username", username);
-        }
-
-        String nickname = session.get("nickname");
-        if (null == nickname) {
-            nickname = "匿名用户";
-            session.put("nickname", nickname);
-        }
-
-        Integer score = session.get("score");
-        if (null == score) {
-            score = 700;
-            session.put("score", score);
-        }
-
-        dto.sessionId = session.id();
-        dto.identity = identity;
-        dto.username = username;
-        dto.nickname = nickname;
-        dto.source = score;
-        return dto;
-    }
-
-    public SessionDTO sessionUser() {
-        return sessionUser(ctx);
     }
 }

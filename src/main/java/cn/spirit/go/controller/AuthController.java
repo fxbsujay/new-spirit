@@ -8,6 +8,7 @@ import cn.spirit.go.common.util.RandomUtils;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.common.util.SecurityUtils;
 import cn.spirit.go.common.util.StringUtils;
+import cn.spirit.go.web.RedisSession;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.dto.SignDTO;
@@ -66,14 +67,17 @@ public class AuthController {
                 return;
             }
 
-            RestContext.setLogged(ctx, username, user.nickname,  1200);
-
-            SignInVO vo = new SignInVO();
-            vo.username = username;
-            vo.nickname = user.nickname;
-            vo.avatar = user.avatar;
-            vo.email = user.email;
-            RestContext.success(ctx, vo);
+            RedisSession.logged(ctx, username).onSuccess(r -> {
+                SignInVO vo = new SignInVO();
+                vo.username = username;
+                vo.nickname = user.nickname;
+                vo.avatar = user.avatar;
+                vo.email = user.email;
+                RestContext.success(ctx, vo);
+            }).onFailure(e -> {
+                log.error(e.getMessage(), e.getCause());
+                RestContext.fail(ctx);
+            });
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
             RestContext.fail(ctx);

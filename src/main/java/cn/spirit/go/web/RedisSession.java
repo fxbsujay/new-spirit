@@ -31,75 +31,65 @@ public class RedisSession implements Handler<RoutingContext> {
     public void handle(RoutingContext ctx) {
         Cookie cookie = ctx.request().getCookie(COOKIE_NAME);
         if (cookie == null) {
-            cookie = Cookie.cookie(COOKIE_NAME, StringUtils.uuid());
-            cookie.setSameSite(CookieSameSite.STRICT);
-            cookie.setHttpOnly(true);
-            ctx.response().addCookie(cookie);
+           setCookie(ctx);
+        } else {
+            ctx.put(COOKIE_NAME, cookie.getValue());
         }
         ctx.next();
     }
 
-    /**
-     * 访客登录
-     */
-    public Future<Long> logged(RoutingContext ctx) {
-        return logged(ctx, null);
+    public static Cookie setCookie(RoutingContext ctx) {
+        Cookie cookie = Cookie.cookie(COOKIE_NAME, StringUtils.uuid());
+        cookie.setSameSite(CookieSameSite.STRICT);
+        cookie.setHttpOnly(true);
+        ctx.response().addCookie(cookie);
+        ctx.session().put(COOKIE_NAME, cookie.getValue());
+        ctx.put(COOKIE_NAME, cookie.getValue());
+        return cookie;
     }
 
     /**
      * 登录
      */
-    public Future<Long> logged(RoutingContext ctx, String username) {
+    public static Future<Long> logged(RoutingContext ctx, String username) {
         Cookie cookie = ctx.request().getCookie(COOKIE_NAME);
         if (cookie == null) {
-            return Future.failedFuture("Cookie not found");
+            cookie = setCookie(ctx);
         }
-        boolean isGuest = StringUtils.isEmpty(username);
-        String sessionId = cookie.getValue();
-        String key = AUTH_SESSION + sessionId;
-        return AppContext.REDIS.hset(List.of(key,
-                        "isGuest", Boolean.toString(isGuest),
-                        "username", isGuest ? sessionId : username,
-                        "ip", ctx.request().remoteAddress().hostAddress()))
-                .compose(r -> AppContext.REDIS.expire(List.of(key, AUTH_SESSION_EXPIRE)))
-                .map(Response::toLong);
+        String key = AUTH_SESSION + cookie.getValue();
+        String value = username + ";" + ctx.request().remoteAddress().hostAddress();
+        return AppContext.REDIS.setex(key, AUTH_SESSION_EXPIRE, value).map(Response::toLong);
     }
 
     /**
      * 退出
      */
-    public void logout(String sessionId) {
+    public static void logout(String sessionId) {
         AppContext.REDIS.del(List.of(AUTH_SESSION + sessionId));
+    }
+
+    public static String getSessionId(RoutingContext ctx) {
+        Cookie cookie = ctx.request().getCookie(COOKIE_NAME);
+        if (cookie == null) {
+            return ctx.get(COOKIE_NAME);
+        }
+        return cookie.getValue();
     }
 
     /**
      * 获取用户信息
      */
-    public Future<UserSession> get(String sessionId) {
-       return AppContext.REDIS.hgetall(AUTH_SESSION + sessionId).map(r -> {
-           UserSession userSession = new UserSession();
-           Response username = r.get("username");
-           if (username != null) {
-               userSession.username = username.toString();
-           }
-           Response isGuest = r.get("isGuest");
-           if (isGuest != null) {
-               userSession.isGuest = isGuest.toBoolean();
-           }
-           Response ip = r.get("ip");
-           if (ip != null) {
-               userSession.ip = ip.toString();
-           }
-           return userSession;
-       });
+    public static Future<UserSession> get(String sessionId) {
+        return AppContext.REDIS.get(AUTH_SESSION + sessionId).map(r -> {
+            UserSession userSession = new UserSession();
+            String[] value = r.toString().split(";");
+            userSession.username = value[0];
+            userSession.ip = value[1];
+            return userSession;
+        });
     }
 
     public static class UserSession {
-
-        /**
-         * 是不是游客
-         */
-        public Boolean isGuest;
 
         /**
          * 用户
@@ -114,8 +104,7 @@ public class RedisSession implements Handler<RoutingContext> {
         @Override
         public String toString() {
             return "UserSession{" +
-                    "isGuest=" + isGuest +
-                    ", username='" + username + '\'' +
+                    "username='" + username + '\'' +
                     ", ip='" + ip + '\'' +
                     '}';
         }
