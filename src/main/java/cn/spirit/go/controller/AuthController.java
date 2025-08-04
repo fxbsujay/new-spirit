@@ -67,7 +67,7 @@ public class AuthController {
                 return;
             }
 
-            RedisSession.logged(ctx, username).onSuccess(r -> {
+            RedisSession.logged(ctx, username).onSuccess(v -> {
                 SignInVO vo = new SignInVO();
                 vo.username = username;
                 vo.nickname = user.nickname;
@@ -109,23 +109,27 @@ public class AuthController {
 
             String key = RedisConstant.AUTH_CODE_SIGNUP + dto.email;
             AppContext.REDIS.get(key).onSuccess(v -> {
-                if (dto.code.equals(v.toString())) {
-                    UserEntity entity = new UserEntity();
-                    entity.avatar = "avatar";
-                    entity.username = dto.username;
-                    entity.email = dto.email;
-                    entity.nickname = dto.username;
-                    entity.password = SecurityUtils.bCrypt(dto.password);
-                    entity.status = UserStatus.NORMAL;
-                    userDao.insert(entity).onSuccess(username -> {
-                        RestContext.success(ctx, username);
-                        AppContext.REDIS.del(List.of(key));
-                    }).onFailure(e -> {
-                        log.error(e.getMessage(), e.getCause());
-                        RestContext.fail(ctx);
-                    });
+                if (null == v) {
+                    RestContext.fail(ctx, RestStatus.SIGNUP_CODE_INVALID);
                 } else {
-                    RestContext.fail(ctx, RestStatus.SIGNUP_CODE_ERROR);
+                    if (dto.code.equals(v.toString())) {
+                        UserEntity entity = new UserEntity();
+                        entity.avatar = "avatar";
+                        entity.username = dto.username;
+                        entity.email = dto.email;
+                        entity.nickname = dto.username;
+                        entity.password = SecurityUtils.bCrypt(dto.password);
+                        entity.status = UserStatus.NORMAL;
+                        userDao.insert(entity).onSuccess(username -> {
+                            RestContext.success(ctx, username);
+                            AppContext.REDIS.del(List.of(key));
+                        }).onFailure(e -> {
+                            log.error(e.getMessage(), e.getCause());
+                            RestContext.fail(ctx);
+                        });
+                    } else {
+                        RestContext.fail(ctx, RestStatus.SIGNUP_CODE_ERROR);
+                    }
                 }
             }).onFailure(e -> RestContext.fail(ctx, RestStatus.SIGNUP_CODE_INVALID));
         }).onFailure(e -> {

@@ -30,9 +30,7 @@ public class GameController {
      */
     public void createGame(RoutingContext context) {
         RestContext<GameDTO, Boolean> ctx = new RestContext<>(context, GameDTO.class);
-
         GameDTO dto = ctx.body();
-
         if (StringUtils.isBlank(dto.name) || dto.name.length() > 30 ||
                 null == dto.type || null == dto.mode || null == dto.boardSize) {
             ctx.fail(HttpResponseStatus.BAD_REQUEST);

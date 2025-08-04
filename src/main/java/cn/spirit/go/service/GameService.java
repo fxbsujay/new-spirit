@@ -3,10 +3,10 @@ package cn.spirit.go.service;
 import cn.spirit.go.common.RestContext;
 import cn.spirit.go.common.enums.*;
 import cn.spirit.go.common.util.DateUtils;
+import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.dao.GameReadyDao;
 import cn.spirit.go.model.dto.GameDTO;
-import cn.spirit.go.model.dto.SessionDTO;
 import cn.spirit.go.model.entity.GameReadyEntity;
 import cn.spirit.go.model.dto.SearchGameDTO;
 import io.vertx.core.Future;
@@ -62,7 +62,8 @@ public class GameService {
      */
     public void createGame(RestContext<GameDTO, Boolean> ctx) {
         GameDTO dto = ctx.body();
-        SessionDTO session = null;
+
+        UserSession session = ctx.session();
         gameReadyDao.selectCountByUsername(session.username).compose(size -> {
             if (size > 0) {
                 return Future.succeededFuture(null);
@@ -77,7 +78,7 @@ public class GameService {
             entity.duration = dto.duration;
             entity.stepDuration = dto.stepDuration;
             entity.username = session.username;
-            entity.score = session.source;
+            entity.score = 800;
             return gameReadyDao.insert(entity);
         }).onSuccess(id -> {
             if (null == id) {
@@ -106,9 +107,4 @@ public class GameService {
         return Long.toString(Long.parseLong(dailyTime.substring(2) + AppContext.MAC_CODE + dailyGameCount), 36).toUpperCase();
     }
 
-    public static void main(String[] args) {
-        GameService service = new GameService();
-        System.out.println(service.generateCode());
-        ;
-    }
 }

@@ -5,7 +5,6 @@ import cn.spirit.go.controller.AuthController;
 import cn.spirit.go.controller.GameController;
 import cn.spirit.go.web.RedisSession;
 import io.vertx.core.Vertx;
-import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.slf4j.Logger;
@@ -20,29 +19,16 @@ public class RouterConfig {
         router.route().handler(BodyHandler.create());
         router.route().handler(session);
 
-        router.route().handler(ctx -> {
-            SocketAddress socketAddress = ctx.request().remoteAddress();
-            log.info("socketAddress: {}", socketAddress);
-            // RestContext.setLogged(ctx, "admin", "adminAAA", 100);
-            if (ctx.request().path().startsWith("/api/auth/")) {
-                log.info("Auth Request path: {}, remote addr: {}", ctx.request().path(), ctx.request().remoteAddress());
-                ctx.next();
-            } else {
-                log.info("Other Request path: {}, remote addr: {}", ctx.request().path(), ctx.request().remoteAddress());
-                ctx.next();
-            }
-        });
-
         router.errorHandler(500, ctx -> {
             log.error("500", ctx.failure());
             ctx.response().setStatusCode(500).end();
         });
 
-        authController(router);
+        authController(router, session);
         return router;
     }
 
-    private static void authController(Router router) {
+    private static void authController(Router router, RedisSession session) {
         AuthController authController = new AuthController();
         GameController gameController = new GameController();
         router.get("/api/ping").handler(ctx -> {
@@ -51,8 +37,10 @@ public class RouterConfig {
         router.post("/api/auth/signin").handler(authController::signIn);
         router.post("/api/auth/signup").handler(authController::signUp);
         router.post("/api/auth/signup/code").handler(authController::sendSignUpCode);
-        router.post("/api/game/create").handler(gameController::createGame);
+
         router.get("/api/game/search").handler(gameController::searchGame);
-        router.post("/api/game/join/:code").handler(gameController::joinGame);
+        router.post("/api/game/create").handler(session::verify).handler(gameController::createGame);
+        router.post("/api/game/join/:code").handler(session::verify).handler(gameController::joinGame);
     }
+
 }
