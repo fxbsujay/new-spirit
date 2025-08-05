@@ -8,7 +8,7 @@ import cn.spirit.go.common.util.RandomUtils;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.common.util.SecurityUtils;
 import cn.spirit.go.common.util.StringUtils;
-import cn.spirit.go.web.RedisSession;
+import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.dto.SignDTO;
@@ -26,6 +26,15 @@ public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final UserDao userDao = AppContext.getBean(UserDao.class);
+
+    /**
+     * 访客登录
+     */
+    public void guestSignIn(RoutingContext ctx) {
+        SessionStore.logged(ctx, RandomUtils.getRandom(5, true), 800, false).onSuccess(v -> {
+
+        });
+    }
 
     /**
      * 登录
@@ -67,7 +76,7 @@ public class AuthController {
                 return;
             }
 
-            RedisSession.logged(ctx, username).onSuccess(v -> {
+            SessionStore.logged(ctx, username, 800, false).onSuccess(v -> {
                 SignInVO vo = new SignInVO();
                 vo.username = username;
                 vo.nickname = user.nickname;

@@ -1,6 +1,6 @@
 package cn.spirit.go;
 
-import cn.spirit.go.web.RedisSession;
+import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.web.config.RouterConfig;
 import cn.spirit.go.web.socket.SocketHandler;
@@ -29,12 +29,11 @@ public class Application extends VerticleBase {
 
         AppContext.init(vertx);
 
-        RedisSession session = new RedisSession();
-        Router router = RouterConfig.init(vertx, session);
+        Router router = RouterConfig.init(vertx);
 
         return vertx.createHttpServer()
                 .requestHandler(router)
-                .webSocketHandler(new SocketHandler(session))
+                .webSocketHandler(new SocketHandler())
                 .listen(8899)
                 .onSuccess(http -> {
             log.info("HTTP server started on port {}",  http.actualPort());

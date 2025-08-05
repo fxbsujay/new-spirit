@@ -1,7 +1,7 @@
 package cn.spirit.go.common;
 
 import cn.spirit.go.common.enums.RestStatus;
-import cn.spirit.go.web.RedisSession;
+import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
@@ -71,11 +71,11 @@ public class RestContext<P, T> {
     }
 
     public UserSession session() {
-        return RedisSession.sessionUser(ctx);
+        return SessionStore.sessionUser(ctx);
     }
 
     public String sessionId() {
-        return RedisSession.getSessionId(ctx);
+        return SessionStore.getSessionId(ctx);
     }
 
     public void setBody(P param) {

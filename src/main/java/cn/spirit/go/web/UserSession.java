@@ -10,9 +10,20 @@ public class UserSession {
     public String username;
 
     /**
+     * 分数
+     */
+    public Integer score;
+
+    /**
+     * 是否是游客
+     */
+    public Boolean isGuest;
+
+    /**
      * 登录IP
      */
     public String ip;
+
 
     @Override
     public String toString() {

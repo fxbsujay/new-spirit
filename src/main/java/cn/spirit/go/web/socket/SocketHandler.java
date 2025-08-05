@@ -1,11 +1,10 @@
 package cn.spirit.go.web.socket;
 
 import cn.spirit.go.common.util.StringUtils;
-import cn.spirit.go.web.RedisSession;
+import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.config.AppContext;
 import io.vertx.core.Handler;
 import io.vertx.core.http.ServerWebSocket;
-import io.vertx.ext.web.sstore.SessionStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,13 +12,7 @@ public class SocketHandler implements Handler<ServerWebSocket> {
 
     private final Logger log = LoggerFactory.getLogger(SocketHandler.class);
 
-    private final RedisSession session;
-
     private final ClientManger clientManger = AppContext.getBean(ClientManger.class);
-
-    public SocketHandler(RedisSession session) {
-        this.session = session;
-    }
 
     public void handle(ServerWebSocket ws) {
         String[] split = ws.query().split("=");
@@ -32,7 +25,9 @@ public class SocketHandler implements Handler<ServerWebSocket> {
             ws.close();
             return;
         }
-        session.get(sessionId).onSuccess(session -> {
+
+
+        SessionStore.getSession(sessionId).onSuccess(session -> {
 
 
         }).onFailure(event -> {

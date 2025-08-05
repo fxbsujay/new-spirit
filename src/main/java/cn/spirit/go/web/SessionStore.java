@@ -9,7 +9,7 @@ import io.vertx.core.http.CookieSameSite;
 import io.vertx.ext.web.RoutingContext;
 import java.util.List;
 
-public class RedisSession implements Handler<RoutingContext> {
+public class SessionStore implements Handler<RoutingContext> {
 
     /**
      * Redis session key
@@ -33,17 +33,11 @@ public class RedisSession implements Handler<RoutingContext> {
 
     @Override
     public void handle(RoutingContext ctx) {
-        Cookie cookie = ctx.request().getCookie(COOKIE_NAME);
-        if (cookie == null) {
-           setCookie(ctx);
-        } else {
-            ctx.put(COOKIE_NAME, cookie.getValue());
-        }
         ctx.next();
     }
 
     public void verify(RoutingContext ctx) {
-        get(getSessionId(ctx)).onSuccess(u -> {
+        getSession(getSessionId(ctx)).onSuccess(u -> {
             if (null == u) {
                 ctx.response().setStatusCode(401).end();
             } else {
@@ -63,12 +57,16 @@ public class RedisSession implements Handler<RoutingContext> {
     }
 
     /**
-     * 登录
+     * 用户登录
+     * @param username  用户名
+     * @param score     分数
+     * @param isGuest   是否是游客登录
+     * @return Void
      */
-    public static Future<Void> logged(RoutingContext ctx, String username) {
+    public static Future<Void> logged(RoutingContext ctx, String username, Integer score, Boolean isGuest) {
         Cookie cookie = setCookie(ctx);
         String key = AUTH_SESSION + cookie.getValue();
-        String value = username + ";" + ctx.request().remoteAddress().hostAddress();
+        String value = username + ";" + score + ";" + isGuest + ";" + ctx.request().remoteAddress().hostAddress();
         return AppContext.REDIS.setex(key, AUTH_SESSION_EXPIRE, value).map(r -> null);
     }
 
@@ -94,14 +92,16 @@ public class RedisSession implements Handler<RoutingContext> {
     /**
      * 获取用户信息
      */
-    public static Future<UserSession> get(String sessionId) {
+    public static Future<UserSession> getSession(String sessionId) {
         return AppContext.REDIS.get(AUTH_SESSION + sessionId).map(r -> {
             if (null != r) {
                 UserSession userSession = new UserSession();
                 String[] value = r.toString().split(";");
                 userSession.sessionId = sessionId;
                 userSession.username = value[0];
-                userSession.ip = value[1];
+                userSession.score = Integer.parseInt(value[1]);
+                userSession.isGuest = Boolean.parseBoolean(value[2]);
+                userSession.ip = value[3];
                 return userSession;
             }
             return null;
