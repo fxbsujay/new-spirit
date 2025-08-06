@@ -4,8 +4,10 @@ import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.web.config.AppContext;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.Cookie;
 import io.vertx.core.http.CookieSameSite;
+import io.vertx.ext.auth.prng.VertxContextPRNG;
 import io.vertx.ext.web.RoutingContext;
 import java.util.List;
 
@@ -19,25 +21,38 @@ public class SessionStore implements Handler<RoutingContext> {
     /**
      * Request cookie key
      */
-    private static final String COOKIE_NAME = "sid";
+    private static final String SESSION_COOKIE_NAME = "sid";
 
     /**
      * session
      */
-    private static final String SESSION_USER = "su";
+    private static final String SESSION_USER = "session";
 
     /**
      * Session过期时间 2 周
      */
     private static final String AUTH_SESSION_EXPIRE = "1209600";
 
+
     @Override
     public void handle(RoutingContext ctx) {
+        Cookie cookie = ctx.request().getCookie(SESSION_COOKIE_NAME);
+        if (cookie != null) {
+            setSessionCookie(ctx);
+        }
         ctx.next();
     }
 
+    public static String setSessionCookie(RoutingContext ctx) {
+        String sid = StringUtils.uuid();
+        Cookie cookie = Cookie.cookie(SESSION_COOKIE_NAME, sid);
+        ctx.response().addCookie(cookie);
+        ctx.put(SESSION_USER, cookie.getValue());
+        return sid;
+    }
+
     public void verify(RoutingContext ctx) {
-        getSession(getSessionId(ctx)).onSuccess(u -> {
+        getSession(ctx).onSuccess(u -> {
             if (null == u) {
                 ctx.response().setStatusCode(401).end();
             } else {
@@ -47,40 +62,33 @@ public class SessionStore implements Handler<RoutingContext> {
         }).onFailure(cause -> ctx.response().setStatusCode(401).end());
     }
 
-    public static Cookie setCookie(RoutingContext ctx) {
-        Cookie cookie = Cookie.cookie(COOKIE_NAME, StringUtils.uuid());
-        cookie.setSameSite(CookieSameSite.STRICT);
-        cookie.setHttpOnly(true);
-        ctx.response().addCookie(cookie);
-        ctx.put(COOKIE_NAME, cookie.getValue());
-        return cookie;
+    public static void refreshSession(String sessionId) {
+        AppContext.REDIS.expire(List.of(AUTH_SESSION + sessionId, AUTH_SESSION_EXPIRE));
     }
 
     /**
      * 用户登录
      * @param username  用户名
      * @param score     分数
-     * @param isGuest   是否是游客登录
      * @return Void
      */
-    public static Future<Void> logged(RoutingContext ctx, String username, Integer score, Boolean isGuest) {
-        Cookie cookie = setCookie(ctx);
-        String key = AUTH_SESSION + cookie.getValue();
-        String value = username + ";" + score + ";" + isGuest + ";" + ctx.request().remoteAddress().hostAddress();
-        return AppContext.REDIS.setex(key, AUTH_SESSION_EXPIRE, value).map(r -> null);
+    public static Future<Void> logged(RoutingContext ctx, String username, Integer score) {
+        String sessionId = setSessionCookie(ctx);
+        String value = username + ";" + score + ";" + ctx.request().remoteAddress().hostAddress();
+        return AppContext.REDIS.setex(AUTH_SESSION + sessionId, AUTH_SESSION_EXPIRE, value).map(r -> null);
     }
 
     /**
-     * 退出
+     * 退出并重置session
      */
     public static void logout(String sessionId) {
         AppContext.REDIS.del(List.of(AUTH_SESSION + sessionId));
     }
 
     public static String getSessionId(RoutingContext ctx) {
-        Cookie cookie = ctx.request().getCookie(COOKIE_NAME);
+        Cookie cookie = ctx.request().getCookie(SESSION_COOKIE_NAME);
         if (cookie == null) {
-            return ctx.get(COOKIE_NAME);
+            return ctx.get(SESSION_COOKIE_NAME);
         }
         return cookie.getValue();
     }
@@ -100,11 +108,14 @@ public class SessionStore implements Handler<RoutingContext> {
                 userSession.sessionId = sessionId;
                 userSession.username = value[0];
                 userSession.score = Integer.parseInt(value[1]);
-                userSession.isGuest = Boolean.parseBoolean(value[2]);
-                userSession.ip = value[3];
+                userSession.ip = value[2];
                 return userSession;
             }
             return null;
         });
+    }
+
+    public static Future<UserSession> getSession(RoutingContext ctx) {
+        return getSession(getSessionId(ctx));
     }
 }

@@ -28,15 +28,6 @@ public class AuthController {
     private final UserDao userDao = AppContext.getBean(UserDao.class);
 
     /**
-     * 访客登录
-     */
-    public void guestSignIn(RoutingContext ctx) {
-        SessionStore.logged(ctx, RandomUtils.getRandom(5, true), 800, false).onSuccess(v -> {
-
-        });
-    }
-
-    /**
      * 登录
      */
     public void signIn(RoutingContext ctx) {
@@ -76,7 +67,7 @@ public class AuthController {
                 return;
             }
 
-            SessionStore.logged(ctx, username, 800, false).onSuccess(v -> {
+            SessionStore.logged(ctx, username, 800).onSuccess(v -> {
                 SignInVO vo = new SignInVO();
                 vo.username = username;
                 vo.nickname = user.nickname;

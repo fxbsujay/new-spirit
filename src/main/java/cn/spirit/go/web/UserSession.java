@@ -15,11 +15,6 @@ public class UserSession {
     public Integer score;
 
     /**
-     * 是否是游客
-     */
-    public Boolean isGuest;
-
-    /**
      * 登录IP
      */
     public String ip;
@@ -30,6 +25,7 @@ public class UserSession {
         return "UserSession{" +
                 "sessionId='" + sessionId + '\'' +
                 ", username='" + username + '\'' +
+                ", score=" + score +
                 ", ip='" + ip + '\'' +
                 '}';
     }
