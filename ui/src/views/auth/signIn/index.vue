@@ -3,6 +3,7 @@ import { reactive, ref } from 'vue'
 import http from '@/utils/http.js'
 import {useUserStore} from '@/stores/user.js'
 import router from '@/router/index.js'
+import Cookie from 'js-cookie'
 
 const formState = reactive({
   username: '',

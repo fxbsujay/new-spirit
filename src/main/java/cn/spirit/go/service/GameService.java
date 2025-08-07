@@ -78,7 +78,7 @@ public class GameService {
             entity.duration = dto.duration;
             entity.stepDuration = dto.stepDuration;
             entity.username = session.username;
-            entity.score = 800;
+            entity.score = session.score;
             return gameReadyDao.insert(entity);
         }).onSuccess(id -> {
             if (null == id) {

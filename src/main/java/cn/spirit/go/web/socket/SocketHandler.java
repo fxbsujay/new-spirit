@@ -15,7 +15,7 @@ public class SocketHandler implements Handler<ServerWebSocket> {
     private final ClientManger clientManger = AppContext.getBean(ClientManger.class);
 
     public void handle(ServerWebSocket ws) {
-        String[] split = ws.query().split("=");
+        String[] split = new String[]{"1", "2"};
         if (split.length != 2) {
             ws.close();
             return;
