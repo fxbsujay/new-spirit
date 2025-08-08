@@ -28,7 +28,7 @@ http.get('/game/search').then(res => {
       <div class="toggle-filter">
         <div class="search-wrap">
           <div class="btn-icon">
-            <Icon name="search" size="18px"/>
+            <Icon name="search" size="14px"/>
           </div>
           <input class="search-input" type="text" placeholder="搜索房间名称或房间号"/>
         </div>
@@ -64,7 +64,7 @@ http.get('/game/search').then(res => {
       </Responsive>
       <div class="play-btn">
         <button class="button border" @click="createDialogRef.open()">创建游戏</button>
-        <button class="button border">快速匹配</button>
+        <button class="button border">AAA</button>
         <button class="button border">积分赛</button>
       </div>
     </div>

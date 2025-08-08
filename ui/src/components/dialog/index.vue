@@ -45,6 +45,7 @@ const emits = defineEmits(['close'])
     padding: 1rem;
     margin: 1rem;
     max-width: 100%;
+    border-radius: 4px;
   }
 }
 </style>

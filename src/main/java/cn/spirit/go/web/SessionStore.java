@@ -40,7 +40,6 @@ public class SessionStore implements Handler<RoutingContext> {
         if (cookie == null || !checkId(cookie.getValue())) {
             setSessionCookie(ctx);
         }
-
         if (ctx.request().path().startsWith("/api/auth/")) {
             ctx.next();
         } else {
@@ -49,6 +48,7 @@ public class SessionStore implements Handler<RoutingContext> {
     }
 
     public boolean checkId(String sessionId) {
+        log.info("checkId session id {}", sessionId);
         if (null == sessionId || sessionId.length() != 46) {
             return false;
         }
@@ -64,6 +64,7 @@ public class SessionStore implements Handler<RoutingContext> {
         cookie.setHttpOnly(true);
         ctx.response().addCookie(cookie);
         ctx.put(SESSION_USER, cookie.getValue());
+        log.info("session id {}", sid);
         return sid;
     }
 
