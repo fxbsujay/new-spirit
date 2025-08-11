@@ -67,6 +67,20 @@ defineExpose({ open, close })
 
       <form class="form" @submit.prevent="submitHandle">
         <div class="form-group">
+          <div class="border-input-wrap">
+            <label class="label" >
+              对局名称
+            </label>
+            <input
+                class="input"
+                required
+                pattern="[a-zA-Z0-9@.]{2,20}"
+                title="2-20位字母或数字"
+                v-model="formState.username"
+            />
+          </div>
+        </div>
+        <div class="form-group">
           <div class="float-input-wrap">
             <input class="input" required v-model="formState.name" placeholder=" "/>
             <label class="label" >
@@ -125,35 +139,25 @@ defineExpose({ open, close })
 
 <style scoped lang="less">
 @import "@/assets/css/variable.less";
-
 .create-game-dialog {
-  padding: 2rem 2rem 1rem 2rem;
+  padding: 1rem;
   position: relative;
   width: 600px;
   max-width: 100%;
 
   .header {
-    .close-icon {
-      height: calc(1.2em + 8px);
-      padding: 4px;
-      cursor: pointer;
-      display: inline;
-      position: absolute;
-      right: 0;
-      top: 0;
-
-      &:hover {
-        background-color: rgba(0, 0, 0, 0.04);
-      }
-    }
-
-    .title {
-      color: @titleColor;
-    }
+    margin-bottom: 2rem;
   }
 
   .form {
     margin: 1rem 0;
+
+    .border-input-wrap {
+      .input {
+        height: auto;
+        font-size: 14px;
+      }
+    }
   }
 
   .form-label {
