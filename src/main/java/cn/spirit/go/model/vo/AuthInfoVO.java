@@ -1,6 +1,6 @@
 package cn.spirit.go.model.vo;
 
-public class SignInVO {
+public class AuthInfoVO {
 
     /**
      * 用户头像
@@ -21,4 +21,9 @@ public class SignInVO {
      * 用户账号
      */
     public String username;
+
+    /**
+     * 是不是访客
+     */
+    public Boolean isGuest;
 }

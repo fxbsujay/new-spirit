@@ -36,28 +36,25 @@ public class SessionStore implements Handler<RoutingContext> {
 
     @Override
     public void handle(RoutingContext ctx) {
-        Cookie cookie = ctx.request().getCookie(SESSION_COOKIE_NAME);
-        if (cookie == null || !checkId(cookie.getValue())) {
-            setSessionCookie(ctx);
+        String sessionId = getSessionId(ctx);
+        if (StringUtils.isBlank(sessionId) || sessionId.length() != 32) {
+            ctx.response().setStatusCode(401).end();
+            return;
         }
-        if (ctx.request().path().startsWith("/api/auth/")) {
-            ctx.next();
-        } else {
-            verify(ctx);
-        }
-    }
 
-    public boolean checkId(String sessionId) {
-        log.info("checkId session id {}", sessionId);
-        if (null == sessionId || sessionId.length() != 46) {
-            return false;
-        }
-        String[] split = sessionId.split("=");
-        return split.length == 2 && System.currentTimeMillis() - Long.parseLong(split[1]) <= AUTH_SESSION_EXPIRE * 1000;
+        getSession(sessionId).onSuccess(u -> {
+            if (null == u) {
+                ctx.response().setStatusCode(401).end();
+            } else {
+                ctx.put(SESSION_USER, u);
+                refreshSession(sessionId);
+                ctx.next();
+            }
+        }).onFailure(cause -> ctx.response().setStatusCode(401).end());
     }
 
     public static String setSessionCookie(RoutingContext ctx) {
-        String sid = StringUtils.uuid() + "=" + System.currentTimeMillis();
+        String sid = StringUtils.uuid();
         Cookie cookie = Cookie.cookie(SESSION_COOKIE_NAME, sid);
         cookie.setPath("/api");
         cookie.setMaxAge(AUTH_SESSION_EXPIRE);
@@ -66,17 +63,6 @@ public class SessionStore implements Handler<RoutingContext> {
         ctx.put(SESSION_USER, cookie.getValue());
         log.info("session id {}", sid);
         return sid;
-    }
-
-    public void verify(RoutingContext ctx) {
-        getSession(ctx).onSuccess(u -> {
-            if (null == u) {
-                ctx.response().setStatusCode(401).end();
-            } else {
-                ctx.put(SESSION_USER, u);
-                ctx.next();
-            }
-        }).onFailure(cause -> ctx.response().setStatusCode(401).end());
     }
 
     public static void refreshSession(String sessionId) {
@@ -89,9 +75,9 @@ public class SessionStore implements Handler<RoutingContext> {
      * @param score     分数
      * @return Void
      */
-    public static Future<Void> logged(RoutingContext ctx, String username, Integer score) {
+    public static Future<Void> logged(RoutingContext ctx, String username, Integer score, Boolean isGuest) {
         String sessionId = setSessionCookie(ctx);
-        String value = username + ";" + score + ";" + ctx.request().remoteAddress().hostAddress();
+        String value = username + ";" + score + ";" + ctx.request().remoteAddress().hostAddress() + ";" + isGuest;
         return AppContext.REDIS.setex(AUTH_SESSION + sessionId, String.valueOf(AUTH_SESSION_EXPIRE), value).map(r -> null);
     }
 
@@ -126,13 +112,10 @@ public class SessionStore implements Handler<RoutingContext> {
                 userSession.username = value[0];
                 userSession.score = Integer.parseInt(value[1]);
                 userSession.ip = value[2];
+                userSession.isGuest = Boolean.parseBoolean(value[3]);
                 return userSession;
             }
             return null;
         });
-    }
-
-    public static Future<UserSession> getSession(RoutingContext ctx) {
-        return getSession(getSessionId(ctx));
     }
 }

@@ -19,6 +19,11 @@ public class UserSession {
      */
     public String ip;
 
+    /**
+     * 是不是访客
+     */
+    public Boolean isGuest = false;
+
 
     @Override
     public String toString() {

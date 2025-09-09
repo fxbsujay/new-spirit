@@ -8,12 +8,13 @@ import cn.spirit.go.common.util.RandomUtils;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.common.util.SecurityUtils;
 import cn.spirit.go.common.util.StringUtils;
+import cn.spirit.go.model.vo.AuthInfoVO;
 import cn.spirit.go.web.SessionStore;
+import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.dto.SignDTO;
 import cn.spirit.go.model.entity.UserEntity;
-import cn.spirit.go.model.vo.SignInVO;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.ext.web.RoutingContext;
@@ -26,6 +27,56 @@ public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final UserDao userDao = AppContext.getBean(UserDao.class);
+
+    private void guestInfo(RoutingContext ctx) {
+        SessionStore.logged(ctx, "--", 800, true).onSuccess(v -> {
+            AuthInfoVO vo = new AuthInfoVO();
+            vo.isGuest = true;
+            RestContext.success(ctx, vo);
+        }).onFailure(e -> {
+            log.error(e.getMessage(), e.getCause());
+            RestContext.fail(ctx);
+        });
+    }
+
+    /**
+     * 认证先
+     */
+    public void info(RoutingContext ctx) {
+        String sessionId = SessionStore.getSessionId(ctx);
+        if (sessionId == null || sessionId.length() != 32) {
+            guestInfo(ctx);
+        } else {
+            SessionStore.getSession(sessionId).onSuccess(session -> {
+
+                if (session == null) {
+                    guestInfo(ctx);
+                } else {
+                    if (session.isGuest) {
+                        AuthInfoVO vo = new AuthInfoVO();
+                        vo.isGuest = true;
+                        RestContext.success(ctx, vo);
+                    } else {
+                        userDao.selectByUsername(session.username).onSuccess(user -> {
+                            AuthInfoVO vo = new AuthInfoVO();
+                            vo.isGuest = false;
+                            vo.username = session.username;
+                            vo.nickname = user.nickname;
+                            vo.avatar = user.avatar;
+                            vo.email = user.email;
+                            RestContext.success(ctx, vo);
+                        }).onFailure(e -> {
+                            log.error(e.getMessage(), e.getCause());
+                            RestContext.fail(ctx);
+                        });
+                    }
+                }
+
+            }).onFailure(cause -> {
+                guestInfo(ctx);
+            });
+        }
+    }
 
     /**
      * 登录
@@ -67,13 +118,8 @@ public class AuthController {
                 return;
             }
 
-            SessionStore.logged(ctx, username, 800).onSuccess(v -> {
-                SignInVO vo = new SignInVO();
-                vo.username = username;
-                vo.nickname = user.nickname;
-                vo.avatar = user.avatar;
-                vo.email = user.email;
-                RestContext.success(ctx, vo);
+            SessionStore.logged(ctx, username, 800, false).onSuccess(v -> {
+                RestContext.success(ctx);
             }).onFailure(e -> {
                 log.error(e.getMessage(), e.getCause());
                 RestContext.fail(ctx);

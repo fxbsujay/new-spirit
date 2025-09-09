@@ -139,6 +139,10 @@ public class RestContext<P, T> {
         defaultResponse(ctx, new RestResponse(200, data, "SUCCESS"));
     }
 
+    public static void success(RoutingContext ctx) {
+        defaultResponse(ctx, new RestResponse(200, null, "SUCCESS"));
+    }
+
     public static void fail(RoutingContext ctx, HttpResponseStatus status) {
         defaultResponse(ctx, new RestResponse(status));
     }

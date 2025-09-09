@@ -27,7 +27,6 @@ public class UserDao {
                 .collecting(Collector.of(() -> null, (v, row) -> {}, (a, b) -> null))
                 .execute(Tuple.of(entity.avatar, entity.nickname, entity.email, entity.status, entity.username, entity.password))
                 .map(row -> entity.username);
-
     }
 
     public Future<UserEntity> selectByUsername(String username) {
