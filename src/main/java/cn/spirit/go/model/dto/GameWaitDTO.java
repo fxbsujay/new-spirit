@@ -3,7 +3,7 @@ package cn.spirit.go.model.dto;
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 
-public class SearchGameDTO {
+public class GameWaitDTO {
 
     /**
      * 名称

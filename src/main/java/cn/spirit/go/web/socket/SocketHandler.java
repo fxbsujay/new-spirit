@@ -23,14 +23,14 @@ public class SocketHandler implements Handler<RoutingContext> {
     public void handle(RoutingContext ctx) {
         UserSession session = SessionStore.sessionUser(ctx);
         ctx.request().toWebSocket().onSuccess(ws -> {
-            if (clientManger.connect(session.sessionId, ws)) {
+            if (clientManger.connect(session, ws)) {
                 ws.textMessageHandler(text -> {
                     SocketPackage<?> pck;
                     try {
                         pck = Json.decodeValue(text, SocketPackage.class);
                     } catch (DecodeException e) {
                         log.error("Failed to parse websocket message packet, from: {}, sessionId: {}", session.username, session.sessionId);
-                        clientManger.close(session.sessionId);
+                        ws.close();
                         return;
                     }
                     switch (pck.type) {
@@ -38,16 +38,18 @@ public class SocketHandler implements Handler<RoutingContext> {
                             break;
                         default:
                             log.error("Illegal websocket message packet type, from: {}, sessionId: {}", session.username, session.sessionId);
-                            clientManger.close(session.sessionId);
+                            ws.close();
                             return;
                     }
                 });
                 ws.closeHandler(e -> {
-                    clientManger.cancel(session.sessionId);
+                    clientManger.cancel(session);
                 });
             } else {
                 ws.close();
             }
+        }).onFailure(e -> {
+            log.error(e.getMessage(), e);
         });
     }
 }

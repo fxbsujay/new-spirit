@@ -1,10 +1,8 @@
 package cn.spirit.go.web.config;
 
 import cn.spirit.go.dao.GameDao;
-import cn.spirit.go.dao.GameReadyDao;
 import cn.spirit.go.dao.UserDao;
-import cn.spirit.go.service.GameService;
-import cn.spirit.go.service.UserService;
+import cn.spirit.go.service.GameWaitService;
 import cn.spirit.go.web.socket.ClientManger;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -91,9 +89,8 @@ public class AppContext {
 
         addBean(new UserDao());
         addBean(new GameDao());
-        addBean(new GameReadyDao());
-        addBean(new UserService());
-        addBean(new GameService());
+
+        addBean(new GameWaitService());
     }
 
     public static Future<MailResult> sendMail(String subject, String to, String content, boolean html) {

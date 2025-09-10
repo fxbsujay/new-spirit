@@ -18,6 +18,10 @@ public class RouterConfig {
     public static Router init(Vertx vertx) {
         Router router = Router.router(vertx);
 
+        SessionStore sessionHandle = new SessionStore();
+        router.get("/api/ping").handler(RestContext::success);
+        router.route("/api/ws").handler(ctx -> sessionHandle.handle(ctx, false)).handler(new SocketHandler());
+
         router.route().handler(BodyHandler.create());
         router.errorHandler(500, ctx -> {
             log.error("500", ctx.failure());
@@ -25,24 +29,24 @@ public class RouterConfig {
         });
 
         authController(router);
+        gameController(router, sessionHandle);
         return router;
     }
 
     private static void authController(Router router) {
-        SessionStore sessionHandle = new SessionStore();
         AuthController authController = new AuthController();
-        GameController gameController = new GameController();
-        router.get("/api/ping").handler(RestContext::success);
-        router.route("/api/ws").handler(sessionHandle).handler(new SocketHandler());
-
         router.post("/api/auth/signin").handler(authController::signIn);
         router.post("/api/auth/signup").handler(authController::signUp);
         router.post("/api/auth/signup/code").handler(authController::sendSignUpCode);
         router.post("/api/auth/info").handler(authController::info);
 
-        router.get("/api/game/search").handler(sessionHandle).handler(gameController::searchGame);
-        router.post("/api/game/create").handler(sessionHandle).handler(gameController::createGame);
-        router.post("/api/game/join/:code").handler(sessionHandle).handler(gameController::joinGame);
+    }
+
+    private static void gameController(Router router, SessionStore sessionHandle) {
+        GameController gameController = new GameController();
+        router.get("/api/game/search").handler(ctx -> sessionHandle.handle(ctx, true)).handler(gameController::searchGame);
+        router.post("/api/game/create").handler(ctx -> sessionHandle.handle(ctx, false)).handler(gameController::createGame);
+        router.post("/api/game/join/:code").handler(ctx -> sessionHandle.handle(ctx, false)).handler(gameController::joinGame);
     }
 
 }

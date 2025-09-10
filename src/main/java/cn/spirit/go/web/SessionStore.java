@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.List;
 
-public class SessionStore implements Handler<RoutingContext> {
+public class SessionStore {
 
     /**
      * Redis session key
@@ -34,8 +34,12 @@ public class SessionStore implements Handler<RoutingContext> {
 
     private static final Logger log = LoggerFactory.getLogger(SessionStore.class);
 
-    @Override
-    public void handle(RoutingContext ctx) {
+    /**
+     * 身份验证
+     * @param ctx       路由上下文
+     * @param isGuest   是否允许访客
+     */
+    public void handle(RoutingContext ctx, Boolean isGuest) {
         String sessionId = getSessionId(ctx);
         if (StringUtils.isBlank(sessionId) || sessionId.length() != 32) {
             ctx.response().setStatusCode(401).end();
@@ -46,9 +50,13 @@ public class SessionStore implements Handler<RoutingContext> {
             if (null == u) {
                 ctx.response().setStatusCode(401).end();
             } else {
-                ctx.put(SESSION_USER, u);
-                refreshSession(sessionId);
-                ctx.next();
+                if (!isGuest && u.isGuest) {
+                    ctx.response().setStatusCode(403).end();
+                } else {
+                    ctx.put(SESSION_USER, u);
+                    refreshSession(sessionId);
+                    ctx.next();
+                }
             }
         }).onFailure(cause -> ctx.response().setStatusCode(401).end());
     }
@@ -90,7 +98,7 @@ public class SessionStore implements Handler<RoutingContext> {
 
     public static String getSessionId(RoutingContext ctx) {
         Cookie cookie = ctx.request().getCookie(SESSION_COOKIE_NAME);
-        if (cookie == null) {
+        if (null == cookie) {
             return ctx.get(SESSION_COOKIE_NAME);
         }
         return cookie.getValue();

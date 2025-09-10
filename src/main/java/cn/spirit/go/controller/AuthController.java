@@ -10,7 +10,6 @@ import cn.spirit.go.common.util.SecurityUtils;
 import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.model.vo.AuthInfoVO;
 import cn.spirit.go.web.SessionStore;
-import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.dto.SignDTO;
@@ -44,12 +43,11 @@ public class AuthController {
      */
     public void info(RoutingContext ctx) {
         String sessionId = SessionStore.getSessionId(ctx);
-        if (sessionId == null || sessionId.length() != 32) {
+        if (null == sessionId || sessionId.length() != 32) {
             guestInfo(ctx);
         } else {
             SessionStore.getSession(sessionId).onSuccess(session -> {
-
-                if (session == null) {
+                if (null == session) {
                     guestInfo(ctx);
                 } else {
                     if (session.isGuest) {
@@ -71,7 +69,6 @@ public class AuthController {
                         });
                     }
                 }
-
             }).onFailure(cause -> {
                 guestInfo(ctx);
             });

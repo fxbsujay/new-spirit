@@ -6,7 +6,7 @@ public enum GameStatus {
      */
     READY,
     /**
-     * 已经开始，等等落子
+     * 开始，等待双方落子
      */
     START,
     /**
