@@ -40,25 +40,29 @@ public class SessionStore {
      * @param isGuest   是否允许访客
      */
     public void handle(RoutingContext ctx, Boolean isGuest) {
-        String sessionId = getSessionId(ctx);
+        validateSession(getSessionId(ctx), isGuest).onSuccess(u -> {
+            ctx.put(SESSION_USER, u);
+            ctx.next();
+        }).onFailure(cause -> ctx.response().setStatusCode(401).end());
+    }
+
+    public static Future<UserSession> validateSession(String sessionId, Boolean isGuest) {
         if (StringUtils.isBlank(sessionId) || sessionId.length() != 32) {
-            ctx.response().setStatusCode(401).end();
-            return;
+            return Future.failedFuture("session id is null");
         }
 
-        getSession(sessionId).onSuccess(u -> {
+        return getSession(sessionId).compose(u -> {
             if (null == u) {
-                ctx.response().setStatusCode(401).end();
+                return Future.failedFuture("session is null");
             } else {
                 if (!isGuest && u.isGuest) {
-                    ctx.response().setStatusCode(403).end();
+                    return Future.failedFuture("session user is guest");
                 } else {
-                    ctx.put(SESSION_USER, u);
                     refreshSession(sessionId);
-                    ctx.next();
+                    return Future.succeededFuture(u);
                 }
             }
-        }).onFailure(cause -> ctx.response().setStatusCode(401).end());
+        });
     }
 
     public static String setSessionCookie(RoutingContext ctx) {

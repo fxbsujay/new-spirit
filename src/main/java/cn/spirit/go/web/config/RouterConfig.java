@@ -20,7 +20,7 @@ public class RouterConfig {
 
         SessionStore sessionHandle = new SessionStore();
         router.get("/api/ping").handler(RestContext::success);
-        router.route("/api/ws").handler(ctx -> sessionHandle.handle(ctx, false)).handler(new SocketHandler());
+        router.route("/api/ws").handler(new SocketHandler());
 
         router.route().handler(BodyHandler.create());
         router.errorHandler(500, ctx -> {
