@@ -13,12 +13,9 @@ public interface RedisConstant {
      */
     String AUTH_CODE_SIGNUP = "AUTH:CODE:SIGNUP:";
 
-
-    String GAME_COUNT = "GAME:COUNT";
-
     /**
      * 游戏对局
      */
-    String GAME_INFO = "GAME_INFO:";
+    String GAME_INFO = "GAME:INFO:";
 
 }

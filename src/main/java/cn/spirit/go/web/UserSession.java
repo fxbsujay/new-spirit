@@ -10,11 +10,6 @@ public class UserSession {
     public String username;
 
     /**
-     * 分数
-     */
-    public Integer score;
-
-    /**
      * 登录IP
      */
     public String ip;
@@ -30,7 +25,6 @@ public class UserSession {
         return "UserSession{" +
                 "sessionId='" + sessionId + '\'' +
                 ", username='" + username + '\'' +
-                ", score=" + score +
                 ", ip='" + ip + '\'' +
                 '}';
     }

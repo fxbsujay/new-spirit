@@ -39,6 +39,10 @@ public class GameWaitService {
         });
     }
 
+    public ClientManger getClientManger() {
+        return clientManger;
+    }
+
     public List<GameWaitDTO> searchGames(String username, String name, GameMode mode, GameType type) {
         List<GameWaitDTO> result = new ArrayList<>();
         for (GameWaitDTO value : games.values()) {
@@ -54,26 +58,29 @@ public class GameWaitService {
     }
 
     public boolean addGame(UserSession session, GameWaitDTO game) {
-        if (userGames.containsKey(session.username) || !clientManger.contains(session.sessionId)) {
+        if (userGames.containsKey(session.username) && !clientManger.contains(session.sessionId)) {
             log.warn("{} failed to create the game", session.username);
             return false;
         }
         game.username = session.username;
-        game.score = session.score;
         String code = generateCode();
         game.code = code;
         userGames.put(game.username, code);
         games.put(code, game);
-        log.info("{} has created a game", game.username);
+        log.info("{} has created a game, code = {}", game.username, code);
         return true;
     }
 
-    public void removeGame(String username) {
-        String code = userGames.get(username);
+    public GameWaitDTO removeGame(String username) {
+        String code = userGames.remove(username);
         if (null != code) {
-            games.remove(code);
-            userGames.remove(username);
+           return  games.remove(code);
         }
+        return null;
+    }
+
+    public GameWaitDTO get(String code) {
+        return games.get(code);
     }
 
     /**

@@ -28,7 +28,7 @@ public class AuthController {
     private final UserDao userDao = AppContext.getBean(UserDao.class);
 
     private void guestInfo(RoutingContext ctx) {
-        SessionStore.logged(ctx, "--", 800, true).onSuccess(v -> {
+        SessionStore.logged(ctx, "--", true).onSuccess(v -> {
             AuthInfoVO vo = new AuthInfoVO();
             vo.isGuest = true;
             RestContext.success(ctx, vo);
@@ -115,7 +115,7 @@ public class AuthController {
                 return;
             }
 
-            SessionStore.logged(ctx, username, 800, false).onSuccess(v -> {
+            SessionStore.logged(ctx, username,  false).onSuccess(v -> {
                 RestContext.success(ctx);
             }).onFailure(e -> {
                 log.error(e.getMessage(), e.getCause());

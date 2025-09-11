@@ -4,7 +4,7 @@ import Responsive from '@/components/responsive/index.vue'
 import CreateDialog from './CreateDialog.vue'
 import { ref, useTemplateRef } from 'vue'
 import Icon from '@/components/icon/Icon.vue'
-import http from '@/utils/http.js'
+import http from '@/utils/http'
 
 const createDialogRef = useTemplateRef('createDialogRef')
 

@@ -1,11 +1,13 @@
 package cn.spirit.go.controller;
 
+import cn.spirit.go.common.RedisConstant;
 import cn.spirit.go.common.RestContext;
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.RestStatus;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.common.util.StringUtils;
+import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.dto.GameWaitDTO;
 import cn.spirit.go.service.GameWaitService;
 import cn.spirit.go.web.SessionStore;
@@ -21,6 +23,8 @@ import java.util.List;
 public class GameController {
 
     private final Logger log = LoggerFactory.getLogger(GameController.class);
+
+    private final UserDao userDao = AppContext.getBean(UserDao.class);
 
     private final GameWaitService gameWaitService = AppContext.getBean(GameWaitService.class);
 
@@ -70,11 +74,20 @@ public class GameController {
             }
         }
 
-        if (gameWaitService.addGame(SessionStore.sessionUser(ctx), dto)) {
-            RestContext.success(ctx);
-        } else {
-            RestContext.fail(ctx, RestStatus.GAME_CREATED);
-        }
+        UserSession session = SessionStore.sessionUser(ctx);
+        userDao.selectByUsername(session.username).onSuccess(user -> {
+            dto.score = 800;
+            dto.nickname = user.nickname;
+            if (gameWaitService.addGame(session, dto)) {
+                RestContext.success(ctx);
+            } else {
+                RestContext.fail(ctx, RestStatus.GAME_CREATED);
+            }
+        }).onFailure(e -> {
+            log.error(e.getMessage(), e);
+            RestContext.fail(ctx);
+        });
+
     }
 
     /**
@@ -89,14 +102,32 @@ public class GameController {
         }
 
         ctx.vertx().sharedData().withLock(code, 1000, () -> {
-            log.info("---");
-            RestContext.success(ctx);
-            return Future.succeededFuture();
+            GameWaitDTO game = gameWaitService.get(code);
+            if (game == null) {
+                RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
+                return Future.succeededFuture();
+            }
+            return AppContext.REDIS.hset(List.of(RedisConstant.GAME_INFO + code,
+                    "code", code,
+                    "boardSize", game.boardSize.toString(),
+                    "type", game.type.name(),
+                    "mode", game.mode.name(),
+                    "duration", game.duration.toString(),
+                    "stepDuration", game.stepDuration.toString(),
+                    "username", game.username))
+                    .compose(r -> {
+                        if (null != r && r.toInteger() == 7) {
+                            gameWaitService.removeGame(game.username);
+                            RestContext.success(ctx);
+                        } else {
+                            RestContext.fail(ctx);
+                        }
+                        return Future.succeededFuture();
+                    });
         }).onFailure(e -> {
             log.error("{}: {}", e.getMessage(), code);
             RestContext.fail(ctx, HttpResponseStatus.LOCKED);
         });
     }
-
 
 }

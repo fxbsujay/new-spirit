@@ -87,9 +87,9 @@ public class SessionStore {
      * @param score     分数
      * @return Void
      */
-    public static Future<Void> logged(RoutingContext ctx, String username, Integer score, Boolean isGuest) {
+    public static Future<Void> logged(RoutingContext ctx, String username, Boolean isGuest) {
         String sessionId = setSessionCookie(ctx);
-        String value = username + ";" + score + ";" + ctx.request().remoteAddress().hostAddress() + ";" + isGuest;
+        String value = username + ";" + ctx.request().remoteAddress().hostAddress() + ";" + isGuest;
         return AppContext.REDIS.setex(AUTH_SESSION + sessionId, String.valueOf(AUTH_SESSION_EXPIRE), value).map(r -> null);
     }
 
@@ -122,9 +122,8 @@ public class SessionStore {
                 String[] value = r.toString().split(";");
                 userSession.sessionId = sessionId;
                 userSession.username = value[0];
-                userSession.score = Integer.parseInt(value[1]);
-                userSession.ip = value[2];
-                userSession.isGuest = Boolean.parseBoolean(value[3]);
+                userSession.ip = value[1];
+                userSession.isGuest = Boolean.parseBoolean(value[2]);
                 return userSession;
             }
             return null;

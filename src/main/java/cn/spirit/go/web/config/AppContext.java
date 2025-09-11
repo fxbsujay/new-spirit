@@ -16,10 +16,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class AppContext {
 
     private static final Logger log = LoggerFactory.getLogger(AppContext.class);
+
+    public static Vertx vertx;
 
     /**
      * 机器编码
@@ -55,6 +58,7 @@ public class AppContext {
     }
 
     public static void init(Vertx vertx) {
+        AppContext.vertx = vertx;
         MySQLConnectOptions conOpt = new MySQLConnectOptions()
                 .setHost("8.133.248.55")
                 .setPort(3306)
