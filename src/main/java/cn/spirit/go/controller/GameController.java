@@ -13,6 +13,7 @@ import cn.spirit.go.service.GameWaitService;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
+import cn.spirit.go.web.socket.ClientManger;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.ext.web.RoutingContext;
@@ -101,29 +102,33 @@ public class GameController {
             return;
         }
 
-        ctx.vertx().sharedData().withLock(code, 1000, () -> {
-            GameWaitDTO game = gameWaitService.get(code);
+        ctx.vertx().sharedData().withLock(code, 1000, () -> Future.succeededFuture(gameWaitService.removeGame(code))).onSuccess(game -> {
             if (game == null) {
                 RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
-                return Future.succeededFuture();
-            }
-            return AppContext.REDIS.hset(List.of(RedisConstant.GAME_INFO + code,
-                    "code", code,
-                    "boardSize", game.boardSize.toString(),
-                    "type", game.type.name(),
-                    "mode", game.mode.name(),
-                    "duration", game.duration.toString(),
-                    "stepDuration", game.stepDuration.toString(),
-                    "username", game.username))
-                    .compose(r -> {
-                        if (null != r && r.toInteger() == 7) {
-                            gameWaitService.removeGame(game.username);
-                            RestContext.success(ctx);
-                        } else {
-                            RestContext.fail(ctx);
-                        }
-                        return Future.succeededFuture();
+            } else {
+                UserSession session = SessionStore.sessionUser(ctx);
+                if (!session.username.equals(game.username)) {
+                    // 自己不能加入自己的对局
+                    RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+                } else {
+                    // 分黑白
+                    AppContext.REDIS.hset(List.of(RedisConstant.GAME_INFO + code,
+                            "code", code,
+                            "boardSize", game.boardSize.toString(),
+                            "type", game.type.name(),
+                            "mode", game.mode.name(),
+                            "duration", game.duration.toString(),
+                            "stepDuration", game.stepDuration.toString(),
+                            "username", game.username
+                    )).onSuccess(size -> {
+                        RestContext.success(ctx);
+                        ClientManger clientManger = gameWaitService.getClientManger();
+                    }).onFailure(e -> {
+                        log.error("{}: {}", e.getMessage(), code);
+                        RestContext.fail(ctx);
                     });
+                }
+            }
         }).onFailure(e -> {
             log.error("{}: {}", e.getMessage(), code);
             RestContext.fail(ctx, HttpResponseStatus.LOCKED);

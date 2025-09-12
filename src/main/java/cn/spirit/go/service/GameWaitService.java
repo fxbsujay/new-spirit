@@ -74,7 +74,7 @@ public class GameWaitService {
     public GameWaitDTO removeGame(String username) {
         String code = userGames.remove(username);
         if (null != code) {
-           return  games.remove(code);
+           return games.remove(code);
         }
         return null;
     }
