@@ -2,6 +2,7 @@ package cn.spirit.go.controller;
 
 import cn.spirit.go.common.RedisConstant;
 import cn.spirit.go.common.RestContext;
+import cn.spirit.go.common.enums.ChessPiece;
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.RestStatus;
@@ -111,7 +112,7 @@ public class GameController {
                     // 自己不能加入自己的对局
                     RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
                 } else {
-                    // 分黑白
+                    // 将对局添加到缓存
                     AppContext.REDIS.hset(List.of(RedisConstant.GAME_INFO + code,
                             "code", code,
                             "boardSize", game.boardSize.toString(),
@@ -119,7 +120,9 @@ public class GameController {
                             "mode", game.mode.name(),
                             "duration", game.duration.toString(),
                             "stepDuration", game.stepDuration.toString(),
-                            "username", game.username
+                            "camp", System.currentTimeMillis() % 2 == 0 ? ChessPiece.WHITE.name() : ChessPiece.BLACK.name(),
+                            "creator", game.username,
+                            "contender", session.username
                     )).onSuccess(size -> {
                         RestContext.success(ctx);
                         ClientManger clientManger = gameWaitService.getClientManger();
