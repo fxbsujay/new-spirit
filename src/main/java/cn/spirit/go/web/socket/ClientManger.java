@@ -5,12 +5,7 @@ import io.vertx.core.http.WebSocket;
 import io.vertx.core.json.Json;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 import java.util.function.Consumer;
 
 /**
@@ -22,9 +17,9 @@ public class ClientManger {
 
     /**
      * 客户端
-     * <sessionId, socket>
+     * <username, sessionId, socket>
      */
-    private final Map<String, WebSocket> sockets = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, WebSocket>> sockets = new HashMap<>();
 
     /**
      * 客户端端口监听器
@@ -33,10 +28,11 @@ public class ClientManger {
 
     /**
      * 是否有连接
-     * @param sessionId 客户端 Session
+     * @param session 客户端 Session
      */
-    public boolean contains(String sessionId) {
-        return sockets.containsKey(sessionId);
+    public boolean contains(UserSession session) {
+        Map<String, WebSocket> sessionSockets = sockets.get(session.username);
+        return null != sessionSockets && sessionSockets.containsKey(session.sessionId);
     }
 
     /**
@@ -46,11 +42,19 @@ public class ClientManger {
      * @return          是否注册成功
      */
     public boolean connect(UserSession session, WebSocket socket) {
-        if (contains(session.sessionId)) {
+        if (contains(session)) {
             log.warn("WebSocket connection failed with ID {}, username = {}", session.sessionId, session.username);
             return false;
         }
-        sockets.put(session.sessionId, socket);
+        Map<String, WebSocket> sessionSockets = sockets.get(session.username);
+        if (null == sessionSockets) {
+            sessionSockets = new HashMap<>();
+            sessionSockets.put(session.sessionId, socket);
+            sockets.put(session.username, sessionSockets);
+        } else {
+            sessionSockets.put(session.sessionId, socket);
+        }
+
         log.info("WebSocket connection successful with ID {}, username = {}", session.sessionId, session.username);
         return true;
     }
@@ -60,11 +64,17 @@ public class ClientManger {
      * @param session 客户端 Session
      */
     public void cancel(UserSession session) {
-        WebSocket s = sockets.remove(session.sessionId);
-        if (s != null) {
-            log.info("WebSocket cancel successful with session ID {}, username = {}", session.sessionId, session.username);
-        } else {
-            log.warn("WebSocket cancel failed with session ID {} not found, username = {}", session.sessionId, session.username);
+        Map<String, WebSocket> sessionSockets = sockets.get(session.username);
+        if (null != sessionSockets) {
+            WebSocket s = sessionSockets.remove(session.sessionId);
+            if (s != null) {
+                log.info("WebSocket cancel successful with session ID {}, username = {}", session.sessionId, session.username);
+            } else {
+                log.warn("WebSocket cancel failed with session ID {} not found, username = {}", session.sessionId, session.username);
+            }
+            if (sessionSockets.isEmpty()) {
+                sockets.remove(session.username);
+            }
         }
         for (Consumer<UserSession> listener : cancelListeners) {
             listener.accept(session);
@@ -75,15 +85,17 @@ public class ClientManger {
      * 发送消息
      *
      * @param pack          消息包
-     * @param sessionIds    接收方
+     * @param usernames    接收方
      */
-    public void send(SocketPackage<?> pack, String ...sessionIds) {
+    public void send(SocketPackage<?> pack, String ...usernames) {
         String msg = Json.encode(pack);
-        log.info("Sending message to {}, package: {}", Arrays.toString(sessionIds), msg);
-        for (String sessionId : sessionIds) {
-            WebSocket webSocket = sockets.get(sessionId);
-            if (null != webSocket) {
-                webSocket.writeFinalTextFrame(msg);
+        log.info("Sending message to {}, package: {}", Arrays.toString(usernames), msg);
+        for (String username : usernames) {
+            Map<String, WebSocket> sessionSockets = sockets.get(username);
+            if (null != sessionSockets) {
+                for (WebSocket socket : sessionSockets.values()) {
+                    socket.writeFinalTextFrame(msg);
+                }
             }
         }
     }

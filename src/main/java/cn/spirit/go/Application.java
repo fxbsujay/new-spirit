@@ -22,11 +22,9 @@ public class Application extends VerticleBase {
 
     @Override
     public Future<?> start() {
-
         DatabindCodec.mapper().registerModule(new JavaTimeModule());
         AppContext.init(vertx);
         Router router = RouterConfig.init(vertx);
-
         return vertx.createHttpServer()
                 .requestHandler(router)
                 .listen(8899)

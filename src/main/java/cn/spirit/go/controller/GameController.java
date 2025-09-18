@@ -14,7 +14,8 @@ import cn.spirit.go.service.GameWaitService;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
-import cn.spirit.go.web.socket.ClientManger;
+import cn.spirit.go.web.socket.PackageType;
+import cn.spirit.go.web.socket.SocketPackage;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.ext.web.RoutingContext;
@@ -97,40 +98,43 @@ public class GameController {
      */
     public void joinGame(RoutingContext ctx) {
         String code = ctx.pathParam("code");
-
         if (!RegexUtils.matches(code, "[A-Z0-9]{5,}")) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
-
-        ctx.vertx().sharedData().withLock(code, 1000, () -> Future.succeededFuture(gameWaitService.removeGame(code))).onSuccess(game -> {
+        UserSession session = SessionStore.sessionUser(ctx);
+        ctx.vertx().sharedData().withLock(code, 1000, () -> {
+            GameWaitDTO game = gameWaitService.get(code);
+            if (null != game) {
+                // 自己不能加入自己的对局
+                if (game.username.equals(session.username)) {
+                    return Future.succeededFuture(null);
+                }
+            }
+            return Future.succeededFuture(gameWaitService.removeGame(code));
+        }).onSuccess(game -> {
             if (game == null) {
                 RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
             } else {
-                UserSession session = SessionStore.sessionUser(ctx);
-                if (!session.username.equals(game.username)) {
-                    // 自己不能加入自己的对局
-                    RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
-                } else {
-                    // 将对局添加到缓存
-                    AppContext.REDIS.hset(List.of(RedisConstant.GAME_INFO + code,
-                            "code", code,
-                            "boardSize", game.boardSize.toString(),
-                            "type", game.type.name(),
-                            "mode", game.mode.name(),
-                            "duration", game.duration.toString(),
-                            "stepDuration", game.stepDuration.toString(),
-                            "camp", System.currentTimeMillis() % 2 == 0 ? ChessPiece.WHITE.name() : ChessPiece.BLACK.name(),
-                            "creator", game.username,
-                            "contender", session.username
-                    )).onSuccess(size -> {
-                        RestContext.success(ctx);
-                        ClientManger clientManger = gameWaitService.getClientManger();
-                    }).onFailure(e -> {
-                        log.error("{}: {}", e.getMessage(), code);
-                        RestContext.fail(ctx);
-                    });
-                }
+                // 将对局添加到缓存
+                AppContext.REDIS.hset(List.of(RedisConstant.GAME_INFO + code,
+                        "code", code,
+                        "boardSize", game.boardSize.toString(),
+                        "type", game.type.name(),
+                        "mode", game.mode.name(),
+                        "duration", game.duration.toString(),
+                        "stepDuration", game.stepDuration.toString(),
+                        "camp", System.currentTimeMillis() % 2 == 0 ? ChessPiece.WHITE.name() : ChessPiece.BLACK.name(),
+                        "creator", game.username,
+                        "contender", session.username
+                )).onSuccess(size -> {
+                    RestContext.success(ctx, code);
+                    // 通知对方游戏开始
+                    gameWaitService.getClientManger().send(SocketPackage.build(PackageType.GAME_START, code, session.username), game.username);
+                }).onFailure(e -> {
+                    log.error("{}: {}", e.getMessage(), code);
+                    RestContext.fail(ctx);
+                });
             }
         }).onFailure(e -> {
             log.error("{}: {}", e.getMessage(), code);
@@ -138,4 +142,31 @@ public class GameController {
         });
     }
 
+
+    /**
+     * 取消游戏
+     */
+    public void cancelGame(RoutingContext ctx) {
+        String code = ctx.pathParam("code");
+        if (!RegexUtils.matches(code, "[A-Z0-9]{5,}")) {
+            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+            return;
+        }
+        UserSession session = SessionStore.sessionUser(ctx);
+        ctx.vertx().sharedData().withLock(code, 1000, () -> {
+            GameWaitDTO game = gameWaitService.get(code);
+            if (null != game) {
+                // 只能取消自己的对局
+                if (!game.username.equals(session.username)) {
+                    return Future.succeededFuture(null);
+                }
+            }
+            return Future.succeededFuture(gameWaitService.removeGame(code));
+        }).onSuccess(game -> {
+            RestContext.success(ctx, game != null);
+        }).onFailure(e -> {
+            log.error("{}: {}", e.getMessage(), code);
+            RestContext.fail(ctx, HttpResponseStatus.LOCKED);
+        });
+    }
 }

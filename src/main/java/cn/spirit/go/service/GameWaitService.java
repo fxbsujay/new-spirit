@@ -16,7 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 创建的游戏对局，等待对手加入游戏，游戏开始后删除游戏，用户连接断开后删除
+ * 没有  {@link cn.spirit.go.web.socket.ClientManger Socket} 连接不能创建游戏<br/>
+ * 创建的游戏对局，等待对手加入游戏，游戏开始后删除游戏，用户连接断开后删除<br/>
  * 游戏未开始只存在内存中，不保存数据，游戏开始后保存数据
  */
 public class GameWaitService {
@@ -57,8 +58,13 @@ public class GameWaitService {
         return result;
     }
 
+    /**
+     * 创建游戏
+     * @param session   Session
+     * @param game      对局
+     */
     public boolean addGame(UserSession session, GameWaitDTO game) {
-        if (userGames.containsKey(session.username) && !clientManger.contains(session.sessionId)) {
+        if (userGames.containsKey(session.username) && !clientManger.contains(session)) {
             log.warn("{} failed to create the game", session.username);
             return false;
         }
