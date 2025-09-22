@@ -8,6 +8,7 @@ import cn.spirit.go.model.dto.GameWaitDTO;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.web.socket.ClientManger;
+import io.vertx.core.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
@@ -33,6 +34,11 @@ public class GameWaitService {
     private final Map<String, GameWaitDTO> games = new HashMap<>();
 
     private final ClientManger clientManger = AppContext.getBean(ClientManger.class);
+
+    /**
+     * 分布式锁
+     */
+    private final String GAME_LOCK = "GAME:LOCK:";
 
     public GameWaitService() {
         clientManger.addCancelListener(session -> {
@@ -63,26 +69,30 @@ public class GameWaitService {
      * @param session   Session
      * @param game      对局
      */
-    public boolean addGame(UserSession session, GameWaitDTO game) {
-        if (userGames.containsKey(session.username) && !clientManger.contains(session)) {
-            log.warn("{} failed to create the game", session.username);
-            return false;
-        }
-        game.username = session.username;
-        String code = generateCode();
-        game.code = code;
-        userGames.put(game.username, code);
-        games.put(code, game);
-        log.info("{} has created a game, code = {}", game.username, code);
-        return true;
+    public Future<Boolean> addGame(UserSession session, GameWaitDTO game) {
+        return AppContext.vertx.sharedData().withLock(GAME_LOCK + session.username, 1000, () -> {
+            if (userGames.containsKey(session.username) && !clientManger.contains(session)) {
+                log.warn("{} failed to create the game", session.username);
+                return Future.succeededFuture(false);
+            }
+            game.username = session.username;
+            String code = generateCode();
+            game.code = code;
+            userGames.put(game.username, code);
+            games.put(code, game);
+            log.info("{} has created a game, code = {}", game.username, code);
+            return Future.succeededFuture(true);
+        });
     }
 
-    public GameWaitDTO removeGame(String username) {
-        String code = userGames.remove(username);
-        if (null != code) {
-           return games.remove(code);
-        }
-        return null;
+    public Future<GameWaitDTO> removeGame(String username) {
+        return AppContext.vertx.sharedData().withLock(GAME_LOCK + username, 1000, () -> {
+            String code = userGames.remove(username);
+            if (null != code) {
+                return Future.succeededFuture(games.remove(code));
+            }
+            return Future.succeededFuture(null);
+        });
     }
 
     public GameWaitDTO get(String code) {

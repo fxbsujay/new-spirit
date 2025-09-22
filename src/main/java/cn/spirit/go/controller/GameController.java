@@ -17,7 +17,6 @@ import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.web.socket.PackageType;
 import cn.spirit.go.web.socket.SocketPackage;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.core.Future;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,11 +80,15 @@ public class GameController {
         userDao.selectByUsername(session.username).onSuccess(user -> {
             dto.score = 800;
             dto.nickname = user.nickname;
-            if (gameWaitService.addGame(session, dto)) {
-                RestContext.success(ctx);
-            } else {
-                RestContext.fail(ctx, RestStatus.GAME_CREATED);
-            }
+            gameWaitService.addGame(session, dto).onSuccess(flag -> {
+                if (flag) {
+                    RestContext.success(ctx);
+                } else {
+                    RestContext.fail(ctx, RestStatus.GAME_CREATED);
+                }
+            }).onFailure(ex -> {
+                RestContext.fail(ctx, HttpResponseStatus.LOCKED);
+            });
         }).onFailure(e -> {
             log.error(e.getMessage(), e);
             RestContext.fail(ctx);
@@ -103,16 +106,13 @@ public class GameController {
             return;
         }
         UserSession session = SessionStore.sessionUser(ctx);
-        ctx.vertx().sharedData().withLock(code, 1000, () -> {
-            GameWaitDTO game = gameWaitService.get(code);
-            if (null != game) {
-                // 自己不能加入自己的对局
-                if (game.username.equals(session.username)) {
-                    return Future.succeededFuture(null);
-                }
-            }
-            return Future.succeededFuture(gameWaitService.removeGame(code));
-        }).onSuccess(game -> {
+        GameWaitDTO g = gameWaitService.get(code);
+        if (null == g || g.username.equals(session.username)) {
+            RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
+            return;
+        }
+
+        gameWaitService.removeGame(g.username).onSuccess(game -> {
             if (game == null) {
                 RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
             } else {
@@ -142,30 +142,14 @@ public class GameController {
         });
     }
 
-
     /**
      * 取消游戏
      */
     public void cancelGame(RoutingContext ctx) {
-        String code = ctx.pathParam("code");
-        if (!RegexUtils.matches(code, "[A-Z0-9]{5,}")) {
-            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
-            return;
-        }
         UserSession session = SessionStore.sessionUser(ctx);
-        ctx.vertx().sharedData().withLock(code, 1000, () -> {
-            GameWaitDTO game = gameWaitService.get(code);
-            if (null != game) {
-                // 只能取消自己的对局
-                if (!game.username.equals(session.username)) {
-                    return Future.succeededFuture(null);
-                }
-            }
-            return Future.succeededFuture(gameWaitService.removeGame(code));
-        }).onSuccess(game -> {
+        gameWaitService.removeGame(session.username).onSuccess(game -> {
             RestContext.success(ctx, game != null);
         }).onFailure(e -> {
-            log.error("{}: {}", e.getMessage(), code);
             RestContext.fail(ctx, HttpResponseStatus.LOCKED);
         });
     }

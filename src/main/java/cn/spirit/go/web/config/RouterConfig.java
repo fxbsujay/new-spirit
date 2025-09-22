@@ -47,7 +47,7 @@ public class RouterConfig {
         router.get("/api/game/search").handler(ctx -> sessionHandle.handle(ctx, true)).handler(gameController::searchGame);
         router.post("/api/game/create").handler(ctx -> sessionHandle.handle(ctx, false)).handler(gameController::createGame);
         router.post("/api/game/join/:code").handler(ctx -> sessionHandle.handle(ctx, false)).handler(gameController::joinGame);
-        router.post("/api/game/cancel/:code").handler(ctx -> sessionHandle.handle(ctx, false)).handler(gameController::cancelGame);
+        router.post("/api/game/cancel").handler(ctx -> sessionHandle.handle(ctx, false)).handler(gameController::cancelGame);
     }
 
 }
