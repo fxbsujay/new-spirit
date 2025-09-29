@@ -50,6 +50,15 @@ public class GameWaitService {
         return clientManger;
     }
 
+    /**
+     * 搜索游戏
+     *
+     * @param username  查询不是自己的对局
+     * @param name      对局
+     * @param mode
+     * @param type
+     * @return
+     */
     public List<GameWaitDTO> searchGames(String username, String name, GameMode mode, GameType type) {
         List<GameWaitDTO> result = new ArrayList<>();
         for (GameWaitDTO value : games.values()) {

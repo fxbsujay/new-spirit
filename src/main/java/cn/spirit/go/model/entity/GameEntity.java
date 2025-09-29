@@ -53,17 +53,12 @@ public class GameEntity {
   public ChessPiece winner;
 
   /**
-   * 我的阵营 WHITE 白棋 BLACK 黑棋
+   * 白棋用户
    */
-  public ChessPiece camp;
+  public String white;
 
   /**
-   * 对手ID
+   * 黑棋用户
    */
-  public String contender;
-
-  /**
-   * 所属人
-   */
-  public String creator;
+  public String black;
 }

@@ -1,24 +1,28 @@
 package cn.spirit.test;
 
-import cn.spirit.go.web.config.AppContext;
-import io.vertx.core.Future;
-import io.vertx.core.VerticleBase;
-import io.vertx.launcher.application.VertxApplication;
+import cn.spirit.go.Application;
+import io.vertx.core.Vertx;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class RedisTest extends VerticleBase {
+@DisplayName("Server")
+@ExtendWith(VertxExtension.class)
+public class RedisTest {
 
-    public static void main(String[] args) {
-        VertxApplication.main(new String[]{RedisTest.class.getName()});
+    private static final Logger log = LoggerFactory.getLogger(RedisTest.class);
+
+    @Test
+    @DisplayName("Redis Test")
+    public void server(Vertx vertx, VertxTestContext testContext) {
+        vertx.deployVerticle(new Application()).onComplete(testContext.succeeding(id -> {
+            log.info("server deployed successfully");
+            testContext.completeNow();
+        }));
     }
 
-    @Override
-    public Future<?> start() throws Exception {
-        AppContext.init(vertx);
-
-        long l = System.currentTimeMillis();
-        AppContext.REDIS.get("33").onSuccess(redis -> {
-            System.out.println(System.currentTimeMillis()-l);
-        });
-        return Future.succeededFuture();
-    }
 }

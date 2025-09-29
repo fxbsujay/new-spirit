@@ -8,8 +8,10 @@ import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.RestStatus;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.common.util.StringUtils;
+import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.dto.GameWaitDTO;
+import cn.spirit.go.model.entity.GameEntity;
 import cn.spirit.go.service.GameWaitService;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
@@ -28,6 +30,8 @@ public class GameController {
 
     private final UserDao userDao = AppContext.getBean(UserDao.class);
 
+    private final GameDao gameDao = AppContext.getBean(GameDao.class);
+
     private final GameWaitService gameWaitService = AppContext.getBean(GameWaitService.class);
 
     /**
@@ -41,6 +45,13 @@ public class GameController {
                 GameMode.convert(ctx.queryParams().get("mode")),
                 GameType.convert(ctx.queryParams().get("type")));
         RestContext.success(ctx, games);
+    }
+
+    /**
+     * 查询对局
+     */
+    public void info(RoutingContext ctx) {
+        // 查询缓存，缓存没有查询
     }
 
     /**
@@ -113,22 +124,28 @@ public class GameController {
         }
 
         gameWaitService.removeGame(g.username).onSuccess(game -> {
-            if (game == null) {
+            if (game == null || !game.code.equals(code)) {
                 RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
             } else {
-                // 将对局添加到缓存
-                AppContext.REDIS.hset(List.of(RedisConstant.GAME_INFO + code,
-                        "code", code,
-                        "boardSize", game.boardSize.toString(),
-                        "type", game.type.name(),
-                        "mode", game.mode.name(),
-                        "duration", game.duration.toString(),
-                        "stepDuration", game.stepDuration.toString(),
-                        "camp", System.currentTimeMillis() % 2 == 0 ? ChessPiece.WHITE.name() : ChessPiece.BLACK.name(),
-                        "creator", game.username,
-                        "contender", session.username
-                )).onSuccess(size -> {
+                // 对局的基本信息存在数据库中
+                GameEntity entity = new GameEntity();
+                entity.code = code;
+                entity.boardSize = game.boardSize;
+                entity.mode = game.mode;
+                entity.type = game.type;
+                entity.duration = game.duration;
+                entity.stepDuration = game.stepDuration;
+                if (System.currentTimeMillis() % 2 == 0) {
+                    entity.white = session.username;
+                    entity.black = game.username;
+                } else {
+                    entity.white = game.username;
+                    entity.black = session.username;
+                }
+                gameDao.insert(entity).onSuccess(size -> {
                     RestContext.success(ctx, code);
+                    // 创建缓存队列
+
                     // 通知对方游戏开始
                     gameWaitService.getClientManger().send(SocketPackage.build(PackageType.GAME_START, code, session.username), game.username);
                 }).onFailure(e -> {
