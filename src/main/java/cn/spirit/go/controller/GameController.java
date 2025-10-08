@@ -1,8 +1,6 @@
 package cn.spirit.go.controller;
 
-import cn.spirit.go.common.RedisConstant;
 import cn.spirit.go.common.RestContext;
-import cn.spirit.go.common.enums.ChessPiece;
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.RestStatus;

@@ -26,7 +26,6 @@ const BoardSizeConstant = [
 ]
 
 const formState = reactive({
-  name: '',
   boardSize: 21,
   type: 'SHORT',
   mode: 'CASUAL',
@@ -41,7 +40,6 @@ const open = () => {
 const close = () => {
   visible.value = false
   Object.assign(formState, {
-    name: '',
     boardSize: 21,
     type: 'SHORT',
     mode: 'CASUAL',
@@ -66,28 +64,6 @@ defineExpose({ open, close })
       </div>
 
       <form class="form" @submit.prevent="submitHandle">
-        <div class="form-group">
-          <div class="border-input-wrap">
-            <label class="label" >
-              对局名称
-            </label>
-            <input
-                class="input"
-                required
-                pattern="[a-zA-Z0-9@.]{2,20}"
-                title="2-20位字母或数字"
-                v-model="formState.username"
-            />
-          </div>
-        </div>
-        <div class="form-group">
-          <div class="float-input-wrap">
-            <input class="input" required v-model="formState.name" placeholder=" "/>
-            <label class="label" >
-              对局名称
-            </label>
-          </div>
-        </div>
         <div class="row input-row">
           <div class="form-group col">
             <label class="form-label" >
@@ -142,7 +118,7 @@ defineExpose({ open, close })
 .create-game-dialog {
   padding: 1rem;
   position: relative;
-  width: 600px;
+  width: 400px;
   max-width: 100%;
 
   .header {

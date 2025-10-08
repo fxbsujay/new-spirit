@@ -3,7 +3,6 @@ import { reactive, ref } from 'vue'
 import http from '@/utils/http.js'
 import {useUserStore} from '@/stores/user.js'
 import router from '@/router/index.js'
-import Cookie from 'js-cookie'
 
 const formState = reactive({
   username: '',
@@ -13,8 +12,8 @@ const passwordReveal = ref(false)
 const userStore = useUserStore()
 
 const submitHandle = () => {
-  http.post("/auth/signin", formState).then(res => {
-    userStore.user.username = res.username
+  http.post("/auth/signin", formState).then(() => {
+    userStore.refreshInfo()
     router.push('/')
   }).catch(err => {
     console.log(err)

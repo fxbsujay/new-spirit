@@ -67,7 +67,7 @@ class Http {
                     if (res.code !== 200) {
                         throw new HttpError(res.code, res.msg)
                     } else {
-                        resolve(res)
+                        resolve(res.data)
                     }
                 }).catch(err => {
                     if (err.status > 10000) {
