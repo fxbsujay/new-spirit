@@ -1,5 +1,6 @@
 package cn.spirit.go.web.socket;
 
+import cn.spirit.go.service.GameWaitService;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.config.AppContext;
 import io.vertx.core.Handler;
@@ -14,6 +15,8 @@ public class SocketHandler implements Handler<RoutingContext> {
     private final Logger log = LoggerFactory.getLogger(SocketHandler.class);
 
     private final ClientManger clientManger = AppContext.getBean(ClientManger.class);
+
+    private final GameWaitService gameWaitService = AppContext.getBean(GameWaitService.class);
 
     public SocketHandler() {
         log.info("Web Socket path = /api/ws");
@@ -43,6 +46,7 @@ public class SocketHandler implements Handler<RoutingContext> {
                     });
                     ws.closeHandler(e -> {
                         clientManger.cancel(session);
+                        gameWaitService.removeGame(session.username);
                     });
                 } else {
                     ws.close();

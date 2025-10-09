@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 没有  {@link cn.spirit.go.web.socket.ClientManger Socket} 连接不能创建游戏<br/>
+ * 没有  {@link ClientManger Socket} 连接不能创建游戏<br/>
  * 创建的游戏对局，等待对手加入游戏，游戏开始后删除游戏，用户连接断开后删除<br/>
  * 游戏未开始只存在内存中，不保存数据，游戏开始后保存数据
  */
@@ -40,24 +40,13 @@ public class GameWaitService {
      */
     private final String GAME_LOCK = "GAME:LOCK:";
 
-    public GameWaitService() {
-        clientManger.addCancelListener(session -> {
-            removeGame(session.username);
-        });
-    }
-
-    public ClientManger getClientManger() {
-        return clientManger;
-    }
-
     /**
      * 搜索游戏
      *
      * @param username  查询不是自己的对局
      * @param name      对局
-     * @param mode
-     * @param type
-     * @return
+     * @param mode      {@link GameMode}
+     * @param type      {@link GameType}
      */
     public List<GameWaitDTO> searchGames(String username, String name, GameMode mode, GameType type) {
         List<GameWaitDTO> result = new ArrayList<>();
@@ -94,6 +83,12 @@ public class GameWaitService {
         });
     }
 
+    /**
+     * 删除自己的游戏
+     * socket断开时删除、自己取消游戏时删除、别人加入游戏时删除
+     *
+     * @param username  用户名
+     */
     public Future<GameWaitDTO> removeGame(String username) {
         return AppContext.vertx.sharedData().withLock(GAME_LOCK + username, 1000, () -> {
             String code = userGames.remove(username);

@@ -10,12 +10,11 @@ import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.dto.GameWaitDTO;
 import cn.spirit.go.model.entity.GameEntity;
+import cn.spirit.go.service.GameRoomService;
 import cn.spirit.go.service.GameWaitService;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
-import cn.spirit.go.web.socket.PackageType;
-import cn.spirit.go.web.socket.SocketPackage;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
@@ -31,6 +30,9 @@ public class GameController {
     private final GameDao gameDao = AppContext.getBean(GameDao.class);
 
     private final GameWaitService gameWaitService = AppContext.getBean(GameWaitService.class);
+
+    private final GameRoomService gameRoomService = AppContext.getBean(GameRoomService.class);
+
 
     /**
      * 搜索对局
@@ -95,7 +97,7 @@ public class GameController {
                 } else {
                     RestContext.fail(ctx, RestStatus.GAME_CREATED);
                 }
-            }).onFailure(ex -> {
+            }).onFailure(__ -> {
                 RestContext.fail(ctx, HttpResponseStatus.LOCKED);
             });
         }).onFailure(e -> {
@@ -140,13 +142,7 @@ public class GameController {
                     entity.white = game.username;
                     entity.black = session.username;
                 }
-                gameDao.insert(entity).onSuccess(size -> {
-                    RestContext.success(ctx, code);
-                    // 创建缓存队列
-
-                    // 通知对方游戏开始
-                    gameWaitService.getClientManger().send(SocketPackage.build(PackageType.GAME_START, code, session.username), game.username);
-                }).onFailure(e -> {
+                gameDao.insert(entity).onSuccess(__ -> RestContext.success(ctx, gameRoomService.add(entity))).onFailure(e -> {
                     log.error("{}: {}", e.getMessage(), code);
                     RestContext.fail(ctx);
                 });
@@ -164,7 +160,7 @@ public class GameController {
         UserSession session = SessionStore.sessionUser(ctx);
         gameWaitService.removeGame(session.username).onSuccess(game -> {
             RestContext.success(ctx, game != null);
-        }).onFailure(e -> {
+        }).onFailure(__ -> {
             RestContext.fail(ctx, HttpResponseStatus.LOCKED);
         });
     }

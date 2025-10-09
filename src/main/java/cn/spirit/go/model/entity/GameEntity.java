@@ -3,6 +3,8 @@ package cn.spirit.go.model.entity;
 import cn.spirit.go.common.enums.ChessPiece;
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDateTime;
 
 public class GameEntity {

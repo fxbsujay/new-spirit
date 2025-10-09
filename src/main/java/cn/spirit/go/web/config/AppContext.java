@@ -2,6 +2,7 @@ package cn.spirit.go.web.config;
 
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
+import cn.spirit.go.service.GameRoomService;
 import cn.spirit.go.service.GameWaitService;
 import cn.spirit.go.web.socket.ClientManger;
 import io.vertx.core.Future;
@@ -95,6 +96,7 @@ public class AppContext {
         addBean(new GameDao());
 
         addBean(new GameWaitService());
+        addBean(new GameRoomService());
     }
 
     public static Future<MailResult> sendMail(String subject, String to, String content, boolean html) {
