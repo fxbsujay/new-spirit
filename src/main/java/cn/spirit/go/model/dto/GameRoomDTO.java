@@ -12,7 +12,7 @@ public class GameRoomDTO {
     public GameEntity info;
 
     /**
-     * 步骤 0412B:1243W
+     * 步骤
      */
     public List<String> steps = new ArrayList<>();
 
