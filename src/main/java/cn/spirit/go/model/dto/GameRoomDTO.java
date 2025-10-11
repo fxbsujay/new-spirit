@@ -2,9 +2,7 @@ package cn.spirit.go.model.dto;
 
 import cn.spirit.go.model.entity.GameEntity;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class GameRoomDTO {
 
@@ -14,12 +12,7 @@ public class GameRoomDTO {
     public GameEntity info;
 
     /**
-     * 观战席
-     */
-    public Set<String> sessionIds = new HashSet<>();
-
-    /**
-     * 步骤
+     * 步骤 0412B:1243W
      */
     public List<String> steps = new ArrayList<>();
 

@@ -5,4 +5,6 @@ public enum PackageType {
     SYS,
     // 游戏开始通知
     GAME_START,
+    // 加入房间通知
+    GAME_JOIN,
 }

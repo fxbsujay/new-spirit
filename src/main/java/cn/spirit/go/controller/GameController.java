@@ -124,7 +124,7 @@ public class GameController {
         }
 
         gameWaitService.removeGame(g.username).onSuccess(game -> {
-            if (game == null || !game.code.equals(code)) {
+            if (null == game || !game.code.equals(code)) {
                 RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
             } else {
                 // 对局的基本信息存在数据库中
