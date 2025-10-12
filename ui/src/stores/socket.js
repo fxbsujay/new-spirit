@@ -16,6 +16,10 @@ export const useSocketStore = defineStore('counter', () => {
     }
   }
 
+  socket.onmessage = function (event) {
+    console.log(event)
+  }
+
   const isConnected = () => {
     return socket.readyState === WebSocket.OPEN
   }

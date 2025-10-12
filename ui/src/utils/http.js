@@ -107,7 +107,7 @@ class Http {
     post(path, data) {
         const options = {
             method: Method.POST,
-            body: JSON.stringify(data),
+            body: data ? JSON.stringify(data) : null,
             headers: {
                 "Content-Type": ContentType.json
             },

@@ -12,9 +12,15 @@ const games = ref([])
 
 http.get('/game/search').then(res => {
   games.value = res
-}).catch(err => {
+}).catch(() => {
   games.value = []
 })
+
+const joinGame = (code) => {
+  http.post('/game/join/' + code).then(() => {
+    console.log(code)
+  })
+}
 </script>
 
 <template>
@@ -42,17 +48,21 @@ http.get('/game/search').then(res => {
         </div>
       </div>
       <div class="lists">
-        <div class="item" v-for="item in games">
+        <div class="list-header">
+          <div class="col name-col">棋手</div>
+          <div class="col">尺寸</div>
+          <div class="col">时间</div>
+          <div class="col">积分</div>
+          <div class="col">模式</div>
+        </div>
+        <div class="item" v-for="item in games" @click="joinGame(item.code)">
           <div class="col name-col">
-            <p class="name">{{ item.name }}</p>
-            <p class="user">我是莲花</p>
+            {{ item.nickname }}
           </div>
           <div class="col">{{ item.boardSize }}x{{ item.boardSize }}</div>
           <div class="col">10h+6s</div>
           <div class="col">1700</div>
-          <div class="col">
-            <Icon name="lock" size="1rem"/>
-          </div>
+          <div class="col">排位</div>
         </div>
       </div>
     </div>
@@ -63,6 +73,9 @@ http.get('/game/search').then(res => {
         </div>
       </Responsive>
       <div class="play-btn">
+        <div>
+
+        </div>
         <button class="button border" @click="createDialogRef.open()">创建游戏</button>
         <button class="button border">AAA</button>
         <button class="button border">积分赛</button>

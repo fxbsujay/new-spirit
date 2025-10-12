@@ -41,7 +41,6 @@ public class GameController {
         UserSession session = SessionStore.sessionUser(ctx);
         List<GameWaitDTO> games = gameWaitService.searchGames(
                 session.isGuest ? null : session.username,
-                ctx.queryParams().get("name"),
                 GameMode.convert(ctx.queryParams().get("mode")),
                 GameType.convert(ctx.queryParams().get("type")));
         RestContext.success(ctx, games);
@@ -59,8 +58,7 @@ public class GameController {
      */
     public void createGame(RoutingContext ctx) {
         GameWaitDTO dto = ctx.body().asPojo(GameWaitDTO.class);
-        if (StringUtils.isBlank(dto.name) || dto.name.length() > 30 ||
-                null == dto.type || null == dto.mode || null == dto.boardSize) {
+        if (null == dto.type || null == dto.mode || null == dto.boardSize) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }

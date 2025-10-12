@@ -33,8 +33,6 @@ public class GameWaitService {
 
     private final Map<String, GameWaitDTO> games = new HashMap<>();
 
-    private final ClientManger clientManger = AppContext.getBean(ClientManger.class);
-
     /**
      * 分布式锁
      */
@@ -48,11 +46,10 @@ public class GameWaitService {
      * @param mode      {@link GameMode}
      * @param type      {@link GameType}
      */
-    public List<GameWaitDTO> searchGames(String username, String name, GameMode mode, GameType type) {
+    public List<GameWaitDTO> searchGames(String username, GameMode mode, GameType type) {
         List<GameWaitDTO> result = new ArrayList<>();
         for (GameWaitDTO value : games.values()) {
             if ((StringUtils.isNotBlank(username) && username.equals(value.username)) ||
-                (StringUtils.isNotBlank(name) && !value.name.contains(name)) ||
                 (mode != null && mode != value.mode) ||
                 (type != null && type != value.type)) {
                 continue;
@@ -69,7 +66,7 @@ public class GameWaitService {
      */
     public Future<Boolean> addGame(UserSession session, GameWaitDTO game) {
         return AppContext.vertx.sharedData().withLock(GAME_LOCK + session.username, 1000, () -> {
-            if (userGames.containsKey(session.username) && !clientManger.contains(session)) {
+            if (userGames.containsKey(session.username)) {
                 log.warn("{} failed to create the game", session.username);
                 return Future.succeededFuture(false);
             }

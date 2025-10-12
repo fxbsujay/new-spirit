@@ -48,24 +48,15 @@
 
 .lists {
   margin-top: 1rem;
-  .item {
-    background-color: #ffffff;
+
+
+  .list-header, .item {
     margin: 4px 0;
     display: flex;
     align-items: center;
     white-space: nowrap;
-    cursor: pointer;
-    font-size: 14px;
     line-height: 0;
-    @borderSize: 3px;
-    border-bottom: @borderSize solid #F7F7F7;
-    padding: 12px 0;
-
-    &:hover {
-      background: rgba(0, 0, 0, 0.05);
-      border-bottom: @borderSize solid @linkActiveColor;
-    }
-
+    user-select: none;
     .col {
       flex: 1;
       padding: 0 1rem;
@@ -73,7 +64,27 @@
     .name-col {
       position: relative;
       flex: 5;
+      line-height: 1rem;
     }
+  }
+  .list-header {
+    color: @labelColor;
+    font-size: 12px;
+    padding: 4px 0;
+  }
+  .item {
+    padding: 12px 0;
+    @borderSize: 3px;
+    background-color: #ffffff;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 0;
+    border-bottom: @borderSize solid #F7F7F7;
+    &:hover {
+      background: rgba(0, 0, 0, 0.05);
+      border-bottom: @borderSize solid @linkActiveColor;
+    }
+
   }
 }
 .toggle-filter {

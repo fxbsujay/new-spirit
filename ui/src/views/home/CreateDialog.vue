@@ -3,6 +3,7 @@
 import Slider from '@/components/slider/index.vue'
 import Dialog from '@/components/dialog/index.vue'
 import { reactive, ref } from 'vue'
+import http from '@/utils/http'
 
 const visible = ref(false)
 
@@ -49,7 +50,9 @@ const close = () => {
 }
 
 const submitHandle = () => {
-
+  http.post('/game/create', formState).then(() => {
+    console.log('--')
+  })
 }
 
 defineExpose({ open, close })

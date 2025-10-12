@@ -4,10 +4,6 @@ import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 
 public class GameWaitDTO {
-    /**
-     * 名称
-     */
-    public String name;
 
     /**
      * 编号
