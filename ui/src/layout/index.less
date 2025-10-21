@@ -1,10 +1,57 @@
 @import "@/assets/css/variable.less";
 
+
+.animation (@name, @duration:1s, @delay:0, @ease:linear, @iterations:infinite, @endState:normal) {
+  -webkit-animation: @name @duration @ease @iterations @endState;
+  -moz-animation: @name @duration @ease @iterations @endState;
+  -ms-animation: @name @duration @ease @iterations @endState;
+  animation: @name @duration @ease @iterations @endState;
+  .delay(@delay);
+}
+
+.delay (@delay) {
+  -webkit-animation-delay: @delay;
+  -moz-animation-delay: @delay;
+  -o-animation-delay: @delay;
+  animation-delay: @delay;
+}
+
+.box-shadow (@string) {
+  -webkit-box-shadow: @string;
+  -moz-box-shadow: @string;
+  box-shadow: @string;
+}
+
+.square (@xy:30px) {
+  width:@xy;
+  height:@xy;
+}
+@blue:rgba(0,183,229,0.9);
+@blue-shadow:darken(@blue, 30%);
+@keyframes spin-pulse
+{
+  from {
+    transform:rotate(160deg);
+    opacity:0;
+    box-shadow:0 0 1px @blue-shadow;
+  }
+  50% { transform:rotate(145deg); opacity:1; }
+  to { transform:rotate(-320deg); opacity:0; }
+}
+
+@keyframes spin-right
+{
+  from { transform:rotate(0deg); opacity:0.2; }
+  50% { transform:rotate(180deg); opacity:1.0; }
+  to { transform:rotate(360deg); opacity:0.2; }
+}
+
 .layout-header {
   background-color: #fff;
   height: 60px;
   margin: 0 auto;
   padding: 0 40px;
+  position: relative;
 
   .site-title-nav {
     height: 100%;
@@ -15,10 +62,33 @@
     justify-content: flex-start;
   }
 
+
+
+
   a {
     padding: 0 1rem;
   }
 
+  .play {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    z-index: 100;
+    transform: translateX(-50%);
+    background-color: #3E7DD6;
+    padding: 8px 10px;
+    width: 250px;
+
+    .title {
+      display: flex;
+      align-items: center;
+
+      .type-name {
+        margin-left: 8px;
+        color: #fff;
+      }
+    }
+  }
 }
 
 .site-title {
