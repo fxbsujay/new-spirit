@@ -30,13 +30,6 @@
         </RouterLink>
       </div>
     </div>
-    <div class="play">
-      <div class="title">
-        <Loading color="#fff" size="24px"/>
-        <span class="type-name">积分赛</span>
-      </div>
-
-    </div>
   </header>
   <main class="layout-main">
     <RouterView/>

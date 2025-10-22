@@ -2,6 +2,7 @@
 <script setup>
 import Responsive from '@/components/responsive/index.vue'
 import CreateDialog from './CreateDialog.vue'
+import WaitPlayPanels from './WaitPlayPanels.vue'
 import { ref, useTemplateRef } from 'vue'
 import Icon from '@/components/icon/Icon.vue'
 import http from '@/utils/http'
@@ -81,6 +82,7 @@ const joinGame = (code) => {
         <button class="button border">积分赛</button>
       </div>
     </div>
+    <WaitPlayPanels />
   </div>
   <CreateDialog  ref="createDialogRef" />
 

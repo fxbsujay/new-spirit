@@ -14,9 +14,9 @@ const { color, size } = defineProps({
 </script>
 
 <template>
-  <div class="loading">
+  <div class="loading"  :style="{ width: size, height: size}">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45.714285714285715 45.714285714285715"
-         :style="{transform: 'rotate(calc(-90deg))', color, width: size, height: size}">
+         :style="{transform: 'rotate(calc(-90deg))', color}">
       <circle class="underlay" fill="transparent" cx="50%" cy="50%" r="20"
               stroke-width="5.714285714285714" stroke-dasharray="125.66370614359172" stroke-dashoffset="0"></circle>
       <circle class="overlay" fill="transparent" cx="50%" cy="50%" r="20"
@@ -32,6 +32,8 @@ svg {
   animation: progress-circular-rotate 1.4s linear infinite;
   transform-origin: center center;
   transition: all .2s ease-in-out;
+  width: 100%;
+  height: 100%;
 }
 
 .underlay {

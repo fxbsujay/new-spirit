@@ -1,56 +1,10 @@
 @import "@/assets/css/variable.less";
 
-
-.animation (@name, @duration:1s, @delay:0, @ease:linear, @iterations:infinite, @endState:normal) {
-  -webkit-animation: @name @duration @ease @iterations @endState;
-  -moz-animation: @name @duration @ease @iterations @endState;
-  -ms-animation: @name @duration @ease @iterations @endState;
-  animation: @name @duration @ease @iterations @endState;
-  .delay(@delay);
-}
-
-.delay (@delay) {
-  -webkit-animation-delay: @delay;
-  -moz-animation-delay: @delay;
-  -o-animation-delay: @delay;
-  animation-delay: @delay;
-}
-
-.box-shadow (@string) {
-  -webkit-box-shadow: @string;
-  -moz-box-shadow: @string;
-  box-shadow: @string;
-}
-
-.square (@xy:30px) {
-  width:@xy;
-  height:@xy;
-}
-@blue:rgba(0,183,229,0.9);
-@blue-shadow:darken(@blue, 30%);
-@keyframes spin-pulse
-{
-  from {
-    transform:rotate(160deg);
-    opacity:0;
-    box-shadow:0 0 1px @blue-shadow;
-  }
-  50% { transform:rotate(145deg); opacity:1; }
-  to { transform:rotate(-320deg); opacity:0; }
-}
-
-@keyframes spin-right
-{
-  from { transform:rotate(0deg); opacity:0.2; }
-  50% { transform:rotate(180deg); opacity:1.0; }
-  to { transform:rotate(360deg); opacity:0.2; }
-}
-
 .layout-header {
   background-color: #fff;
-  height: 60px;
+  height: @headerHeight;
   margin: 0 auto;
-  padding: 0 40px;
+  padding: 0 20px;
   position: relative;
 
   .site-title-nav {
@@ -63,39 +17,17 @@
   }
 
 
-
-
   a {
     padding: 0 1rem;
-  }
-
-  .play {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    z-index: 100;
-    transform: translateX(-50%);
-    background-color: #3E7DD6;
-    padding: 8px 10px;
-    width: 250px;
-
-    .title {
-      display: flex;
-      align-items: center;
-
-      .type-name {
-        margin-left: 8px;
-        color: #fff;
-      }
-    }
+    height: 100%;
   }
 }
 
 .site-title {
-  display: flex;
-  align-items: center;
+  height: 100%;
+  padding: 5% 0;
   .logo {
-    height: 48px;
+    height: 100%;
     width: auto;
   }
 }
@@ -123,7 +55,7 @@
       }
     }
     & > a {
-      line-height: 60px;
+      line-height: @headerHeight;
       &:hover {
         color: @linkActiveColor;
       }
@@ -163,7 +95,7 @@
 
 .layout-main {
   position: relative;
-  height: calc(100vh - 60px);
+  height: calc(100vh - @headerHeight);
   overflow-y: auto;
   padding: 2rem;
   background-color: #F7F7F7;
