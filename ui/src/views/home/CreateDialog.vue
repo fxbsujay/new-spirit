@@ -8,8 +8,8 @@ import http from '@/utils/http'
 const visible = ref(false)
 
 const ModeConstant = [
-  { label: '休闲', value: 'CASUAL' },
-  { label: '排放', value: 'RANK' },
+  { label: '公开', value: 'CASUAL' },
+  { label: '好友', value: 'RANK' },
 ]
 
 const TypeConstant = [
@@ -60,7 +60,7 @@ defineExpose({ open, close })
 </script>
 
 <template>
-  <Dialog :visible="visible" @close="close">
+  <Dialog :visible="visible">
     <div class="create-game-dialog">
       <div class="header">
         <h2 class="title">创建对局</h2>

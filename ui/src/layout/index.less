@@ -72,7 +72,7 @@
     background: #fff;
     min-width: 10rem;
     box-shadow: 2px 5px 6px rgba(0, 0, 0, .3);
-    z-index: 99;
+    z-index: @headerZIndex;
 
     a {
       display: inline-block;
@@ -89,8 +89,38 @@
 .tools {
   margin-left: auto;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+}
 
+.user {
+  position: relative;
+  height: 100%;
+  .avatar {
+    height: 90%;
+    cursor: pointer;
+    border-radius: 50%;
+    border: 1px solid #6b6969;
+    padding: 1px;
+    margin-top: 5%;
+  }
 
+  .dropdown {
+    position: absolute;
+    transform: translateY(100%) translateX(50%);
+    bottom: 0;
+    right: 50%;
+    max-height: inherit;
+    background: #fff;
+    min-width: 10rem;
+    box-shadow: 2px 5px 6px rgba(0, 0, 0, 0.3);
+    height: 200px;
+    z-index: @headerZIndex;
+  }
+
+  &:hover {
+
+  }
 }
 
 .layout-main {

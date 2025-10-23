@@ -15,14 +15,11 @@ export const useUserStore = defineStore('user', () => {
   })
 
   const refreshInfo = () => {
-    if (!user.timestamp) {
-      // WWNF8X 22222222
-      http.post("/auth/info").then(res => {
-        Object.assign(user, res)
-        user.timestamp = dayjs().valueOf()
-        console.log(user)
-      })
-    }
+    http.post("/auth/info").then(res => {
+      Object.assign(user, res)
+      user.timestamp = dayjs().valueOf()
+    })
   }
+
   return { user, refreshInfo }
 })

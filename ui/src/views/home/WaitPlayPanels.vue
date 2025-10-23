@@ -22,11 +22,12 @@ import Loading from '@/components/loading/index.vue'
 </template>
 
 <style scoped lang="less">
+@import "@/assets/css/variable.less";
 .play-panels {
   position: fixed;
   top: 0;
   left: 50%;
-  z-index: 100;
+  z-index: @headerZIndex + 1;
   transform: translateX(-50%);
   cursor: pointer;
 
@@ -44,7 +45,7 @@ import Loading from '@/components/loading/index.vue'
     .button {
       height: 30px;
       opacity: 1;
-      transition: opacity 0.5s 0.3s ease;
+      transition: opacity 0.3s 0.1s ease;
     }
   }
 }
@@ -57,7 +58,7 @@ import Loading from '@/components/loading/index.vue'
   border-radius:  0 0 4px 4px;
   display: flex;
   height: 40px;
-  transition: height 0.5s ease;
+  transition: height 0.3s ease;
 
   .info {
     margin-left: 8px;
@@ -77,7 +78,7 @@ import Loading from '@/components/loading/index.vue'
     font-size: 14px;
     opacity: 0;
     height: 0;
-    transition: opacity 0.5s ease;
+    transition: opacity 0.3s ease;
   }
 
   .code {
@@ -88,7 +89,7 @@ import Loading from '@/components/loading/index.vue'
   .time {
     margin-top: auto;
     font-size: 16px;
-    transition: font-size 0.5s ease;
+    transition: font-size 0.3s ease;
   }
 }
 

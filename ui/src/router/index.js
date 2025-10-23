@@ -48,7 +48,9 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
-  userStore.refreshInfo()
+  if (!userStore.user.timestamp) {
+    userStore.refreshInfo()
+  }
   next()
 })
 

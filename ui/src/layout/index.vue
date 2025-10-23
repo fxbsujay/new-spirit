@@ -25,9 +25,17 @@
         </section>
       </nav>
       <div class="tools">
-        <RouterLink to="/sign-in">
+        <RouterLink to="/sign-in" v-if="user.isGuest">
           登录
         </RouterLink>
+        <div class="user" v-else>
+          <img :src="user.avatar" :alt="user.nickname" class="avatar">
+          <div class="dropdown">
+            <div class="links">
+              <RouterLink to="/sign-in"><Icon name="star" size="1rem" color="#F0B01A"/>创建对局</RouterLink>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -36,7 +44,8 @@
   </main>
 </template>
 <script setup>
-import Loading from '@/components/loading/index.vue'
+import { useUserStore } from '@/stores/user.js'
+const { user } = useUserStore()
 </script>
 <style lang="less" scoped>
 @import "./index.less";

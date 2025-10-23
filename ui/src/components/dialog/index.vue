@@ -14,7 +14,7 @@ const emits = defineEmits(['close'])
 </script>
 
 <style scoped lang="less">
-
+@import "@/assets/css/variable.less";
 .dialog-modal {
   position: fixed;
   top: 0;
@@ -24,7 +24,7 @@ const emits = defineEmits(['close'])
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2400;
+  z-index: @dialogZIndex;
   padding: 1rem;
 
   .mask {

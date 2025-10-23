@@ -32,20 +32,20 @@ const open = () => {
 defineExpose({ open, close })
 </script>
 
-<style scoped>
+<style scoped lang="less">
+@import "@/assets/css/variable.less";
 .message-box {
   position: fixed;
   top: 8%;
   left: 50%;
   min-width: 300px;
-
   transform: translateX(-50%);
   padding: 12px 16px;
   border-radius: 4px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
   display: flex;
   align-items: center;
-  z-index: 9999;
+  z-index: @messageZIndex;
   font-size: 14px;
   color: rgb(238, 238, 238);
   background-color: #424242;
