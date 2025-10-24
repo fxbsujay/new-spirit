@@ -101,12 +101,14 @@
   align-items: center;
   justify-content: center;
 
+
   .avatar {
-    height: 80%;
+    height: 32px;
     cursor: pointer;
     border-radius: 50%;
     border: 1px solid @linkActiveColor;
     padding: 1px;
+    width: 32px;
   }
 
   .dropdown {
@@ -118,10 +120,27 @@
     z-index: @headerZIndex;
     visibility: hidden;
     .dropdown-content {
-      margin-top: 4px;
+      margin-top: 10px;
       background: #fff;
-      min-width: 10rem;
+      min-width: inherit;
       box-shadow: 0 0 #0000, 0 0 #0000, 0 1px 3px #0000000a, 0 10px 28px -4px #00000029;
+      z-index: 2;
+      position: relative;
+    }
+
+    &:before {
+      top: 4px;
+      right: 5%;
+      background: #fff;
+      border: 1px solid #ebeced;
+      box-sizing: border-box;
+      content: "";
+      height: 20px;
+      width: 20px;
+      pointer-events: auto;
+      position: absolute;
+      transform: rotate(45deg);
+      z-index: 1;
     }
 
     &:hover {
@@ -133,25 +152,23 @@
       flex-direction: column;
       padding: 8px;
       a {
-        color: #000;
+        white-space: nowrap;
+        color: #595959;
         padding: 6px 1rem;
         border-radius: 2px;
         display: flex;
         align-items: center;
+
+        svg {
+          fill: #595959;
+        }
 
         .icon {
           margin-right: 8px;
         }
 
         &:hover {
-          background-color: @linkActiveColor;
-          color: #fff;
-          .icon {
-            fill: #fff;
-          }
-        }
-        &.logout:hover {
-          background-color: #d01b45;
+          background-color: rgba(192, 194, 192, 0.2);
         }
       }
     }

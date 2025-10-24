@@ -34,7 +34,7 @@
             <div class="dropdown-content">
               <div class="links">
                 <RouterLink to="/sign-in"><Icon name="person" size="14px" /><span>个人中心</span></RouterLink>
-                <RouterLink class="logout" to="/sign-in"><Icon name="logout" size="14px" /><span>退出</span></RouterLink>
+                <RouterLink class="logout" to="/sign-in"><Icon name="logout" size="14px" /><span>退出登录</span></RouterLink>
               </div>
             </div>
           </div>
