@@ -36,7 +36,7 @@
   display: flex;
   a {
     color: #000;
-    font-size: 16px;
+    font-size: 14px;
     height: 100%;
     border-inline-start: 3px solid transparent;
   }
@@ -87,6 +87,7 @@
 }
 
 .tools {
+  height: 100%;
   margin-left: auto;
   font-size: 14px;
   display: flex;
@@ -96,30 +97,73 @@
 .user {
   position: relative;
   height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   .avatar {
-    height: 90%;
+    height: 80%;
     cursor: pointer;
     border-radius: 50%;
-    border: 1px solid #6b6969;
+    border: 1px solid @linkActiveColor;
     padding: 1px;
-    margin-top: 5%;
   }
 
   .dropdown {
     position: absolute;
-    transform: translateY(100%) translateX(50%);
+    transform: translateY(100%);
     bottom: 0;
-    right: 50%;
+    right: 0;
     max-height: inherit;
-    background: #fff;
-    min-width: 10rem;
-    box-shadow: 2px 5px 6px rgba(0, 0, 0, 0.3);
-    height: 200px;
     z-index: @headerZIndex;
+    visibility: hidden;
+    .dropdown-content {
+      margin-top: 4px;
+      background: #fff;
+      min-width: 10rem;
+      box-shadow: 0 0 #0000, 0 0 #0000, 0 1px 3px #0000000a, 0 10px 28px -4px #00000029;
+    }
+
+    &:hover {
+      visibility: visible;
+    }
+
+    .links {
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+      a {
+        color: #000;
+        padding: 6px 1rem;
+        border-radius: 2px;
+        display: flex;
+        align-items: center;
+
+        .icon {
+          margin-right: 8px;
+        }
+
+        &:hover {
+          background-color: @linkActiveColor;
+          color: #fff;
+          .icon {
+            fill: #fff;
+          }
+        }
+        &.logout:hover {
+          background-color: #d01b45;
+        }
+      }
+    }
   }
 
   &:hover {
-
+    .dropdown {
+      visibility: visible;
+    }
+    .avatar {
+      border: 2px solid @linkActiveColor;
+    }
   }
 }
 

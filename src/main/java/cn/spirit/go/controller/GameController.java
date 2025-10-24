@@ -5,7 +5,6 @@ import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.RestStatus;
 import cn.spirit.go.common.util.RegexUtils;
-import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.dto.GameWaitDTO;
@@ -33,16 +32,14 @@ public class GameController {
 
     private final GameRoomService gameRoomService = AppContext.getBean(GameRoomService.class);
 
-
     /**
      * 搜索对局
      */
     public void searchGame(RoutingContext ctx) {
+        String like = ctx.request().getParam("like");
+        GameType type = GameType.convert(ctx.request().getParam("type"));
         UserSession session = SessionStore.sessionUser(ctx);
-        List<GameWaitDTO> games = gameWaitService.searchGames(
-                session.isGuest ? null : session.username,
-                GameMode.convert(ctx.queryParams().get("mode")),
-                GameType.convert(ctx.queryParams().get("type")));
+        List<GameWaitDTO> games = gameWaitService.searchGames(session.isGuest ? null : session.username, like, type, 10);
         RestContext.success(ctx, games);
     }
 
@@ -54,11 +51,11 @@ public class GameController {
     }
 
     /**
-     * 创建对局
+     * 创建对局 休闲或好友
      */
     public void createGame(RoutingContext ctx) {
         GameWaitDTO dto = ctx.body().asPojo(GameWaitDTO.class);
-        if (null == dto.type || null == dto.mode || null == dto.boardSize) {
+        if (null == dto.type || null == dto.mode || null == dto.boardSize || (!GameMode.CASUAL.equals(dto.mode) && !GameMode.FRIEND.equals(dto.mode))) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
@@ -71,18 +68,6 @@ public class GameController {
         } else {
             dto.duration = 0;
             dto.stepDuration = 0;
-        }
-
-        if (GameMode.RANK.equals(dto.mode)) {
-            if (!GameType.SHORT.equals(dto.type)) {
-                RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
-                return;
-            }
-
-            if (dto.boardSize != 19) {
-                RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
-                return;
-            }
         }
 
         UserSession session = SessionStore.sessionUser(ctx);
@@ -102,11 +87,10 @@ public class GameController {
             log.error(e.getMessage(), e);
             RestContext.fail(ctx);
         });
-
     }
 
     /**
-     * 创建对局
+     * 创建自定义对局,
      */
     public void joinGame(RoutingContext ctx) {
         String code = ctx.pathParam("code");

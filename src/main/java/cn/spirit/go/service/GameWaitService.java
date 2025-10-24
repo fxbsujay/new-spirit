@@ -29,8 +29,14 @@ public class GameWaitService {
 
     private String dailyTime = DateUtils.getTime("yyyyMMdd");
 
+    /**
+     * username -> code
+     */
     private final Map<String, String> userGames = new HashMap<>();
 
+    /**
+     * code -> game
+     */
     private final Map<String, GameWaitDTO> games = new HashMap<>();
 
     /**
@@ -39,22 +45,25 @@ public class GameWaitService {
     private final String GAME_LOCK = "GAME:LOCK:";
 
     /**
-     * 搜索游戏
+     * 搜索休闲游戏
      *
      * @param username  查询不是自己的对局
-     * @param name      对局
-     * @param mode      {@link GameMode}
+     * @param like      对局名称或编号
      * @param type      {@link GameType}
      */
-    public List<GameWaitDTO> searchGames(String username, GameMode mode, GameType type) {
+    public List<GameWaitDTO> searchGames(String username, String like, GameType type, int limit) {
         List<GameWaitDTO> result = new ArrayList<>();
         for (GameWaitDTO value : games.values()) {
-            if ((StringUtils.isNotBlank(username) && username.equals(value.username)) ||
-                (mode != null && mode != value.mode) ||
-                (type != null && type != value.type)) {
+            if (null != username && (username.equals(value.username)) ||
+                (null != like&& !like.equals(value.code) && !like.equals(value.username)) ||
+                (null != type && type != value.type) ||
+                !GameMode.CASUAL.equals(value.mode)) {
                 continue;
             }
             result.add(value);
+            if (result.size() >= limit) {
+                break;
+            }
         }
         return result;
     }
@@ -98,6 +107,14 @@ public class GameWaitService {
 
     public GameWaitDTO get(String code) {
         return games.get(code);
+    }
+
+    public GameWaitDTO getByUsername(String username) {
+        String code = userGames.get(username);
+        if (null == code) {
+            return null;
+        }
+        return get(code);
     }
 
     /**
