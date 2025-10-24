@@ -64,7 +64,7 @@ public class ClientManger {
     public void cancel(UserSession session) {
         Set<String> sessions = userSessions.get(session.username);
         if (null != sessions) {
-            boolean remove = sessions.remove(session.username);
+            boolean remove = sessions.remove(session.sessionId);
             if (remove) {
                 log.info("WebSocket cancel successful with session ID {}, username = {}", session.sessionId, session.username);
 
