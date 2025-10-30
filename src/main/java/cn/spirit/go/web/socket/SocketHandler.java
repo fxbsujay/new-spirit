@@ -51,7 +51,9 @@ public class SocketHandler implements Handler<RoutingContext> {
                 } else {
                     ws.close();
                 }
-            }).onFailure(e -> ws.close());
+            }).onFailure(e -> {
+                ws.close();
+            });
         });
     }
 }
