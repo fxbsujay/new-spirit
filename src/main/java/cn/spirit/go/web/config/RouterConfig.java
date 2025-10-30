@@ -3,6 +3,7 @@ package cn.spirit.go.web.config;
 import cn.spirit.go.common.RestContext;
 import cn.spirit.go.controller.AuthController;
 import cn.spirit.go.controller.GameController;
+import cn.spirit.go.controller.UserController;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.socket.SocketHandler;
 import io.vertx.core.Vertx;
@@ -30,6 +31,7 @@ public class RouterConfig {
 
         authController(router);
         gameController(router, sessionHandle);
+        userController(router, sessionHandle);
         return router;
     }
 
@@ -38,16 +40,19 @@ public class RouterConfig {
         router.post("/api/auth/signin").handler(authController::signIn);
         router.post("/api/auth/signup").handler(authController::signUp);
         router.post("/api/auth/signup/code").handler(authController::sendSignUpCode);
-        router.post("/api/auth/info").handler(authController::info);
-
     }
 
     private static void gameController(Router router, SessionStore sessionHandle) {
         GameController gameController = new GameController();
-        router.get("/api/game/search").handler(ctx -> sessionHandle.handle(ctx, true)).handler(gameController::searchGame);
-        router.post("/api/game/create").handler(ctx -> sessionHandle.handle(ctx, false)).handler(gameController::createGame);
-        router.post("/api/game/join/:code").handler(ctx -> sessionHandle.handle(ctx, false)).handler(gameController::joinGame);
-        router.post("/api/game/cancel").handler(ctx -> sessionHandle.handle(ctx, false)).handler(gameController::cancelGame);
+        router.get("/api/game/search").handler(ctx -> sessionHandle.handle(ctx, false)).handler(gameController::searchGame);
+        router.post("/api/game/create").handler(sessionHandle::handle).handler(gameController::createGame);
+        router.post("/api/game/join/:code").handler(sessionHandle::handle).handler(gameController::joinGame);
+        router.post("/api/game/cancel").handler(sessionHandle::handle).handler(gameController::cancelGame);
+    }
+
+    private static void userController(Router router, SessionStore sessionHandle) {
+        UserController userController = new UserController();
+        router.post("/api/user/info").handler(sessionHandle::handle).handler(userController::info);
     }
 
 }

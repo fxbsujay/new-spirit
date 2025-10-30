@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 public class AppContext {
 
@@ -97,6 +96,7 @@ public class AppContext {
 
         addBean(new GameWaitService());
         addBean(new GameRoomService());
+        log.info("AppContext init success");
     }
 
     public static Future<MailResult> sendMail(String subject, String to, String content, boolean html) {

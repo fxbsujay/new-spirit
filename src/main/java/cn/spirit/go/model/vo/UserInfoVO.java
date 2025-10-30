@@ -1,6 +1,6 @@
 package cn.spirit.go.model.vo;
 
-public class AuthInfoVO {
+public class UserInfoVO {
 
     /**
      * 用户头像
@@ -22,8 +22,4 @@ public class AuthInfoVO {
      */
     public String username;
 
-    /**
-     * 是不是访客
-     */
-    public Boolean isGuest;
 }

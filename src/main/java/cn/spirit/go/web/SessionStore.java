@@ -3,7 +3,6 @@ package cn.spirit.go.web;
 import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.web.config.AppContext;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.http.Cookie;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
@@ -34,33 +33,45 @@ public class SessionStore {
 
     private static final Logger log = LoggerFactory.getLogger(SessionStore.class);
 
+    public void handle(RoutingContext ctx) {
+        handle(ctx, true);
+    }
     /**
      * 身份验证
      * @param ctx       路由上下文
-     * @param isGuest   是否允许访客
+     * @param isLogged  是否必须是登录用户
      */
-    public void handle(RoutingContext ctx, Boolean isGuest) {
-        validateSession(getSessionId(ctx), isGuest).onSuccess(u -> {
+    public void handle(RoutingContext ctx, Boolean isLogged) {
+        validate(ctx).onSuccess(u -> {
+            if (isLogged && u.isGuest) {
+                ctx.response().setStatusCode(401).end();
+                return;
+            }
             ctx.put(SESSION_USER, u);
             ctx.next();
         }).onFailure(cause -> ctx.response().setStatusCode(401).end());
     }
 
-    public static Future<UserSession> validateSession(String sessionId, Boolean isGuest) {
-        if (StringUtils.isBlank(sessionId) || sessionId.length() != 32) {
-            return Future.failedFuture("session id is null");
+    public static Future<UserSession> validate(RoutingContext ctx) {
+        String sid = getSessionId(ctx);
+        if (StringUtils.isBlank(sid) || sid.length() != 32) {
+            UserSession session = new UserSession();
+            session.isGuest = true;
+            String newSid = setSessionCookie(ctx);
+            session.sessionId = newSid;
+            session.username = newSid;
+            return Future.succeededFuture(session);
         }
-
-        return getSession(sessionId).compose(u -> {
+        return getSession(sid).compose(u -> {
             if (null == u) {
-                return Future.failedFuture("session is null");
+                UserSession session = new UserSession();
+                session.isGuest = true;
+                session.sessionId = sid;
+                session.username = sid;
+                return Future.succeededFuture(session);
             } else {
-                if (!isGuest && u.isGuest) {
-                    return Future.failedFuture("session user is guest");
-                } else {
-                    refreshSession(sessionId);
-                    return Future.succeededFuture(u);
-                }
+                refreshSession(sid);
+                return Future.succeededFuture(u);
             }
         });
     }
@@ -70,7 +81,6 @@ public class SessionStore {
         Cookie cookie = Cookie.cookie(SESSION_COOKIE_NAME, sid);
         cookie.setPath("/api");
         cookie.setMaxAge(AUTH_SESSION_EXPIRE);
-        cookie.setHttpOnly(true);
         ctx.response().addCookie(cookie);
         ctx.put(SESSION_USER, cookie.getValue());
         log.info("session id {}", sid);
@@ -84,17 +94,16 @@ public class SessionStore {
     /**
      * 用户登录
      * @param username  用户名
-     * @param score     分数
      * @return Void
      */
-    public static Future<Void> logged(RoutingContext ctx, String username, Boolean isGuest) {
+    public static Future<Void> logged(RoutingContext ctx, String username) {
         String sessionId = setSessionCookie(ctx);
-        String value = username + ";" + ctx.request().remoteAddress().hostAddress() + ";" + isGuest;
+        String value = username + ";" + ctx.request().remoteAddress().hostAddress() ;
         return AppContext.REDIS.setex(AUTH_SESSION + sessionId, String.valueOf(AUTH_SESSION_EXPIRE), value).map(r -> null);
     }
 
     /**
-     * 退出并重置session
+     * 退出
      */
     public static void logout(String sessionId) {
         AppContext.REDIS.del(List.of(AUTH_SESSION + sessionId));
@@ -123,7 +132,7 @@ public class SessionStore {
                 userSession.sessionId = sessionId;
                 userSession.username = value[0];
                 userSession.ip = value[1];
-                userSession.isGuest = Boolean.parseBoolean(value[2]);
+                userSession.isGuest = false;
                 return userSession;
             }
             return null;

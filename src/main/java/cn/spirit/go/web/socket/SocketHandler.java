@@ -24,7 +24,7 @@ public class SocketHandler implements Handler<RoutingContext> {
 
     public void handle(RoutingContext ctx) {
         ctx.request().toWebSocket().onSuccess(ws -> {
-            SessionStore.validateSession(SessionStore.getSessionId(ctx), true).onSuccess(session -> {
+            SessionStore.validate(ctx).onSuccess(session -> {
                 if (clientManger.connect(session, ws)) {
                     ws.textMessageHandler(text -> {
                         SocketPackage<?> pck;

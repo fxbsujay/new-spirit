@@ -62,8 +62,7 @@ class Http {
                 } else {
                     throw new HttpError(res.status, res.statusText)
                 }
-            })
-                .then(res => {
+            }).then(res => {
                     if (res.code !== 200) {
                         throw new HttpError(res.code, res.msg)
                     } else {

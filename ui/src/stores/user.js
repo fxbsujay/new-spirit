@@ -8,14 +8,14 @@ export const useUserStore = defineStore('user', () => {
   const user = reactive({
     avatar: null,
     email: null,
-    isGuest: null,
+    isGuest: true,
     nickname: null,
     username: null,
     timestamp: 0
   })
 
   const refreshInfo = () => {
-    http.post("/auth/info").then(res => {
+    http.post("/user/info").then(res => {
       Object.assign(user, res)
       user.timestamp = dayjs().valueOf()
     })
