@@ -34,7 +34,7 @@
             <div class="dropdown-content">
               <div class="links">
                 <RouterLink to="/sign-in"><Icon name="person" size="14px" /><span>个人中心</span></RouterLink>
-                <RouterLink class="logout" to="/sign-in"><Icon name="logout" size="14px" /><span>退出登录</span></RouterLink>
+                <RouterLink @click="logout" class="logout" to="/"><Icon name="logout" size="14px" /><span>退出登录</span></RouterLink>
               </div>
             </div>
           </div>
@@ -48,7 +48,10 @@
 </template>
 <script setup>
 import { useUserStore } from '@/stores/user.js'
-const { user } = useUserStore()
+const { user, logout, refreshInfo } = useUserStore()
+
+refreshInfo()
+
 </script>
 <style lang="less" scoped>
 @import "./index.less";

@@ -29,6 +29,12 @@ public class UserDao {
                 .map(row -> entity.username);
     }
 
+    public Future<String> updatePassword(String username, String password) {
+        return AppContext.SQL_POOL.preparedQuery("UPDATE t_user SET password = ? WHERE username = ?")
+                .execute(Tuple.of(username, password))
+                .map(row -> username);
+    }
+
     public Future<UserEntity> selectByUsername(String username) {
         return selectOne("SELECT * FROM t_user WHERE username = ?", Tuple.of(username));
     }

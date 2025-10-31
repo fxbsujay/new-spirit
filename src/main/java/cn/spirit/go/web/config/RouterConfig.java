@@ -39,6 +39,7 @@ public class RouterConfig {
         AuthController authController = new AuthController();
         router.post("/api/auth/signin").handler(authController::signIn);
         router.post("/api/auth/signup").handler(authController::signUp);
+        router.post("/api/auth/signout").handler(authController::signOut);
         router.post("/api/auth/signup/code").handler(authController::sendSignUpCode);
     }
 

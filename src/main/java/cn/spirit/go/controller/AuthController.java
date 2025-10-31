@@ -133,6 +133,14 @@ public class AuthController {
     }
 
     /**
+     * 退出
+     */
+    public void signOut(RoutingContext ctx) {
+        SessionStore.logout(ctx);
+        RestContext.success(ctx);
+    }
+
+    /**
      * 发送激活码
      */
     public void sendSignUpCode(RoutingContext ctx) {

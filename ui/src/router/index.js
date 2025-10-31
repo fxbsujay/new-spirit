@@ -47,12 +47,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const userStore = useUserStore()
-  if (!userStore.user.timestamp) {
-    userStore.refreshInfo()
-  }
   next()
 })
-
 
 export default router

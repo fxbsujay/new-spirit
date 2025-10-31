@@ -1,4 +1,5 @@
 import snackbar from '@/components/snackbar/index.js'
+import { useUserStore } from '@/stores/user.js'
 
 export const ContentType ={
     form: 'application/x-www-form-urlencoded',
@@ -72,21 +73,23 @@ class Http {
                     if (err.status > 10000) {
                         snackbar.error(err.message)
                     } else {
-                        // switch (err.status) {
-                        //     case 400:
-                        //         snackbar.error('非法操作')
-                        //         break
-                        //     case 401:
-                        //     case 403:
-                        //         snackbar.warning('请登录后操作')
-                        //         break
-                        //     case 404:
-                        //         snackbar.error('网络异常')
-                        //         break
-                        //     case 500:
-                        //         snackbar.error('操作失败')
-                        //         break
-                        // }
+                        switch (err.status) {
+                            case 400:
+                                snackbar.error('非法操作')
+                                break
+                            case 401:
+                                useUserStore().logout()
+                                break
+                            case 403:
+                                snackbar.warning('请登录后操作')
+                                break
+                            case 404:
+                                snackbar.error('网络异常')
+                                break
+                            case 500:
+                                snackbar.error('操作失败')
+                                break
+                        }
                     }
                     reject(err)
                 })

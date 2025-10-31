@@ -13,8 +13,7 @@ const userStore = useUserStore()
 
 const submitHandle = () => {
   http.post("/auth/signin", formState).then(() => {
-    userStore.refreshInfo()
-    router.push('/')
+    userStore.login()
   }).catch(err => {
     console.log(err)
   })

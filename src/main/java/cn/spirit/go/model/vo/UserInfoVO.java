@@ -1,5 +1,7 @@
 package cn.spirit.go.model.vo;
 
+import cn.spirit.go.common.enums.UserStatus;
+
 public class UserInfoVO {
 
     /**
@@ -13,13 +15,18 @@ public class UserInfoVO {
     public String nickname;
 
     /**
-     * 用户邮箱
-     */
-    public String email;
-
-    /**
      * 用户账号
      */
     public String username;
+
+    /**
+     * 状态
+     */
+    public UserStatus status;
+
+    /**
+     * 分数
+     */
+    public Integer rating;
 
 }

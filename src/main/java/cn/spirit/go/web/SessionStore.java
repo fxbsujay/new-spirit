@@ -76,20 +76,6 @@ public class SessionStore {
         });
     }
 
-    public static String setSessionCookie(RoutingContext ctx) {
-        String sid = StringUtils.uuid();
-        Cookie cookie = Cookie.cookie(SESSION_COOKIE_NAME, sid);
-        cookie.setPath("/api");
-        cookie.setMaxAge(AUTH_SESSION_EXPIRE);
-        ctx.response().addCookie(cookie);
-        ctx.put(SESSION_USER, cookie.getValue());
-        log.info("session id {}", sid);
-        return sid;
-    }
-
-    public static void refreshSession(String sessionId) {
-        AppContext.REDIS.expire(List.of(AUTH_SESSION + sessionId, String.valueOf(AUTH_SESSION_EXPIRE)));
-    }
 
     /**
      * 用户登录
@@ -105,8 +91,9 @@ public class SessionStore {
     /**
      * 退出
      */
-    public static void logout(String sessionId) {
-        AppContext.REDIS.del(List.of(AUTH_SESSION + sessionId));
+    public static void logout(RoutingContext ctx) {
+        AppContext.REDIS.del(List.of(AUTH_SESSION + getSessionId(ctx)));
+        setSessionCookie(ctx);
     }
 
     public static String getSessionId(RoutingContext ctx) {
@@ -119,6 +106,22 @@ public class SessionStore {
 
     public static UserSession sessionUser(RoutingContext ctx) {
         return ctx.get(SESSION_USER);
+    }
+
+    public static String setSessionCookie(RoutingContext ctx) {
+        String sid = StringUtils.uuid();
+        Cookie cookie = Cookie.cookie(SESSION_COOKIE_NAME, sid);
+        cookie.setPath("/api");
+        cookie.setHttpOnly(true);
+        cookie.setMaxAge(AUTH_SESSION_EXPIRE);
+        ctx.response().addCookie(cookie);
+        ctx.put(SESSION_USER, cookie.getValue());
+        log.info("session id {}", sid);
+        return sid;
+    }
+
+    public static void refreshSession(String sessionId) {
+        AppContext.REDIS.expire(List.of(AUTH_SESSION + sessionId, String.valueOf(AUTH_SESSION_EXPIRE)));
     }
 
     /**
@@ -138,4 +141,5 @@ public class SessionStore {
             return null;
         });
     }
+
 }
