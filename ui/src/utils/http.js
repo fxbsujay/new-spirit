@@ -71,11 +71,11 @@ class Http {
                     }
                 }).catch(err => {
                     if (err.status > 10000) {
-                        snackbar.error(err.message)
+                        snackbar.warning(err.message)
                     } else {
                         switch (err.status) {
                             case 400:
-                                snackbar.error('非法操作')
+                                snackbar.warning('非法操作')
                                 break
                             case 401:
                                 useUserStore().logout()
@@ -87,7 +87,7 @@ class Http {
                                 snackbar.error('网络异常')
                                 break
                             case 500:
-                                snackbar.error('操作失败')
+                                snackbar.error('网络异常')
                                 break
                         }
                     }

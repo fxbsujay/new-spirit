@@ -50,4 +50,9 @@ public class GameWaitDTO {
      */
     public Integer score;
 
+    /**
+     * 创建时间
+     */
+    public Long timestamp;
+
 }

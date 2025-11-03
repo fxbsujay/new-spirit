@@ -61,7 +61,7 @@ public class GameController {
         }
 
         if (!GameType.NONE.equals(dto.type)) {
-            if (null == dto.duration || dto.duration <= 0 || null == dto.stepDuration || dto.stepDuration <= 0) {
+            if (null == dto.duration || dto.duration <= 0 || null == dto.stepDuration || dto.stepDuration < 0) {
                 RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
                 return;
             }
@@ -76,7 +76,7 @@ public class GameController {
             dto.nickname = user.nickname;
             gameWaitService.addGame(session, dto).onSuccess(flag -> {
                 if (flag) {
-                    RestContext.success(ctx);
+                    RestContext.success(ctx, dto);
                 } else {
                     RestContext.fail(ctx, RestStatus.GAME_CREATED);
                 }

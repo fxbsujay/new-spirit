@@ -4,18 +4,13 @@ import Slider from '@/components/slider/index.vue'
 import Dialog from '@/components/dialog/index.vue'
 import { reactive, ref } from 'vue'
 import http from '@/utils/http'
-
+import { TypeConstant } from '@/constant'
 const visible = ref(false)
+const emits = defineEmits(['submitSuccessHandle'])
 
 const ModeConstant = [
-  { label: '公开', value: 'CASUAL' },
+  { label: '休闲', value: 'CASUAL' },
   { label: '好友', value: 'RANK' },
-]
-
-const TypeConstant = [
-  { label: '实时棋局', value: 'SHORT' },
-  { label: '通讯棋', value: 'LONG' },
-  { label: '无限制', value: 'NONE' },
 ]
 
 const BoardSizeConstant = [
@@ -50,13 +45,13 @@ const close = () => {
 }
 
 const submitHandle = () => {
-  http.post('/game/create', formState).then(() => {
-    console.log('--')
+  http.post('/game/create', formState).then(game => {
+    emits('submitSuccessHandle', game)
+    close()
   })
 }
 
 defineExpose({ open, close })
-
 </script>
 
 <template>
@@ -90,13 +85,13 @@ defineExpose({ open, close })
           <label class="form-label" >
             各方限时（分钟）：{{ formState.duration }}
           </label>
-          <Slider v-model="formState.duration" :step="1" :min="0" :max="100"/>
+          <Slider v-model="formState.duration" :step="1" :min="1" :max="180"/>
         </div>
         <div class="form-group">
           <label class="form-label" >
-            每步加时（分钟）：{{ formState.stepDuration }}
+            每步加时（秒）：{{ formState.stepDuration }}
           </label>
-          <Slider v-model="formState.stepDuration" :step="1" :min="0" :max="100"/>
+          <Slider v-model="formState.stepDuration" :step="1" :min="1" :max="180"/>
         </div>
 
         <div class="form-group">

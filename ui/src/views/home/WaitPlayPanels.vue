@@ -1,23 +1,89 @@
 <script setup lang="ts">
 import Loading from '@/components/loading/index.vue'
+import { reactive, ref } from 'vue'
+import dayjs from 'dayjs'
+
+const ModeConstant = [
+  { label: '休闲赛', value: 'CASUAL' },
+  { label: '好友赛', value: 'RANK' },
+  { label: '积分赛', value: 'RANK' },
+]
+
+const waitGame = reactive({
+  code: '',
+  boardSize: 0,
+  type: 'SHORT',
+  mode: 'CASUAL',
+  duration: 0,
+  stepDuration: 0,
+  username: '',
+  nickname: '',
+  score: 0,
+  timestamp: 0,
+})
+const timeText = ref('')
+let timerInterval = null
+const isStart = ref(false)
+
+const startWait = game => {
+  Object.assign(waitGame, game)
+  isStart.value = true
+
+  timerInterval = setInterval(() => {
+    if (!isStart) {
+      clearInterval(timerInterval)
+      timerInterval = null
+      timeText.value = ''
+      return
+    }
+    const unix = dayjs().unix()
+
+
+
+  }, 1000)
+}
+
+const endWait = () => {
+  isStart.value = false
+}
+
+const detailedText = () => {
+  if (!isStart.value) {
+    return ''
+  }
+  let text = ''
+  if (waitGame.type === 'SHORT') {
+    text += waitGame.duration + 'm + ' + waitGame.stepDuration + 's'
+  } else if (waitGame.type === 'LONG') {
+    text += waitGame.duration + 'd'
+  } else {
+    text += '∞'
+  }
+
+  text +=  '•' + waitGame.boardSize + 'x' + waitGame.boardSize
+  return text
+}
+
+defineExpose({ startWait })
+
 </script>
 
 <template>
-  <div class="play-panels">
+  <div class="play-panels" :class="isStart ? 'panels-open' : ''">
     <div class="panels">
       <Loading color="#fff" size="24px"/>
       <div class="info">
         <div>
-          <span class="type">积分赛</span>
-          <span class="text">21x21•10h+6s </span>
+          <span class="type">{{ isStart ? ModeConstant.find(item => item.value === waitGame.mode).label : ''}}</span>
+          <span class="text">{{ detailedText() }}</span>
         </div>
-        <span class="code">#A2CE4</span>
+        <span class="code">#{{ waitGame.code }}</span>
       </div>
       <div class="time">
-        00:42
+        {{ timeText }}
       </div>
     </div>
-    <button class="button border">取消</button>
+    <button class="button border" @click="endWait">取消</button>
   </div>
 </template>
 
@@ -27,9 +93,14 @@ import Loading from '@/components/loading/index.vue'
   position: fixed;
   top: 0;
   left: 50%;
+  visibility: hidden;
   z-index: @headerZIndex + 1;
   transform: translateX(-50%);
   cursor: pointer;
+
+  &.panels-open {
+    visibility: visible;
+  }
 
   &:hover {
     .panels {

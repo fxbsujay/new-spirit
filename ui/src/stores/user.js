@@ -20,7 +20,6 @@ export const useUserStore = defineStore('user', () => {
     const userIsGuest = Cookie.get('userIsGuest')
     user.isGuest = userIsGuest !== 'false'
     if (!user.isGuest && !user.timestamp) {
-      console.log('refreshInfo')
       http.post("/user/info").then(res => {
         Object.assign(user, res)
         user.timestamp = dayjs().valueOf()
@@ -39,7 +38,6 @@ export const useUserStore = defineStore('user', () => {
   const logout = () => {
     Cookie.remove('userIsGuest')
     user.isGuest = true
-    console.log('logout')
     http.post('/auth/signout').then(() => {
       if (router.currentRoute.value.path !== '/') {
         router.push('/')

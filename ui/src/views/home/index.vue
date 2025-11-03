@@ -10,6 +10,7 @@ import http from '@/utils/http'
 const createDialogRef = useTemplateRef('createDialogRef')
 
 const games = ref([])
+const waitGameRef = useTemplateRef('waitGameRef')
 
 http.get('/game/search').then(res => {
   games.value = res
@@ -82,9 +83,9 @@ const joinGame = (code) => {
         <button class="button border">人机对战</button>
       </div>
     </div>
-    <WaitPlayPanels />
+    <WaitPlayPanels ref="waitGameRef"/>
   </div>
-  <CreateDialog  ref="createDialogRef" />
+  <CreateDialog  ref="createDialogRef" @submitSuccessHandle="game => waitGameRef.startWait(game)" />
 
 </template>
 <style lang="less" scoped>

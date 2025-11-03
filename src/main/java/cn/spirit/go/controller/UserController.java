@@ -5,7 +5,9 @@ import cn.spirit.go.common.enums.RestStatus;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.common.util.SecurityUtils;
 import cn.spirit.go.dao.UserDao;
+import cn.spirit.go.model.dto.GameWaitDTO;
 import cn.spirit.go.model.vo.UserInfoVO;
+import cn.spirit.go.service.GameWaitService;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
@@ -21,6 +23,7 @@ public class UserController {
 
     private final UserDao userDao = AppContext.getBean(UserDao.class);
 
+    private final GameWaitService gameWaitService = AppContext.getBean(GameWaitService.class);
 
     /**
      * 认证先
