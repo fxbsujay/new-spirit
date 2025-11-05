@@ -23,14 +23,13 @@ export const useUserStore = defineStore('user', () => {
       http.post("/user/info").then(res => {
         Object.assign(user, res)
         user.timestamp = dayjs().valueOf()
-        Cookie.set('userIsGuest', user.isGuest)
       })
     }
   }
 
   const login = () => {
     user.isGuest = false
-    Cookie.set('userIsGuest', user.isGuest)
+    Cookie.set('userIsGuest', user.isGuest, { expires: 999 })
     refreshInfo()
     router.push('/')
   }

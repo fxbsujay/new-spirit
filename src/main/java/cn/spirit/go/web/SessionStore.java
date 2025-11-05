@@ -36,6 +36,7 @@ public class SessionStore {
     public void handle(RoutingContext ctx) {
         handle(ctx, true);
     }
+
     /**
      * 身份验证
      * @param ctx       路由上下文
@@ -70,6 +71,11 @@ public class SessionStore {
                 session.username = sid;
                 return Future.succeededFuture(session);
             } else {
+                Cookie cookie = getCookie(ctx);
+                cookie.setPath("/api");
+                cookie.setHttpOnly(true);
+                cookie.setMaxAge(AUTH_SESSION_EXPIRE);
+                ctx.response().addCookie(cookie);
                 refreshSession(sid);
                 return Future.succeededFuture(u);
             }
@@ -96,8 +102,12 @@ public class SessionStore {
         setSessionCookie(ctx);
     }
 
+    public static Cookie getCookie(RoutingContext ctx) {
+        return ctx.request().getCookie(SESSION_COOKIE_NAME);
+    }
+
     public static String getSessionId(RoutingContext ctx) {
-        Cookie cookie = ctx.request().getCookie(SESSION_COOKIE_NAME);
+        Cookie cookie = getCookie(ctx);
         if (null == cookie) {
             return ctx.get(SESSION_COOKIE_NAME);
         }
