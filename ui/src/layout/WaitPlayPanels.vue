@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import Loading from '@/components/loading/index.vue'
-import { reactive, ref } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import dayjs from 'dayjs'
+import { useUserStore } from '@/stores/user'
+import http from '@/utils/http'
 
 const ModeConstant = [
   { label: '休闲赛', value: 'CASUAL' },
@@ -9,42 +11,59 @@ const ModeConstant = [
   { label: '积分赛', value: 'RANK' },
 ]
 
-const waitGame = reactive({
-  code: '',
-  boardSize: 0,
-  type: 'SHORT',
-  mode: 'CASUAL',
-  duration: 0,
-  stepDuration: 0,
-  username: '',
-  nickname: '',
-  score: 0,
-  timestamp: 0,
+const { waitGame } = useUserStore()
+
+watch(waitGame, value => {
+  if (value.code) {
+    startWait(value)
+  }
 })
+
 const timeText = ref('')
 let timerInterval = null
 const isStart = ref(false)
+const loading = ref(false)
 
 const startWait = game => {
-  Object.assign(waitGame, game)
   isStart.value = true
-
   timerInterval = setInterval(() => {
     if (!isStart) {
-      clearInterval(timerInterval)
-      timerInterval = null
-      timeText.value = ''
+      clearTimer()
       return
     }
-    const unix = dayjs().unix()
-
-
-
+    const diff = dayjs().unix() - game.timestamp
+    timeText.value = `${(diff / 60).toFixed(0).padStart(2, '0')}:${(diff % 60).toFixed(0).padStart(2, '0')}`
   }, 1000)
+}
+
+const clearTimer = () => {
+  if (timerInterval) {
+    clearInterval(timerInterval)
+    timerInterval = null
+  }
+  timeText.value = ''
 }
 
 const endWait = () => {
   isStart.value = false
+  loading.value = true
+
+  http.post('/game/cancel').then(() => {
+    clearTimer()
+    loading.value = false
+    Object.assign(waitGame, {
+      code: '',
+      boardSize: 0,
+      type: 'SHORT',
+      mode: 'CASUAL',
+      duration: 0,
+      stepDuration: 0,
+      username: '',
+      nickname: '',
+      score: 0,
+      timestamp: 0,
+    })
+  }).catch(() => loading.value = false)
 }
 
 const detailedText = () => {
@@ -64,12 +83,10 @@ const detailedText = () => {
   return text
 }
 
-defineExpose({ startWait })
-
 </script>
 
 <template>
-  <div class="play-panels" :class="isStart ? 'panels-open' : ''">
+  <div class="play-panels" v-if="isStart">
     <div class="panels">
       <Loading color="#fff" size="24px"/>
       <div class="info">
@@ -83,7 +100,7 @@ defineExpose({ startWait })
         {{ timeText }}
       </div>
     </div>
-    <button class="button border" @click="endWait">取消</button>
+    <button :disabled="loading" class="button border" @click="endWait">取消</button>
   </div>
 </template>
 
@@ -93,14 +110,9 @@ defineExpose({ startWait })
   position: fixed;
   top: 0;
   left: 50%;
-  visibility: hidden;
   z-index: @headerZIndex + 1;
   transform: translateX(-50%);
   cursor: pointer;
-
-  &.panels-open {
-    visibility: visible;
-  }
 
   &:hover {
     .panels {

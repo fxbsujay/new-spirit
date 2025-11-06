@@ -5,8 +5,10 @@ import Dialog from '@/components/dialog/index.vue'
 import { reactive, ref } from 'vue'
 import http from '@/utils/http'
 import { TypeConstant } from '@/constant'
+import { useUserStore } from '@/stores/user'
+
+const userStore = useUserStore()
 const visible = ref(false)
-const emits = defineEmits(['submitSuccessHandle'])
 
 const ModeConstant = [
   { label: '休闲', value: 'CASUAL' },
@@ -46,7 +48,7 @@ const close = () => {
 
 const submitHandle = () => {
   http.post('/game/create', formState).then(game => {
-    emits('submitSuccessHandle', game)
+    Object.assign(userStore.waitGame, game)
     close()
   })
 }

@@ -27,7 +27,7 @@ public class SessionStore {
     private static final String SESSION_USER = "session";
 
     /**
-     * Session过期时间 2 周
+     * Session Redis 过期时间 2 周
      */
     private static final long AUTH_SESSION_EXPIRE = 1209600;
 
@@ -48,6 +48,7 @@ public class SessionStore {
                 ctx.response().setStatusCode(401).end();
                 return;
             }
+            setSessionCookie(ctx, u.sessionId);
             ctx.put(SESSION_USER, u);
             ctx.next();
         }).onFailure(cause -> ctx.response().setStatusCode(401).end());
@@ -71,17 +72,11 @@ public class SessionStore {
                 session.username = sid;
                 return Future.succeededFuture(session);
             } else {
-                Cookie cookie = getCookie(ctx);
-                cookie.setPath("/api");
-                cookie.setHttpOnly(true);
-                cookie.setMaxAge(AUTH_SESSION_EXPIRE);
-                ctx.response().addCookie(cookie);
                 refreshSession(sid);
                 return Future.succeededFuture(u);
             }
         });
     }
-
 
     /**
      * 用户登录
@@ -118,14 +113,18 @@ public class SessionStore {
         return ctx.get(SESSION_USER);
     }
 
-    public static String setSessionCookie(RoutingContext ctx) {
-        String sid = StringUtils.uuid();
+    public static void setSessionCookie(RoutingContext ctx, String sid) {
         Cookie cookie = Cookie.cookie(SESSION_COOKIE_NAME, sid);
         cookie.setPath("/api");
         cookie.setHttpOnly(true);
         cookie.setMaxAge(AUTH_SESSION_EXPIRE);
         ctx.response().addCookie(cookie);
-        ctx.put(SESSION_USER, cookie.getValue());
+    }
+
+    public static String setSessionCookie(RoutingContext ctx) {
+        String sid = StringUtils.uuid();
+        setSessionCookie(ctx, sid);
+        ctx.put(SESSION_USER, sid);
         log.info("session id {}", sid);
         return sid;
     }

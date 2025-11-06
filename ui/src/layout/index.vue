@@ -41,17 +41,18 @@
         </div>
       </div>
     </div>
+    <WaitPlayPanels />
   </header>
   <main class="layout-main">
     <RouterView/>
   </main>
 </template>
 <script setup>
+import WaitPlayPanels from './WaitPlayPanels.vue'
 import { useUserStore } from '@/stores/user.js'
 const { user, logout, refreshInfo } = useUserStore()
 
 refreshInfo()
-
 </script>
 <style lang="less" scoped>
 @import "./index.less";

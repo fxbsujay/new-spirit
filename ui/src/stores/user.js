@@ -1,4 +1,4 @@
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { defineStore } from 'pinia'
 import http from '@/utils/http.js'
 import dayjs from 'dayjs'
@@ -14,6 +14,19 @@ export const useUserStore = defineStore('user', () => {
     nickname: null,
     username: null,
     timestamp: 0
+  })
+
+  const waitGame = reactive({
+    code: '',
+    boardSize: 0,
+    type: 'SHORT',
+    mode: 'CASUAL',
+    duration: 0,
+    stepDuration: 0,
+    username: '',
+    nickname: '',
+    score: 0,
+    timestamp: 0,
   })
 
   const refreshInfo = () => {
@@ -44,5 +57,5 @@ export const useUserStore = defineStore('user', () => {
     })
   }
 
-  return { user, refreshInfo, login, logout }
+  return { user, waitGame, refreshInfo, login, logout }
 })
