@@ -59,12 +59,21 @@ public class GameController {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
+        if (null == dto.duration || dto.duration <= 0 || null == dto.stepDuration || dto.stepDuration < 0) {
+            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+            return;
+        }
 
-        if (!GameType.NONE.equals(dto.type)) {
-            if (null == dto.duration || dto.duration <= 0 || null == dto.stepDuration || dto.stepDuration < 0) {
+
+        if (GameType.SHORT.equals(dto.type) && (dto.duration > 180 || dto.stepDuration > 180)) {
+            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+            return;
+        } else if (GameType.LONG.equals(dto.type) ) {
+            if (dto.duration > 14 || dto.stepDuration > 0) {
                 RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
                 return;
             }
+            dto.stepDuration = 0;
         } else {
             dto.duration = 0;
             dto.stepDuration = 0;
