@@ -44,10 +44,16 @@ public class SessionStore {
      */
     public void handle(RoutingContext ctx, Boolean isLogged) {
         validate(ctx).onSuccess(u -> {
-            if (isLogged && u.isGuest) {
-                ctx.response().setStatusCode(401).end();
-                return;
+            if (u.isGuest) {
+                if (isLogged) {
+                    ctx.response().setStatusCode(401).end();
+                    return;
+                }
+            } else {
+                // 重置Session的失效时间
+                refreshSession(u.sessionId);
             }
+            // 重置Cookie的失效时间
             setSessionCookie(ctx, u.sessionId);
             ctx.put(SESSION_USER, u);
             ctx.next();
@@ -72,7 +78,6 @@ public class SessionStore {
                 session.username = sid;
                 return Future.succeededFuture(session);
             } else {
-                refreshSession(sid);
                 return Future.succeededFuture(u);
             }
         });

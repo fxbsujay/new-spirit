@@ -36,25 +36,30 @@ export const useUserStore = defineStore('user', () => {
       http.post("/user/info").then(res => {
         Object.assign(user, res)
         user.timestamp = dayjs().valueOf()
+        setIsGuestCookie(false)
       })
     }
   }
 
   const login = () => {
     user.isGuest = false
-    Cookie.set('userIsGuest', user.isGuest, { expires: 999 })
+    setIsGuestCookie(false)
     refreshInfo()
     router.push('/')
   }
 
   const logout = () => {
-    Cookie.remove('userIsGuest')
+    setIsGuestCookie(true)
     user.isGuest = true
     http.post('/auth/signout').then(() => {
       if (router.currentRoute.value.path !== '/') {
         router.push('/')
       }
     })
+  }
+
+  const setIsGuestCookie = value => {
+    Cookie.set('userIsGuest', value, { expires: 999 })
   }
 
   return { user, waitGame, refreshInfo, login, logout }
