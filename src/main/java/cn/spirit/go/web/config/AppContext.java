@@ -7,7 +7,9 @@ import cn.spirit.go.service.GameWaitService;
 import cn.spirit.go.web.socket.ClientManger;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mail.*;
+import io.vertx.ext.mongo.MongoClient;
 import io.vertx.mysqlclient.MySQLBuilder;
 import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.redis.client.*;
@@ -35,6 +37,11 @@ public class AppContext {
     public static Pool SQL_POOL;
 
     /**
+     * 数据库连接池
+     */
+    public static MongoClient MONGO;
+
+    /**
      * Redis Api
      */
     public static RedisAPI REDIS;
@@ -59,6 +66,7 @@ public class AppContext {
 
     public static void init(Vertx vertx) {
         AppContext.vertx = vertx;
+
         MySQLConnectOptions conOpt = new MySQLConnectOptions()
                 .setHost("8.133.248.55")
                 .setPort(3306)
@@ -74,6 +82,11 @@ public class AppContext {
                 .connectingTo(conOpt)
                 .using(vertx)
                 .build();
+
+
+        MONGO = MongoClient.createShared(vertx, new JsonObject()
+                .put("connection_string", "mongodb://localhost:27017")
+                .put("db_name", "spirit"));
 
         Redis client = Redis.createClient(vertx, new RedisOptions().addConnectionString("redis://localhost:6379"));
 

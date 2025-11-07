@@ -62,6 +62,9 @@ public class Monggodb extends VerticleBase {
                     System.out.println("Inserted id: " + id);
                     log.info("time = {}", System.currentTimeMillis() - st);
                     return mongoClient.find("products", new JsonObject().put("itemId", "12345"));
+                }).compose(r -> {
+                    log.info("time = {}", System.currentTimeMillis() - st);
+                    return  mongoClient.save("products", entries);
                 })
                 .onSuccess(res -> {
                     log.info("time = {}", System.currentTimeMillis() - st);

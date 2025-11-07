@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 
 public class UserEntity {
 
+  public String _id;
+
   /**
    * 用户账号
    */

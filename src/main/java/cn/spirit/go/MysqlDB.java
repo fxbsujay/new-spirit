@@ -49,13 +49,17 @@ public class MysqlDB extends VerticleBase {
         entity.status = UserStatus.NORMAL;
         long st = System.currentTimeMillis();
         return SQL_POOL.preparedQuery("INSERT INTO t_user (avatar, nickname, email, status, username, password) VALUES (?, ?, ?, ?, ?, ?)")
-                .collecting(Collector.of(() -> null, (v, row) -> {}, (a, b) -> null))
-                .execute(Tuple.of(entity.avatar, entity.nickname, entity.email, entity.status, entity.username, entity.password))
+                .execute(Tuple.of(entity.avatar, entity.nickname, entity.email, entity.status, "22", entity.password))
                 .compose(res -> {
                     System.out.println("Inserted id: " + res.toString());
                     log.info("time = {}", System.currentTimeMillis() - st);
                     return SQL_POOL.query("SELECT * FROM t_user WHERE username = 'root'").execute();
-                }).onSuccess(res -> {
+                }).compose(r -> {
+                    log.info("time = {}", System.currentTimeMillis() - st);
+                    return SQL_POOL.preparedQuery("INSERT INTO t_user (avatar, nickname, email, status, username, password) VALUES (?, ?, ?, ?, ?, ?)")
+                            .execute(Tuple.of(entity.avatar, entity.nickname, entity.email, entity.status, "33", entity.password));
+                })
+                .onSuccess(res -> {
                     System.out.println("Inserted id: " + res.toString());
                     log.info("time = {}", System.currentTimeMillis() - st);
                 });

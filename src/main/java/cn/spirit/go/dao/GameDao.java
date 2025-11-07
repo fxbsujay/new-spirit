@@ -29,10 +29,12 @@ public class GameDao {
     }
 
     public Future<String> insert(GameEntity entity) {
-        return AppContext.SQL_POOL.preparedQuery("INSERT INTO `t_game` (code, board_size, type, mode, duration, step_duration, start_time, end_time, winner, white, black) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-                 .collecting(Collector.of(() -> null, (v, row) -> {}, (a, b) -> null))
-                .execute(Tuple.of(entity.code, entity.boardSize, entity.type, entity.mode, entity.duration, entity.stepDuration, entity.startTime, entity.endTime, entity.winner, entity.white, entity.black))
-                 .map(row -> entity.code);
+
+        return null;
+//        return AppContext.SQL_POOL.preparedQuery("INSERT INTO `t_game` (code, board_size, type, mode, duration, step_duration, start_time, end_time, winner, white, black) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+//                 .collecting(Collector.of(() -> null, (v, row) -> {}, (a, b) -> null))
+//                .execute(Tuple.of(entity.code, entity.boardSize, entity.type, entity.mode, entity.duration, entity.stepDuration, entity.startTime, entity.endTime, entity.winner, entity.white, entity.black))
+//                 .map(row -> entity.code);
     }
 
 }
