@@ -10,11 +10,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mail.*;
 import io.vertx.ext.mongo.MongoClient;
-import io.vertx.mysqlclient.MySQLBuilder;
-import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.redis.client.*;
-import io.vertx.sqlclient.Pool;
-import io.vertx.sqlclient.PoolOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashMap;
@@ -30,11 +26,6 @@ public class AppContext {
      * 机器编码
      */
     public static String MAC_CODE = "1";
-
-    /**
-     * 数据库连接池
-     */
-    public static Pool SQL_POOL;
 
     /**
      * 数据库连接池
@@ -66,23 +57,6 @@ public class AppContext {
 
     public static void init(Vertx vertx) {
         AppContext.vertx = vertx;
-
-        MySQLConnectOptions conOpt = new MySQLConnectOptions()
-                .setHost("8.133.248.55")
-                .setPort(3306)
-                .setDatabase("golang")
-                .setUser("root")
-                .setPassword("F521.wojiaofxb");
-
-        PoolOptions poolOpt = new PoolOptions()
-                .setMaxSize(10);
-        SQL_POOL = MySQLBuilder
-                .pool()
-                .with(poolOpt)
-                .connectingTo(conOpt)
-                .using(vertx)
-                .build();
-
 
         MONGO = MongoClient.createShared(vertx, new JsonObject()
                 .put("connection_string", "mongodb://localhost:27017")
