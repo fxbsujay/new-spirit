@@ -43,11 +43,6 @@ public class UserController {
         });
     }
 
-    public void userInfo(RoutingContext ctx) {
-        String username = ctx.pathParam("username");
-
-    }
-
     /**
      * 修改密码
      */

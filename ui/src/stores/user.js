@@ -62,5 +62,20 @@ export const useUserStore = defineStore('user', () => {
     Cookie.set('userIsGuest', value, { expires: 999 })
   }
 
-  return { user, waitGame, refreshInfo, login, logout }
+  const closeWaitGame = () => {
+    Object.assign(waitGame, {
+      code: '',
+      boardSize: 0,
+      type: 'SHORT',
+      mode: 'CASUAL',
+      duration: 0,
+      stepDuration: 0,
+      username: '',
+      nickname: '',
+      score: 0,
+      timestamp: 0,
+    })
+  }
+
+  return { user, waitGame, refreshInfo, login, logout, closeWaitGame }
 })

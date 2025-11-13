@@ -50,7 +50,7 @@ public class UserDao {
 
     public Future<String> insert(UserEntity entity) {
         entity.createdAt = System.currentTimeMillis();
-        return AppContext.MONGO.save("user", mapping(entity)).compose(Future::succeededFuture);
+        return AppContext.MONGO.save("user", mapping(entity));
     }
 
     public Future<UserEntity> selectByUsername(String username) {
@@ -79,8 +79,7 @@ public class UserDao {
     }
 
     public Future<UserEntity> selectByUsernameOrEmail(String username, String email) {
-        JsonObject query = new JsonObject()
-                .put("$or", new JsonArray()
+        JsonObject query = JsonObject.of("$or", new JsonArray()
                         .add(new JsonObject().put("username", username))
                         .add(new JsonObject().put("email", email)));
         return AppContext.MONGO.findOne("user", query, JsonObject.of()).compose(res -> {

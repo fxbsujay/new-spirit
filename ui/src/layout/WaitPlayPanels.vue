@@ -11,11 +11,14 @@ const ModeConstant = [
   { label: '积分赛', value: 'RANK' },
 ]
 
-const { waitGame } = useUserStore()
+const { waitGame, closeWaitGame } = useUserStore()
 
 watch(waitGame, value => {
   if (value.code) {
     startWait(value)
+  } else {
+    isStart.value = false
+    clearTimer()
   }
 })
 
@@ -51,18 +54,7 @@ const endWait = () => {
   http.post('/game/cancel').then(() => {
     clearTimer()
     loading.value = false
-    Object.assign(waitGame, {
-      code: '',
-      boardSize: 0,
-      type: 'SHORT',
-      mode: 'CASUAL',
-      duration: 0,
-      stepDuration: 0,
-      username: '',
-      nickname: '',
-      score: 0,
-      timestamp: 0,
-    })
+    closeWaitGame()
   }).catch(() => loading.value = false)
 }
 

@@ -59,11 +59,11 @@ public class GameController {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
+
         if (null == dto.duration || dto.duration <= 0 || null == dto.stepDuration || dto.stepDuration < 0) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
-
 
         if (GameType.SHORT.equals(dto.type) && (dto.duration > 180 || dto.stepDuration > 180)) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
@@ -89,9 +89,7 @@ public class GameController {
                 } else {
                     RestContext.fail(ctx, RestStatus.GAME_CREATED);
                 }
-            }).onFailure(__ -> {
-                RestContext.fail(ctx, HttpResponseStatus.LOCKED);
-            });
+            }).onFailure(__ -> RestContext.fail(ctx, HttpResponseStatus.LOCKED));
         }).onFailure(e -> {
             log.error(e.getMessage(), e);
             RestContext.fail(ctx);
@@ -133,7 +131,7 @@ public class GameController {
                     entity.white = game.username;
                     entity.black = session.username;
                 }
-                gameDao.insert(entity).onSuccess(__ -> RestContext.success(ctx, gameRoomService.add(entity))).onFailure(e -> {
+                gameDao.insert(entity).onSuccess(_id -> RestContext.success(ctx, gameRoomService.add(entity))).onFailure(e -> {
                     log.error("{}: {}", e.getMessage(), code);
                     RestContext.fail(ctx);
                 });

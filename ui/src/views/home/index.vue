@@ -6,6 +6,7 @@ import CreateDialog from './CreateDialog.vue'
 import { ref, useTemplateRef } from 'vue'
 import Icon from '@/components/icon/Icon.vue'
 import http from '@/utils/http'
+import router from "@/router/index.js";
 
 const createDialogRef = useTemplateRef('createDialogRef')
 
@@ -20,7 +21,7 @@ http.get('/game/search').then(res => {
 
 const joinGame = (code) => {
   http.post('/game/join/' + code).then(() => {
-    console.log(code)
+    router.push('/' + code)
   })
 }
 </script>

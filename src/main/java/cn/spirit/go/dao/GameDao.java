@@ -43,7 +43,7 @@ public class GameDao {
     }
 
     public Future<String> insert(GameEntity entity) {
-        return AppContext.MONGO.save("game", mapping(entity)).compose(id -> Future.succeededFuture(entity.code));
+        return AppContext.MONGO.save("game", mapping(entity));
     }
 
 }
