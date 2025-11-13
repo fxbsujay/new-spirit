@@ -1,8 +1,6 @@
 package cn.spirit.go.model.entity;
 
 import cn.spirit.go.common.enums.UserStatus;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import java.time.LocalDateTime;
 
 public class UserEntity {
 
@@ -41,7 +39,6 @@ public class UserEntity {
   /**
    * 创建时间
    */
-  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-  public LocalDateTime createdAt;
+  public Long createdAt;
 
 }

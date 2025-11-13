@@ -7,9 +7,6 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 public class UserDao {
 
     private JsonObject mapping(UserEntity entity) {
@@ -33,27 +30,27 @@ public class UserDao {
             obj.put("status", entity.status);
         }
         if (entity.createdAt != null) {
-            obj.put("createdAt", entity.createdAt.format(DateTimeFormatter.ISO_DATE_TIME));
+            obj.put("createdAt", entity.createdAt);
         }
         return obj;
     }
 
     private UserEntity mapping(JsonObject obj) {
         UserEntity entity = new UserEntity();
+        entity._id = obj.getString("_id");
         entity.username = obj.getString("username");
         entity.password = obj.getString("password");
         entity.nickname = obj.getString("nickname");
         entity.avatar = obj.getString("avatar");
         entity.email = obj.getString("email");
         entity.status = UserStatus.valueOf(obj.getString("status"));
-        entity.createdAt = LocalDateTime.parse(obj.getString("createdAt"), DateTimeFormatter.ISO_DATE_TIME);
+        entity.createdAt = obj.getLong("createdAt");
         return entity;
     }
 
     public Future<String> insert(UserEntity entity) {
-        entity.createdAt = LocalDateTime.now();
-        LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
-        return AppContext.MONGO.save("user", JsonObject.mapFrom(entity)).compose(id -> Future.succeededFuture(entity.username));
+        entity.createdAt = System.currentTimeMillis();
+        return AppContext.MONGO.save("user", mapping(entity)).compose(Future::succeededFuture);
     }
 
     public Future<UserEntity> selectByUsername(String username) {
@@ -61,7 +58,7 @@ public class UserDao {
             if (res == null) {
                 return Future.succeededFuture(null);
             } else {
-                return Future.succeededFuture(res.mapTo(UserEntity.class));
+                return Future.succeededFuture(mapping(res));
             }
         });
     }
@@ -71,7 +68,7 @@ public class UserDao {
             if (res == null) {
                 return Future.succeededFuture(null);
             } else {
-                return Future.succeededFuture(res.mapTo(UserEntity.class));
+                return Future.succeededFuture(mapping(res));
             }
         });
     }
@@ -90,7 +87,7 @@ public class UserDao {
             if (res == null) {
                 return Future.succeededFuture(null);
             } else {
-                return Future.succeededFuture(res.mapTo(UserEntity.class));
+                return Future.succeededFuture(mapping(res));
             }
         });
     }
