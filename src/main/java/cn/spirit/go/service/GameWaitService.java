@@ -3,7 +3,6 @@ package cn.spirit.go.service;
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.util.DateUtils;
-import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.model.dto.GameWaitDTO;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
@@ -132,4 +131,5 @@ public class GameWaitService {
         dailyGameCount++;
         return Long.toString(Long.parseLong(dailyTime.substring(2) + AppContext.MAC_CODE + dailyGameCount), 36).toUpperCase();
     }
+
 }

@@ -70,9 +70,6 @@ export const useUserStore = defineStore('user', () => {
       mode: 'CASUAL',
       duration: 0,
       stepDuration: 0,
-      username: '',
-      nickname: '',
-      score: 0,
       timestamp: 0,
     })
   }

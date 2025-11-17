@@ -15,6 +15,7 @@ import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,13 @@ public class GameController {
 
     private final GameRoomService gameRoomService = AppContext.getBean(GameRoomService.class);
 
+    public GameController(Router router, SessionStore sessionHandle) {
+        router.get("/api/game/search").handler(ctx -> sessionHandle.handle(ctx, false)).handler(this::searchGame);
+        router.post("/api/game/create").handler(sessionHandle::handle).handler(this::createGame);
+        router.post("/api/game/join/:code").handler(sessionHandle::handle).handler(this::joinGame);
+        router.post("/api/game/cancel").handler(sessionHandle::handle).handler(this::cancelGame);
+    }
+
     /**
      * 搜索对局
      */
@@ -47,7 +55,8 @@ public class GameController {
      * 查询对局
      */
     public void info(RoutingContext ctx) {
-        // 查询缓存，缓存没有查询
+        // 查询对局
+
     }
 
     /**
@@ -85,7 +94,7 @@ public class GameController {
             dto.nickname = user.nickname;
             gameWaitService.addGame(session, dto).onSuccess(flag -> {
                 if (flag) {
-                    RestContext.success(ctx, dto);
+                    RestContext.success(ctx);
                 } else {
                     RestContext.fail(ctx, RestStatus.GAME_CREATED);
                 }
@@ -131,10 +140,7 @@ public class GameController {
                     entity.white = game.username;
                     entity.black = session.username;
                 }
-                gameDao.insert(entity).onSuccess(_id -> RestContext.success(ctx, gameRoomService.add(entity))).onFailure(e -> {
-                    log.error("{}: {}", e.getMessage(), code);
-                    RestContext.fail(ctx);
-                });
+                RestContext.success(ctx, gameRoomService.add(entity));
             }
         }).onFailure(e -> {
             log.error("{}: {}", e.getMessage(), code);

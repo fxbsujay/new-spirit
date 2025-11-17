@@ -5,13 +5,13 @@ import cn.spirit.go.common.enums.RestStatus;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.common.util.SecurityUtils;
 import cn.spirit.go.dao.UserDao;
-import cn.spirit.go.model.vo.UserInfoVO;
 import cn.spirit.go.service.GameWaitService;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,19 +24,23 @@ public class UserController {
 
     private final GameWaitService gameWaitService = AppContext.getBean(GameWaitService.class);
 
+    public UserController(Router router, SessionStore sessionHandle) {
+        router.post("/api/user/info").handler(sessionHandle::handle).handler(this::info);
+    }
+
     /**
      * 认证先
      */
     public void info(RoutingContext ctx) {
         UserSession session = SessionStore.sessionUser(ctx);
         userDao.selectByUsername(session.username).onSuccess(user -> {
-            UserInfoVO vo = new UserInfoVO();
-            vo.username = session.username;
-            vo.nickname = user.nickname;
-            vo.avatar = user.avatar;
-            vo.status = user.status;
-            vo.rating = 800;
-            RestContext.success(ctx, vo);
+            JsonObject obj = new JsonObject();
+            obj.put("username", user.username);
+            obj.put("nickname", user.nickname);
+            obj.put("avatar", user.avatar);
+            obj.put("status", user.status);
+            obj.put("rating", 800);
+            RestContext.success(ctx, obj);
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
             RestContext.fail(ctx);

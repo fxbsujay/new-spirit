@@ -52,7 +52,6 @@ class Http {
 
         return new Promise((resolve, reject) => {
             fetch(this.apiPrefix + path, options).then(res => {
-
                 if (res.status === 200) {
                     const contentType = res.headers.get('content-type')
                     if (contentType.includes('application/json')){
@@ -63,36 +62,30 @@ class Http {
                 } else {
                     throw new HttpError(res.status, res.statusText)
                 }
-            }).then(res => {
-                    if (res.code !== 200) {
-                        throw new HttpError(res.code, res.msg)
-                    } else {
-                        resolve(res.data)
+            }).then(res => resolve(res)).catch(err => {
+                if (err.status > 10000) {
+                    snackbar.warning(err.message)
+                } else {
+                    switch (err.status) {
+                        case 400:
+                            snackbar.warning('非法操作')
+                            break
+                        case 401:
+                            useUserStore().logout()
+                            break
+                        case 403:
+                            snackbar.warning('请登录后操作')
+                            break
+                        case 404:
+                            snackbar.error('网络异常')
+                            break
+                        case 500:
+                            snackbar.error('网络异常')
+                            break
                     }
-                }).catch(err => {
-                    if (err.status > 10000) {
-                        snackbar.warning(err.message)
-                    } else {
-                        switch (err.status) {
-                            case 400:
-                                snackbar.warning('非法操作')
-                                break
-                            case 401:
-                                useUserStore().logout()
-                                break
-                            case 403:
-                                snackbar.warning('请登录后操作')
-                                break
-                            case 404:
-                                snackbar.error('网络异常')
-                                break
-                            case 500:
-                                snackbar.error('网络异常')
-                                break
-                        }
-                    }
-                    reject(err)
-                })
+                }
+                reject(err)
+            })
         })
     }
 

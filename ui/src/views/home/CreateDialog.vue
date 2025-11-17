@@ -2,10 +2,11 @@
 
 import Slider from '@/components/slider/index.vue'
 import Dialog from '@/components/dialog/index.vue'
-import { reactive, ref } from 'vue'
+import { reactive, ref, toRaw } from 'vue'
 import http from '@/utils/http'
 import { TypeConstant } from '@/constant'
 import { useUserStore } from '@/stores/user'
+import dayjs from "dayjs";
 
 const userStore = useUserStore()
 const visible = ref(false)
@@ -47,8 +48,11 @@ const close = () => {
 }
 
 const submitHandle = () => {
-  http.post('/game/create', formState).then(game => {
-    Object.assign(userStore.waitGame, game)
+  http.post('/game/create', formState).then(() => {
+    Object.assign(userStore.waitGame, {
+      ...toRaw(formState),
+      timestamp: dayjs().unix()
+    })
     close()
   })
 }

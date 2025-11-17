@@ -1,7 +1,9 @@
 package cn.spirit.go.web;
 
+import cn.spirit.go.common.RestContext;
 import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.web.config.AppContext;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.http.Cookie;
 import io.vertx.ext.web.RoutingContext;
@@ -46,7 +48,7 @@ public class SessionStore {
         validate(ctx).onSuccess(u -> {
             if (u.isGuest) {
                 if (isLogged) {
-                    ctx.response().setStatusCode(401).end();
+                    RestContext.fail(ctx, HttpResponseStatus.UNAUTHORIZED);
                     return;
                 }
             } else {
@@ -57,7 +59,7 @@ public class SessionStore {
             setSessionCookie(ctx, u.sessionId);
             ctx.put(SESSION_USER, u);
             ctx.next();
-        }).onFailure(cause -> ctx.response().setStatusCode(401).end());
+        }).onFailure(cause -> RestContext.fail(ctx, HttpResponseStatus.UNAUTHORIZED));
     }
 
     public static Future<UserSession> validate(RoutingContext ctx) {

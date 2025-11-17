@@ -15,6 +15,7 @@ import cn.spirit.go.model.entity.UserEntity;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,13 @@ public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final UserDao userDao = AppContext.getBean(UserDao.class);
+
+    public AuthController(Router router) {
+        router.post("/api/auth/signin").handler(this::signIn);
+        router.post("/api/auth/signup").handler(this::signUp);
+        router.post("/api/auth/signout").handler(this::signOut);
+        router.post("/api/auth/signup/code").handler(this::sendSignUpCode);
+    }
 
     /**
      * 登录
@@ -171,7 +179,7 @@ public class AuthController {
 
             String code = RandomUtils.getRandom(5, true);
             AppContext.REDIS.setex(RedisConstant.AUTH_CODE_SIGNUP + email, RedisConstant.CODE_EXPIRE, code).onSuccess(v -> {
-                RestContext.success(ctx, null);
+                RestContext.success(ctx);
                 AppContext.sendMail("注册验证码", email, code, false);
             }).onFailure(e -> {
                 log.error(e.getMessage(), e.getCause());

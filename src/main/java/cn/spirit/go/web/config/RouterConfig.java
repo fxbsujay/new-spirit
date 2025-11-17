@@ -26,34 +26,13 @@ public class RouterConfig {
         router.route().handler(BodyHandler.create());
         router.errorHandler(500, ctx -> {
             log.error("500", ctx.failure());
-            ctx.response().setStatusCode(500).end();
+            RestContext.fail(ctx);
         });
 
-        authController(router);
-        gameController(router, sessionHandle);
-        userController(router, sessionHandle);
+        new AuthController(router);
+        new GameController(router, sessionHandle);
+        new UserController(router, sessionHandle);
+
         return router;
     }
-
-    private static void authController(Router router) {
-        AuthController authController = new AuthController();
-        router.post("/api/auth/signin").handler(authController::signIn);
-        router.post("/api/auth/signup").handler(authController::signUp);
-        router.post("/api/auth/signout").handler(authController::signOut);
-        router.post("/api/auth/signup/code").handler(authController::sendSignUpCode);
-    }
-
-    private static void gameController(Router router, SessionStore sessionHandle) {
-        GameController gameController = new GameController();
-        router.get("/api/game/search").handler(ctx -> sessionHandle.handle(ctx, false)).handler(gameController::searchGame);
-        router.post("/api/game/create").handler(sessionHandle::handle).handler(gameController::createGame);
-        router.post("/api/game/join/:code").handler(sessionHandle::handle).handler(gameController::joinGame);
-        router.post("/api/game/cancel").handler(sessionHandle::handle).handler(gameController::cancelGame);
-    }
-
-    private static void userController(Router router, SessionStore sessionHandle) {
-        UserController userController = new UserController();
-        router.post("/api/user/info").handler(sessionHandle::handle).handler(userController::info);
-    }
-
 }
