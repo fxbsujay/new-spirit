@@ -19,6 +19,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.mongo.FindOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
@@ -77,10 +78,14 @@ public class GameController {
             if (null == game) {
                 RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
             } else {
-                AppContext.MONGO.find("user", JsonObject.of("$or", JsonArray.of(JsonObject.of("username", game.white), JsonObject.of("username", game.black))))
+                AppContext.MONGO.findWithOptions("user",
+                                JsonObject.of("$or", JsonArray.of(JsonObject.of("username", game.white), JsonObject.of("username", game.black))),
+                                new FindOptions().setFields(JsonObject.of("username", 1, "nickname", 1, "avatar", 1)))
                         .onSuccess(users -> {
-                           JsonObject obj = new JsonObject();
-
+                            JsonObject obj = new JsonObject();
+                            obj.put("info", game);
+                            obj.put("users", users);
+                            RestContext.success(ctx, obj);
                         });
             }
         });
