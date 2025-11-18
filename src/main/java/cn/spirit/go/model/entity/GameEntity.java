@@ -3,7 +3,6 @@ package cn.spirit.go.model.entity;
 import cn.spirit.go.common.enums.ChessPiece;
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
-import java.time.LocalDateTime;
 
 public class GameEntity {
 
@@ -40,12 +39,12 @@ public class GameEntity {
   /**
    * 开始时间
    */
-  public LocalDateTime startTime;
+  public Long startTime;
 
   /**
    * 结束时间
    */
-  public LocalDateTime endTime;
+  public Long endTime;
 
   /**
    * 获胜方 WHITE BLACK

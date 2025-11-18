@@ -7,6 +7,7 @@ import cn.spirit.go.common.enums.RestStatus;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
+import cn.spirit.go.model.dto.GameRoomDTO;
 import cn.spirit.go.model.dto.GameWaitDTO;
 import cn.spirit.go.model.entity.GameEntity;
 import cn.spirit.go.service.GameRoomService;
@@ -15,6 +16,9 @@ import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.Future;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
@@ -38,6 +42,7 @@ public class GameController {
         router.post("/api/game/create").handler(sessionHandle::handle).handler(this::createGame);
         router.post("/api/game/join/:code").handler(sessionHandle::handle).handler(this::joinGame);
         router.post("/api/game/cancel").handler(sessionHandle::handle).handler(this::cancelGame);
+        router.get("/api/game/info/:code").handler(sessionHandle::handle).handler(this::info);
     }
 
     /**
@@ -45,7 +50,7 @@ public class GameController {
      */
     public void searchGame(RoutingContext ctx) {
         String like = ctx.request().getParam("like");
-        GameType type = GameType.convert(ctx.request().getParam("type"));
+        GameType type = GameType.valueOf(ctx.request().getParam("type"));
         UserSession session = SessionStore.sessionUser(ctx);
         List<GameWaitDTO> games = gameWaitService.searchGames(session.isGuest ? null : session.username, like, type, 10);
         RestContext.success(ctx, games);
@@ -55,8 +60,35 @@ public class GameController {
      * 查询对局
      */
     public void info(RoutingContext ctx) {
-        // 查询对局
+        String code = ctx.pathParam("code");
+        if (!RegexUtils.matches(code, "[A-Z0-9]{5,}")) {
+            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+            return;
+        }
+        GameRoomDTO room = gameRoomService.get(code);
 
+        Future<GameEntity> selectGameFuture = null;
+        if (null == room) {
+            selectGameFuture = gameDao.selectByCode(code);
+        } else {
+            selectGameFuture = Future.succeededFuture(room.info);
+        }
+        selectGameFuture.onSuccess(game -> {
+            if (null == game) {
+                RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
+            } else {
+                AppContext.MONGO.find("user", JsonObject.of("$or", JsonArray.of(JsonObject.of("username", game.white), JsonObject.of("username", game.black))))
+                        .onSuccess(users -> {
+                           JsonObject obj = new JsonObject();
+
+                        });
+            }
+        });
+
+    }
+
+    private Future<List<JsonObject>> selectGameUsers(String white, String black) {
+        return AppContext.MONGO.find("user", JsonObject.of("$or", JsonArray.of(JsonObject.of("username", white), JsonObject.of("username", black))));
     }
 
     /**

@@ -1,7 +1,5 @@
 package cn.spirit.go.common.enums;
 
-import cn.spirit.go.common.util.StringUtils;
-
 public enum GameType {
 
     /**
@@ -17,16 +15,4 @@ public enum GameType {
      */
     NONE;
 
-
-    public static GameType convert(final String name) {
-        if (StringUtils.isBlank(name)) {
-            return null;
-        }
-        for (GameType value : values()) {
-            if (value.toString().equals(name)) {
-                return value;
-            }
-        }
-        return null;
-    }
 }

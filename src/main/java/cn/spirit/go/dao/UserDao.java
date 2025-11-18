@@ -36,6 +36,9 @@ public class UserDao {
     }
 
     private UserEntity mapping(JsonObject obj) {
+        if (null == obj) {
+            return null;
+        }
         UserEntity entity = new UserEntity();
         entity._id = obj.getString("_id");
         entity.username = obj.getString("username");
@@ -54,23 +57,11 @@ public class UserDao {
     }
 
     public Future<UserEntity> selectByUsername(String username) {
-        return AppContext.MONGO.findOne("user", JsonObject.of("username", username), JsonObject.of()).compose(res -> {
-            if (res == null) {
-                return Future.succeededFuture(null);
-            } else {
-                return Future.succeededFuture(mapping(res));
-            }
-        });
+        return AppContext.MONGO.findOne("user", JsonObject.of("username", username), JsonObject.of()).compose(res -> Future.succeededFuture(mapping(res)));
     }
 
     public Future<UserEntity> selectByEmail(String email) {
-        return AppContext.MONGO.findOne("user", JsonObject.of("email", email), JsonObject.of()).compose(res -> {
-            if (res == null) {
-                return Future.succeededFuture(null);
-            } else {
-                return Future.succeededFuture(mapping(res));
-            }
-        });
+        return AppContext.MONGO.findOne("user", JsonObject.of("email", email), JsonObject.of()).compose(res -> Future.succeededFuture(mapping(res)));
     }
 
     public Future<String> updatePassword(String username, String password) {
@@ -80,15 +71,9 @@ public class UserDao {
 
     public Future<UserEntity> selectByUsernameOrEmail(String username, String email) {
         JsonObject query = JsonObject.of("$or", new JsonArray()
-                        .add(new JsonObject().put("username", username))
-                        .add(new JsonObject().put("email", email)));
-        return AppContext.MONGO.findOne("user", query, JsonObject.of()).compose(res -> {
-            if (res == null) {
-                return Future.succeededFuture(null);
-            } else {
-                return Future.succeededFuture(mapping(res));
-            }
-        });
+                        .add(JsonObject.of("username", username))
+                        .add(JsonObject.of("email", email)));
+        return AppContext.MONGO.findOne("user", query, JsonObject.of()).compose(res -> Future.succeededFuture(mapping(res)));
     }
 
 }
