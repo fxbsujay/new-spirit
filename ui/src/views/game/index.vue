@@ -2,10 +2,35 @@
 import Responsive from '@/components/responsive/index.vue'
 import Switch from '@/components/switch/index.vue'
 import Go from '@/components/go/Go.vue'
-import {ref} from 'vue'
+import { ref, reactive } from 'vue'
 import Icon from '@/components/icon/Icon.vue'
+import http from '@/utils/http'
+import { useRoute } from 'vue-router'
 
 const value = ref(false)
+const router = useRoute()
+const isExist = ref(false)
+const loading = ref(false)
+const game = reactive({
+  info: {},
+  white: {},
+  black: {}
+})
+
+const refresh = () => {
+  loading.value = true
+  http.get('/game/info/' + router.params.code).then(res => {
+    Object.assign(game, res)
+    console.log(game)
+    isExist.value = true
+    loading.value = false
+  }).catch(() => {
+    isExist.value = false
+    loading.value = false
+  })
+}
+
+refresh()
 </script>
 
 <template>
@@ -23,12 +48,12 @@ const value = ref(false)
         </div>
         <div class="player">
           <img class="player-icon" alt="白棋选手" src="@/assets/img/w.png" />
-          <span class="player-name">Evan Guzman</span>
+          <span class="player-name">{{ game.white.nickname }}</span>
           <span class="player-score">836</span>
         </div>
         <div class="player">
           <img class="player-icon" alt="黑棋选手" src="@/assets/img/b.png" />
-          <span class="player-name">GouDan</span>
+          <span class="player-name">{{ game.black.nickname }}</span>
           <span class="player-score">1700</span>
         </div>
       </div>
@@ -128,5 +153,6 @@ const value = ref(false)
 
 <style scoped lang="less">
 @import "./index.less";
+
 
 </style>

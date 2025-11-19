@@ -39,7 +39,6 @@ public class ClientManger {
      */
     public boolean connect(UserSession session, WebSocket socket) {
         if (contains(session)) {
-            log.warn("WebSocket connection failed with ID {}, username = {}", session.sessionId, session.username);
             return false;
         }
         Set<String> sessions = userSessions.get(session.username);
@@ -53,7 +52,6 @@ public class ClientManger {
             sockets.put(session.sessionId, socket);
         }
 
-        log.info("WebSocket connection successful with ID {}, username = {}", session.sessionId, session.username);
         return true;
     }
 
@@ -64,13 +62,7 @@ public class ClientManger {
     public void cancel(UserSession session) {
         Set<String> sessions = userSessions.get(session.username);
         if (null != sessions) {
-            boolean remove = sessions.remove(session.sessionId);
-            if (remove) {
-                log.info("WebSocket cancel successful with session ID {}, username = {}", session.sessionId, session.username);
-
-            } else {
-                log.warn("WebSocket cancel failed with session ID {} not found, username = {}", session.sessionId, session.username);
-            }
+            sessions.remove(session.sessionId);
             sockets.remove(session.sessionId);
         }
     }

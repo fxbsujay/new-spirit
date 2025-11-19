@@ -54,7 +54,7 @@ class Http {
             fetch(this.apiPrefix + path, options).then(res => {
                 if (res.status === 200) {
                     const contentType = res.headers.get('content-type')
-                    if (contentType.includes('application/json')){
+                    if (contentType && contentType.includes('application/json')){
                         return res.json()
                     } else {
                         return res.text()

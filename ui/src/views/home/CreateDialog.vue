@@ -6,7 +6,7 @@ import { reactive, ref, toRaw } from 'vue'
 import http from '@/utils/http'
 import { TypeConstant } from '@/constant'
 import { useUserStore } from '@/stores/user'
-import dayjs from "dayjs";
+import dayjs from 'dayjs'
 
 const userStore = useUserStore()
 const visible = ref(false)

@@ -5,6 +5,7 @@ import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.RestStatus;
 import cn.spirit.go.common.util.RegexUtils;
+import cn.spirit.go.common.util.SqlUtils;
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.dto.GameRoomDTO;
@@ -51,9 +52,10 @@ public class GameController {
      */
     public void searchGame(RoutingContext ctx) {
         String like = ctx.request().getParam("like");
-        GameType type = GameType.valueOf(ctx.request().getParam("type"));
+        String type = ctx.request().getParam("type");
+
         UserSession session = SessionStore.sessionUser(ctx);
-        List<GameWaitDTO> games = gameWaitService.searchGames(session.isGuest ? null : session.username, like, type, 10);
+        List<GameWaitDTO> games = gameWaitService.searchGames(session.isGuest ? null : session.username, like, null == type ? null : GameType.valueOf(type), 10);
         RestContext.success(ctx, games);
     }
 
@@ -80,11 +82,17 @@ public class GameController {
             } else {
                 AppContext.MONGO.findWithOptions("user",
                                 JsonObject.of("$or", JsonArray.of(JsonObject.of("username", game.white), JsonObject.of("username", game.black))),
-                                new FindOptions().setFields(JsonObject.of("username", 1, "nickname", 1, "avatar", 1)))
+                                SqlUtils.findFields("username", "nickname", "avarar"))
                         .onSuccess(users -> {
                             JsonObject obj = new JsonObject();
                             obj.put("info", game);
-                            obj.put("users", users);
+                            for (JsonObject user : users) {
+                                if (user.getString("username").equals(game.white)) {
+                                    obj.put("white", user);
+                                } else {
+                                    obj.put("black", user);
+                                }
+                            }
                             RestContext.success(ctx, obj);
                         });
             }
