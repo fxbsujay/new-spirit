@@ -5,22 +5,19 @@ import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.RestStatus;
 import cn.spirit.go.common.util.RegexUtils;
-import cn.spirit.go.common.util.SqlUtils;
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
+import cn.spirit.go.model.dto.GamePlayDTO;
 import cn.spirit.go.model.dto.GameRoomDTO;
 import cn.spirit.go.model.dto.GameWaitDTO;
-import cn.spirit.go.model.entity.GameEntity;
 import cn.spirit.go.service.GameRoomService;
 import cn.spirit.go.service.GameWaitService;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.FindOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
@@ -69,39 +66,34 @@ public class GameController {
             return;
         }
         GameRoomDTO room = gameRoomService.get(code);
-
-        Future<GameEntity> selectGameFuture = null;
         if (null == room) {
-            selectGameFuture = gameDao.selectByCode(code);
+            gameDao.findOne(JsonObject.of("code", code)).onSuccess(game ->{
+                if (null == game) {
+                    RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
+                } else {
+                    setGameInfoUsers(ctx, JsonObject.of("info", game), game.getString("white"), game.getString("black"));
+                }
+            });
         } else {
-            selectGameFuture = Future.succeededFuture(room.info);
+            setGameInfoUsers(ctx, JsonObject.of("info", room.info), room.info.white, room.info.black);
         }
-        selectGameFuture.onSuccess(game -> {
-            if (null == game) {
-                RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
-            } else {
-                AppContext.MONGO.findWithOptions("user",
-                                JsonObject.of("$or", JsonArray.of(JsonObject.of("username", game.white), JsonObject.of("username", game.black))),
-                                SqlUtils.findFields("username", "nickname", "avarar"))
-                        .onSuccess(users -> {
-                            JsonObject obj = new JsonObject();
-                            obj.put("info", game);
-                            for (JsonObject user : users) {
-                                if (user.getString("username").equals(game.white)) {
-                                    obj.put("white", user);
-                                } else {
-                                    obj.put("black", user);
-                                }
-                            }
-                            RestContext.success(ctx, obj);
-                        });
-            }
-        });
-
     }
 
-    private Future<List<JsonObject>> selectGameUsers(String white, String black) {
-        return AppContext.MONGO.find("user", JsonObject.of("$or", JsonArray.of(JsonObject.of("username", white), JsonObject.of("username", black))));
+    private void setGameInfoUsers(RoutingContext ctx, JsonObject obj, String white, String black) {
+        JsonObject query = JsonObject.of("$or", JsonArray.of(JsonObject.of("username", white), JsonObject.of("username", black)));
+        userDao.findAll(query, "username", "nickname", "avarar").onSuccess(users -> {
+            for (JsonObject user : users) {
+                if (user.getString("username").equals(white)) {
+                    obj.put("white", user);
+                } else {
+                    obj.put("black", user);
+                }
+            }
+            RestContext.success(ctx, obj);
+        }).onFailure(e -> {
+            log.error(e.getMessage(), e);
+            RestContext.fail(ctx);
+        });
     }
 
     /**
@@ -134,9 +126,9 @@ public class GameController {
         }
 
         UserSession session = SessionStore.sessionUser(ctx);
-        userDao.selectByUsername(session.username).onSuccess(user -> {
+        userDao.findOne(JsonObject.of("username", session.username), "nickname").onSuccess(user -> {
             dto.score = 800;
-            dto.nickname = user.nickname;
+            dto.nickname = user.getString("nickname");
             gameWaitService.addGame(session, dto).onSuccess(flag -> {
                 if (flag) {
                     RestContext.success(ctx);
@@ -171,7 +163,7 @@ public class GameController {
                 RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
             } else {
                 // 对局的基本信息存在数据库中
-                GameEntity entity = new GameEntity();
+                GamePlayDTO entity = new GamePlayDTO();
                 entity.code = code;
                 entity.boardSize = game.boardSize;
                 entity.mode = game.mode;

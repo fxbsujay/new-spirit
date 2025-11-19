@@ -11,9 +11,8 @@ import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.dao.UserDao;
-import cn.spirit.go.model.entity.UserEntity;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.core.Future;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -47,27 +46,27 @@ public class AuthController {
             return;
         }
 
-        Future<UserEntity> future;
+        JsonObject query = new JsonObject();
         if (RegexUtils.matches(username, RegexUtils.EMAIL)) {
-            future = userDao.selectByEmail(username);
+            query.put("email", username);
         } else if (RegexUtils.matches(username, RegexUtils.USERNAME)) {
-            future = userDao.selectByUsername(username);
+            query.put("username", username);
         } else {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
 
-        future.onSuccess(user -> {
+        userDao.findOne(query, "status", "password").onSuccess(user -> {
             if (null == user) {
                 RestContext.fail(ctx, RestStatus.ACCOUNT_NOT_EXIST);
                 return;
             }
-            if (user.status == UserStatus.BANNED) {
+            if (UserStatus.valueOf(user.getString("status")) == UserStatus.BANNED) {
                 RestContext.fail(ctx, RestStatus.PASSWORD_WRONG);
                 return;
             }
 
-            if (!SecurityUtils.matchesBCrypt(password, user.password)) {
+            if (!SecurityUtils.matchesBCrypt(password, user.getString("password"))) {
                 RestContext.fail(ctx, RestStatus.EMAIL_CODE_IS_INVALID);
                 return;
             }
@@ -78,6 +77,7 @@ public class AuthController {
                 log.error(e.getMessage(), e.getCause());
                 RestContext.fail(ctx);
             });
+
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
             RestContext.fail(ctx);
@@ -101,9 +101,12 @@ public class AuthController {
             return;
         }
 
-        userDao.selectByUsernameOrEmail(username, email).onSuccess(user -> {
+        JsonObject query = JsonObject.of("$or", new JsonArray()
+                .add(JsonObject.of("username", username))
+                .add(JsonObject.of("email", email)));
+        userDao.findOne(query, "username").onSuccess(user -> {
             if (user != null) {
-                if (user.username.equals(username)) {
+                if (username.equals(user.getString("username"))) {
                     RestContext.fail(ctx, RestStatus.USERNAME_IS_EXIST);
                 } else {
                     RestContext.fail(ctx, RestStatus.EMAIL_IS_EXIST);
@@ -117,14 +120,13 @@ public class AuthController {
                     RestContext.fail(ctx, RestStatus.SIGNUP_CODE_INVALID);
                 } else {
                     if (code.equals(v.toString())) {
-                        UserEntity entity = new UserEntity();
-                        entity.avatar = "avatar";
-                        entity.username = username;
-                        entity.email = email;
-                        entity.nickname = username;
-                        entity.password = SecurityUtils.bCrypt(password);
-                        entity.status = UserStatus.NORMAL;
-                        userDao.insert(entity).onSuccess(_id -> {
+                        JsonObject obj = JsonObject.of("username", username,
+                                "email", email,
+                                "password", SecurityUtils.bCrypt(password),
+                                "avatar", "https://fxbsujay.github.io/favicon.ico",
+                                "nickname", username,
+                                "status", UserStatus.NORMAL);
+                        userDao.insert(obj).onSuccess(_id -> {
                             RestContext.success(ctx, username);
                             AppContext.REDIS.del(List.of(key));
                         }).onFailure(e -> {
@@ -167,9 +169,13 @@ public class AuthController {
             return;
         }
 
-        userDao.selectByUsernameOrEmail(username, email).onSuccess(user -> {
+
+        JsonObject query = JsonObject.of("$or", new JsonArray()
+                .add(JsonObject.of("username", username))
+                .add(JsonObject.of("email", email)));
+        userDao.findOne(query, "username").onSuccess(user -> {
             if (user != null) {
-                if (user.username.equals(username)) {
+                if (username.equals(user.getString("username"))) {
                     RestContext.fail(ctx, RestStatus.USERNAME_IS_EXIST);
                 } else {
                     RestContext.fail(ctx, RestStatus.EMAIL_IS_EXIST);

@@ -1,6 +1,5 @@
 package cn.spirit.go.model.dto;
 
-import cn.spirit.go.model.entity.GameEntity;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,7 +8,7 @@ public class GameRoomDTO {
     /**
      * 游戏信息
      */
-    public GameEntity info;
+    public GamePlayDTO info;
 
     /**
      * 步骤

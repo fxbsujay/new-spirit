@@ -1,7 +1,7 @@
 package cn.spirit.go.service;
 
+import cn.spirit.go.model.dto.GamePlayDTO;
 import cn.spirit.go.model.dto.GameRoomDTO;
-import cn.spirit.go.model.entity.GameEntity;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.web.socket.ClientManger;
 import cn.spirit.go.web.socket.PackageType;
@@ -97,7 +97,7 @@ public class GameRoomService {
      * 添加房间，创建房间后通知玩家游戏开始，随后进入游戏界面，通知服务器玩家已进入房间，黑旗先行，双方都落子后游戏正式开始，不可取消
      * 进入游戏界面客户端发送加入房间通知，关闭游戏界面发生退出房间通知
      */
-    public String add(GameEntity info) {
+    public String add(GamePlayDTO info) {
         GameRoomDTO dto = new GameRoomDTO();
         dto.info = info;
         rooms.put(info.code, dto);

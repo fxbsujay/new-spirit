@@ -33,14 +33,10 @@ public class UserController {
      */
     public void info(RoutingContext ctx) {
         UserSession session = SessionStore.sessionUser(ctx);
-        userDao.selectByUsername(session.username).onSuccess(user -> {
-            JsonObject obj = new JsonObject();
-            obj.put("username", user.username);
-            obj.put("nickname", user.nickname);
-            obj.put("avatar", user.avatar);
-            obj.put("status", user.status);
-            obj.put("rating", 800);
-            RestContext.success(ctx, obj);
+        userDao.findOne(JsonObject.of("username", session.username), "nickname", "avatar", "status").onSuccess(user -> {
+            user.put("username", session.username);
+            user.put("rating", 800);
+            RestContext.success(ctx, user);
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
             RestContext.fail(ctx);
@@ -65,8 +61,8 @@ public class UserController {
         }
 
         UserSession session = SessionStore.sessionUser(ctx);
-        userDao.selectByUsername(session.username).onSuccess(user -> {
-            if (!SecurityUtils.matchesBCrypt(oldPassword, user.password)) {
+        userDao.findOne(JsonObject.of("username", session.username),  "password").onSuccess(user -> {
+            if (!SecurityUtils.matchesBCrypt(oldPassword, user.getString("password"))) {
                 RestContext.fail(ctx, RestStatus.EMAIL_CODE_IS_INVALID);
             } else {
                 userDao.updatePassword(session.username, newPassword).onSuccess(username -> {
