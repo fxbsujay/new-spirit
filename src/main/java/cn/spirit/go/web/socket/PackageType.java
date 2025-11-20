@@ -7,4 +7,10 @@ public enum PackageType {
     GAME_START,
     // 加入房间通知
     GAME_JOIN,
+    // 离开房间通知
+    GAME_EXIT,
+    // 游戏走棋
+    GAME_STEP,
+    // 游戏聊天
+    GAME_CHAT
 }

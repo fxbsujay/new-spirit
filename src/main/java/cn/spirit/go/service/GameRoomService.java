@@ -21,6 +21,11 @@ public class GameRoomService {
     private final Map<String, GameRoomDTO> rooms = new HashMap<>();
 
     /**
+     * 用户房间
+     */
+    private final Map<String, Set<String>> userRooms = new HashMap<>();
+
+    /**
      * 订阅信息
      * sessionId:游戏编号
      */
@@ -105,6 +110,70 @@ public class GameRoomService {
         return info.code;
     }
 
+    /**
+     * 加入房间
+     */
+    public void joinRoom(String username, String code) {
+        GameRoomDTO room = rooms.get(code);
+        if (null == room || (!room.info.white.equals(username) && !room.info.black.equals(username))) {
+            return;
+        }
+        Set<String> codes = userRooms.get(username);
+        boolean sendMsg = false;
+        if (null == codes) {
+            codes = new HashSet<>();
+            codes.add(code);
+            userRooms.put(username, codes);
+            sendMsg = true;
+        } else {
+            if (!codes.contains(code)) {
+                codes.add(code);
+                sendMsg = true;
+            }
+        }
+        if (sendMsg) {
+            clientManger.sendToUser(SocketPackage.build(PackageType.GAME_JOIN, code), username.equals(room.info.white) ? room.info.black : room.info.white);
+        }
+    }
+
+    /**
+     * 退出房间
+     */
+    public void exitRoom(String username, String code) {
+        GameRoomDTO room = rooms.get(code);
+        if (null == room || (!room.info.white.equals(username) && !room.info.black.equals(username))) {
+            return;
+        }
+        Set<String> codes = userRooms.get(username);
+        if (null == codes) {
+            return;
+        }
+        boolean remove = codes.remove(code);
+        if (remove) {
+            clientManger.sendToUser(SocketPackage.build(PackageType.GAME_EXIT, code), username.equals(room.info.white) ? room.info.black : room.info.white);
+        }
+        if (codes.isEmpty()) {
+            userRooms.remove(username);
+        }
+    }
+
+    public void exitRoom(String username) {
+        Set<String> codes = userRooms.remove(username);
+        if (null == codes) {
+            return;
+        }
+        for (String code : codes) {
+            GameRoomDTO room = rooms.get(code);
+            if (null == room) {
+                continue;
+            }
+            clientManger.sendToUser(SocketPackage.build(PackageType.GAME_EXIT, code), username.equals(room.info.white) ? room.info.black : room.info.white);
+        }
+
+        if (codes.isEmpty()) {
+            userRooms.remove(username);
+        }
+    }
 
     /**
      * 关闭房间

@@ -14,9 +14,4 @@ public class GameRoomDTO {
      * 步骤
      */
     public List<String> steps = new ArrayList<>();
-
-    /**
-     * 聊天历史消息
-     */
-    public List<String> messages = new ArrayList<>();
 }

@@ -61,7 +61,7 @@ public class GameController {
      */
     public void info(RoutingContext ctx) {
         String code = ctx.pathParam("code");
-        if (!RegexUtils.matches(code, "[A-Z0-9]{5,}")) {
+        if (!RegexUtils.matchesGameCode(code)) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
@@ -147,7 +147,7 @@ public class GameController {
      */
     public void joinGame(RoutingContext ctx) {
         String code = ctx.pathParam("code");
-        if (!RegexUtils.matches(code, "[A-Z0-9]{5,}")) {
+        if (!RegexUtils.matchesGameCode(code)) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }

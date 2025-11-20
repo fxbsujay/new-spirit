@@ -2,13 +2,15 @@
 import Responsive from '@/components/responsive/index.vue'
 import Switch from '@/components/switch/index.vue'
 import Go from '@/components/go/Go.vue'
-import { ref, reactive } from 'vue'
+import { ref, reactive, onBeforeUnmount } from 'vue'
 import Icon from '@/components/icon/Icon.vue'
 import http from '@/utils/http'
 import { useRoute } from 'vue-router'
+import { useSocketStore } from '@/stores/socket.js'
 
 const value = ref(false)
 const router = useRoute()
+const socket = useSocketStore()
 const isExist = ref(false)
 const loading = ref(false)
 const game = reactive({
@@ -24,6 +26,8 @@ const refresh = () => {
     console.log(game)
     isExist.value = true
     loading.value = false
+
+    socket.send('GAME_JOIN', router.params.code)
   }).catch(() => {
     isExist.value = false
     loading.value = false
@@ -31,6 +35,11 @@ const refresh = () => {
 }
 
 refresh()
+
+onBeforeUnmount(() => {
+
+  console.log('---------A')
+})
 </script>
 
 <template>

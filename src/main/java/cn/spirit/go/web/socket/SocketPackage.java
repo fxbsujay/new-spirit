@@ -1,31 +1,30 @@
 package cn.spirit.go.web.socket;
 
-public class SocketPackage<T> {
+public class SocketPackage {
 
     public PackageType type;
 
-    public T data;
+    public Object data;
 
     public String sender;
 
     public Long timestamp = System.currentTimeMillis();
 
-    public static <T> SocketPackage<T> build(PackageType type, String sender, T data) {
-        SocketPackage<T> pack = new SocketPackage<T>();
+    public static SocketPackage build(PackageType type, String sender, Object data) {
+        SocketPackage pack = new SocketPackage();
         pack.type = type;
         pack.sender = sender;
         pack.data = data;
         return pack;
     }
 
-    public static <T> SocketPackage<T> build(PackageType type, T data) {
-        SocketPackage<T> pack = new SocketPackage<T>();
+    public static  SocketPackage build(PackageType type, Object data) {
+        SocketPackage pack = new SocketPackage();
         pack.type = type;
         pack.sender = "";
         pack.data = data;
         return pack;
     }
-
 
     @Override
     public String toString() {

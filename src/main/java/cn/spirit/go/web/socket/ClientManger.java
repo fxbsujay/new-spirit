@@ -73,7 +73,7 @@ public class ClientManger {
      * @param pack          消息包
      * @param usernames     接收方
      */
-    public void sendToUser(SocketPackage<?> pack, String ...usernames) {
+    public void sendToUser(SocketPackage pack, String ...usernames) {
         String msg = Json.encode(pack);
         log.info("Sending message to usernames: {}, package: {}", Arrays.toString(usernames), msg);
         for (String username : usernames) {
@@ -90,7 +90,7 @@ public class ClientManger {
      * @param pack          消息包
      * @param sessionIds    接收方
      */
-    public void sendToSession(SocketPackage<?> pack, String ...sessionIds) {
+    public void sendToSession(SocketPackage pack, String ...sessionIds) {
         String msg = Json.encode(pack);
         log.info("Sending message to sessionIds: {}, package: {}", Arrays.toString(sessionIds), msg);
         send(msg, sessionIds);

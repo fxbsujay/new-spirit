@@ -54,6 +54,13 @@ public class RegexUtils {
         return Pattern.matches(pattern, line);
     }
 
+    /**
+     * 匹配对局编号
+     */
+    public static boolean matchesGameCode(String code) {
+        return RegexUtils.matches(code, "[A-Z0-9]{5,}");
+    }
+
     public static void main(String[] args) {
         System.out.println(matches("234223@", PASSWORD));
     }

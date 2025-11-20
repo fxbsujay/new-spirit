@@ -34,6 +34,15 @@ export const useSocketStore = defineStore('counter', () => {
     return socket.readyState === WebSocket.OPEN
   }
 
-  return { socket, isConnected }
+  const send = (type, data) => {
+    const pck = {
+      sender: userStore.user.username,
+      type,
+      data
+    }
+    socket.send(JSON.stringify(pck))
+  }
+
+  return { socket, isConnected, send }
 })
 
