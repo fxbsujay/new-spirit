@@ -61,7 +61,7 @@ public class GameController {
      */
     public void info(RoutingContext ctx) {
         String code = ctx.pathParam("code");
-        if (!RegexUtils.matchesGameCode(code)) {
+        if (RegexUtils.mismatchGameCode(code)) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
@@ -78,6 +78,7 @@ public class GameController {
             setGameInfoUsers(ctx, JsonObject.of("info", room.info), room.info.white, room.info.black);
         }
     }
+
 
     private void setGameInfoUsers(RoutingContext ctx, JsonObject obj, String white, String black) {
         JsonObject query = JsonObject.of("$or", JsonArray.of(JsonObject.of("username", white), JsonObject.of("username", black)));
@@ -147,7 +148,7 @@ public class GameController {
      */
     public void joinGame(RoutingContext ctx) {
         String code = ctx.pathParam("code");
-        if (!RegexUtils.matchesGameCode(code)) {
+        if (RegexUtils.mismatchGameCode(code)) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }

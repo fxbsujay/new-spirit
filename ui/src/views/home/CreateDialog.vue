@@ -130,7 +130,7 @@ defineExpose({ open, close })
   }
 
   .form {
-    margin: 1rem 0;
+    margin-top: 1rem;
 
     .border-input-wrap {
       .input {
@@ -149,7 +149,7 @@ defineExpose({ open, close })
   }
 
   .toggles {
-    margin: .5rem 0;
+    margin: 2rem 0;
     justify-content: center;
     .button {
       font-weight: normal;
@@ -159,7 +159,6 @@ defineExpose({ open, close })
       max-width: 50%;
       height: 2.6rem;
 
-
       &:not(.active):hover {
         background-color: #e6e5e5;
       }
@@ -168,12 +167,12 @@ defineExpose({ open, close })
     .active {
       box-shadow: 0 2px 4px  rgba(0, 0, 0, 0.25);
       color: #fff;
-      background-color: hsl(88, 62%, 37%);
+      background-color: #616161;
     }
   }
 
   .form-footer {
-    margin-top: 4rem;
+    margin-top: 3rem;
     border-top: 1px solid #ddd;
     padding-top: 2rem;
     display: flex;

@@ -17,6 +17,10 @@ public class UserDao {
         return AppContext.MONGO.findOne("user", query, SqlUtils.fields(fields));
     }
 
+    public Future<Long> findCount(JsonObject query) {
+        return AppContext.MONGO.count("user", query);
+    }
+
     public Future<List<JsonObject>> findAll(JsonObject query, String ...fields) {
         return AppContext.MONGO.findWithOptions("user", query, SqlUtils.findOpts(fields));
     }

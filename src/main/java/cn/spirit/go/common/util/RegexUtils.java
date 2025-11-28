@@ -46,6 +46,10 @@ public class RegexUtils {
      * 账户密码 英文字符、数字、!$^.*_%
      */
     public static final String PASSWORD = "^[a-zA-Z0-9@!$^.*_%]{6,30}$";
+    /**
+     * 验证码
+     */
+    public static final String CODE = "[A-Z0-9]{5}";
 
     public static boolean matches(String line, String pattern) {
         if (line == null || line.trim().isBlank()) {
@@ -57,7 +61,7 @@ public class RegexUtils {
     /**
      * 匹配对局编号
      */
-    public static boolean matchesGameCode(String code) {
+    public static boolean mismatchGameCode(String code) {
         return RegexUtils.matches(code, "[A-Z0-9]{5,}");
     }
 

@@ -31,6 +31,8 @@ public class AuthController {
         router.post("/api/auth/signup").handler(this::signUp);
         router.post("/api/auth/signout").handler(this::signOut);
         router.post("/api/auth/signup/code").handler(this::sendSignUpCode);
+        router.post("/api/auth/password").handler(this::resetPassword);
+        router.post("/api/auth/password/code").handler(this::sendResetPasswordCode);
     }
 
     /**
@@ -62,7 +64,7 @@ public class AuthController {
                 return;
             }
             if (UserStatus.valueOf(user.getString("status")) == UserStatus.BANNED) {
-                RestContext.fail(ctx, RestStatus.PASSWORD_WRONG);
+                RestContext.fail(ctx, RestStatus.ACCOUNT_BAN);
                 return;
             }
 
@@ -117,7 +119,7 @@ public class AuthController {
             String key = RedisConstant.AUTH_CODE_SIGNUP + email;
             AppContext.REDIS.get(key).onSuccess(v -> {
                 if (null == v) {
-                    RestContext.fail(ctx, RestStatus.SIGNUP_CODE_INVALID);
+                    RestContext.fail(ctx, RestStatus.CODE_INVALID);
                 } else {
                     if (code.equals(v.toString())) {
                         JsonObject obj = JsonObject.of("username", username,
@@ -134,10 +136,10 @@ public class AuthController {
                             RestContext.fail(ctx);
                         });
                     } else {
-                        RestContext.fail(ctx, RestStatus.SIGNUP_CODE_ERROR);
+                        RestContext.fail(ctx, RestStatus.CODE_ERROR);
                     }
                 }
-            }).onFailure(e -> RestContext.fail(ctx, RestStatus.SIGNUP_CODE_INVALID));
+            }).onFailure(e -> RestContext.fail(ctx, RestStatus.CODE_INVALID));
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
             RestContext.fail(ctx);
@@ -151,7 +153,6 @@ public class AuthController {
         SessionStore.logout(ctx);
         RestContext.success(ctx);
     }
-
 
     /**
      * 发送激活码
@@ -168,7 +169,6 @@ public class AuthController {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
-
 
         JsonObject query = JsonObject.of("$or", new JsonArray()
                 .add(JsonObject.of("username", username))
@@ -195,6 +195,84 @@ public class AuthController {
             log.error(e.getMessage(), e.getCause());
             RestContext.fail(ctx);
         });
+    }
+
+    /**
+     * 发送找回密码验证码
+     */
+    public void sendResetPasswordCode(RoutingContext ctx) {
+        JsonObject auth = ctx.body().asJsonObject();
+        String email = auth.getString("email");
+
+        if (!RegexUtils.matches(email, RegexUtils.EMAIL)) {
+            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+            return;
+        }
+
+        userDao.findCount(JsonObject.of("email", email)).onSuccess(size -> {
+            if (size != 1) {
+                RestContext.fail(ctx, RestStatus.EMAIL_IS_EXIST);
+                return;
+            }
+
+            String code = RandomUtils.getRandom(5, true);
+            AppContext.REDIS.setex(RedisConstant.AUTH_CODE_PASSWORD + email, RedisConstant.CODE_EXPIRE, code).onSuccess(v -> {
+                RestContext.success(ctx);
+                AppContext.sendMail("忘记密码", email, code, false);
+            }).onFailure(e -> {
+                log.error(e.getMessage(), e.getCause());
+                RestContext.fail(ctx);
+            });
+        }).onFailure(e -> {
+            log.error(e.getMessage(), e.getCause());
+            RestContext.fail(ctx);
+        });
+    }
+
+    /**
+     * 重置密码
+     */
+    public void resetPassword(RoutingContext ctx) {
+        JsonObject auth = ctx.body().asJsonObject();
+        String password = auth.getString("password");
+        String email = auth.getString("email");
+        String code = auth.getString("code");
+
+        if (!RegexUtils.matches(password, RegexUtils.PASSWORD) ||
+                !RegexUtils.matches(email, RegexUtils.EMAIL) ||
+                StringUtils.isBlank(code)) {
+            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+            return;
+        }
+
+        userDao.findOne(JsonObject.of("email", email), "username").onSuccess(user -> {
+            if (null == user) {
+                RestContext.fail(ctx, RestStatus.ACCOUNT_NOT_EXIST);
+                return;
+            }
+            String key = RedisConstant.AUTH_CODE_PASSWORD + email;
+            AppContext.REDIS.get(key).onSuccess(v -> {
+                if (null == v) {
+                    RestContext.fail(ctx, RestStatus.CODE_INVALID);
+                } else {
+                    if (code.equals(v.toString())) {
+                        userDao.updatePassword(user.getString("username"),  SecurityUtils.bCrypt(password)).onSuccess(_id -> {
+                            RestContext.success(ctx);
+                            AppContext.REDIS.del(List.of(key));
+                        }).onFailure(e -> {
+                            log.error(e.getMessage(), e.getCause());
+                            RestContext.fail(ctx);
+                        });
+                    } else {
+                        RestContext.fail(ctx, RestStatus.CODE_ERROR);
+                    }
+                }
+            }).onFailure(e -> RestContext.fail(ctx, RestStatus.CODE_INVALID));
+        }).onFailure(e -> {
+            log.error(e.getMessage(), e.getCause());
+            RestContext.fail(ctx);
+        });
+
     }
 
 }

@@ -44,7 +44,36 @@ public class UserController {
     }
 
     /**
+     * 修改个人信息 昵称、头像、
+     * @param ctx
+     */
+    public void updateInfo(RoutingContext ctx) {
+    }
+
+    /**
+     * 修改邮箱
+     * @param ctx 新邮箱、邮箱验证码、密码
+     */
+    public void updateEmail(RoutingContext ctx) {
+        JsonObject body = ctx.body().asJsonObject();
+        String password = body.getString("password");
+        String code = body.getString("code");
+        String email = body.getString("email");
+
+        UserSession session = SessionStore.sessionUser(ctx);
+        userDao.findOne(JsonObject.of("username", session.username), "password").onSuccess(user -> {
+            if (!SecurityUtils.matchesBCrypt(password, user.getString("password"))) {
+                RestContext.fail(ctx, RestStatus.EMAIL_CODE_IS_INVALID);
+            } else {
+                // TODO 修改邮箱
+                RestContext.success(ctx);
+            }
+        });
+    }
+
+    /**
      * 修改密码
+     * @param ctx 旧密码、新密码
      */
     public void updatePassword(RoutingContext ctx) {
         JsonObject body = ctx.body().asJsonObject();
