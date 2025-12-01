@@ -73,9 +73,7 @@ public class AuthController {
                 return;
             }
 
-            SessionStore.logged(ctx, username).onSuccess(v -> {
-                RestContext.success(ctx);
-            }).onFailure(e -> {
+            SessionStore.logged(ctx, username).onSuccess(v -> RestContext.success(ctx)).onFailure(e -> {
                 log.error(e.getMessage(), e.getCause());
                 RestContext.fail(ctx);
             });

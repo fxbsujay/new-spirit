@@ -1,5 +1,6 @@
 package cn.spirit.go.service;
 
+import cn.spirit.go.common.LockConstant;
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.util.DateUtils;
@@ -39,11 +40,6 @@ public class GameWaitService {
     private final Map<String, GameWaitDTO> games = new HashMap<>();
 
     /**
-     * 分布式锁
-     */
-    private final String GAME_LOCK = "GAME:LOCK:";
-
-    /**
      * 搜索休闲游戏
      *
      * @param username  查询不是自己的对局
@@ -73,7 +69,7 @@ public class GameWaitService {
      * @param game      对局
      */
     public Future<Boolean> addGame(UserSession session, GameWaitDTO game) {
-        return AppContext.vertx.sharedData().withLock(GAME_LOCK + session.username, 1000, () -> {
+        return AppContext.vertx.sharedData().withLock(LockConstant.GAME_LOCK + session.username, 1000, () -> {
             if (userGames.containsKey(session.username)) {
                 log.warn("{} failed to create the game", session.username);
                 return Future.succeededFuture(false);
@@ -96,7 +92,7 @@ public class GameWaitService {
      * @param username  用户名
      */
     public Future<GameWaitDTO> removeGame(String username) {
-        return AppContext.vertx.sharedData().withLock(GAME_LOCK + username, 1000, () -> {
+        return AppContext.vertx.sharedData().withLock(LockConstant.GAME_LOCK + username, 1000, () -> {
             String code = userGames.remove(username);
             if (null != code) {
                 return Future.succeededFuture(games.remove(code));

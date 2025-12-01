@@ -1,9 +1,12 @@
 package cn.spirit.go.controller;
 
+import cn.spirit.go.common.RedisConstant;
 import cn.spirit.go.common.RestContext;
 import cn.spirit.go.common.enums.RestStatus;
+import cn.spirit.go.common.util.RandomUtils;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.common.util.SecurityUtils;
+import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.service.GameWaitService;
 import cn.spirit.go.web.SessionStore;
@@ -15,6 +18,8 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 public class UserController {
 
@@ -45,7 +50,6 @@ public class UserController {
 
     /**
      * 修改个人信息 昵称、头像、
-     * @param ctx
      */
     public void updateInfo(RoutingContext ctx) {
     }
@@ -60,14 +64,70 @@ public class UserController {
         String code = body.getString("code");
         String email = body.getString("email");
 
+        if (!RegexUtils.matches(password, RegexUtils.PASSWORD) ||
+                !RegexUtils.matches(email, RegexUtils.EMAIL) ||
+                StringUtils.isBlank(code)) {
+            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+            return;
+        }
+
         UserSession session = SessionStore.sessionUser(ctx);
-        userDao.findOne(JsonObject.of("username", session.username), "password").onSuccess(user -> {
+        String key = RedisConstant.AUTH_CODE_EMAIL + email;
+
+        userDao.findOne(JsonObject.of("username", session.username),  "password").onSuccess(user -> {
             if (!SecurityUtils.matchesBCrypt(password, user.getString("password"))) {
                 RestContext.fail(ctx, RestStatus.EMAIL_CODE_IS_INVALID);
             } else {
-                // TODO 修改邮箱
-                RestContext.success(ctx);
+                AppContext.REDIS.get(key).onSuccess(v -> {
+                    if (null == v) {
+                        RestContext.fail(ctx, RestStatus.CODE_INVALID);
+                    } else {
+                        if (code.equals(v.toString())) {
+                            userDao.updateEmail(session.username, email).onSuccess(_id -> {
+                                RestContext.success(ctx);
+                                AppContext.REDIS.del(List.of(key));
+                            }).onFailure(e -> {
+                                log.error(e.getMessage(), e.getCause());
+                                RestContext.fail(ctx);
+                            });
+                        } else {
+                            RestContext.fail(ctx, RestStatus.CODE_ERROR);
+                        }
+                    }
+                }).onFailure(e -> RestContext.fail(ctx, RestStatus.CODE_INVALID));
             }
+        }).onFailure(e -> {
+            log.error(e.getMessage(), e.getCause());
+            RestContext.fail(ctx);
+        });
+    }
+
+    /**
+     * 发生修改邮箱的验证码
+     */
+    public void sendUpdateEmailCode(RoutingContext ctx) {
+        JsonObject auth = ctx.body().asJsonObject();
+        String email = auth.getString("email");
+        if (!RegexUtils.matches(email, RegexUtils.EMAIL)) {
+            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+            return;
+        }
+        userDao.findCount(JsonObject.of("email", email)).onSuccess(size -> {
+            if (size > 0) {
+                RestContext.fail(ctx, RestStatus.EMAIL_IS_EXIST);
+            } else {
+                String code = RandomUtils.getRandom(5, true);
+                AppContext.REDIS.setex(RedisConstant.AUTH_CODE_EMAIL + email, RedisConstant.CODE_EXPIRE, code).onSuccess(v -> {
+                    RestContext.success(ctx);
+                    AppContext.sendMail("修改邮箱验证", email, code, false);
+                }).onFailure(e -> {
+                    log.error(e.getMessage(), e.getCause());
+                    RestContext.fail(ctx);
+                });
+            }
+        }).onFailure(e -> {
+            log.error(e.getMessage(), e.getCause());
+            RestContext.fail(ctx);
         });
     }
 

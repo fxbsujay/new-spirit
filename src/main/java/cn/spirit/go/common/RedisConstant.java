@@ -19,6 +19,11 @@ public interface RedisConstant {
     String AUTH_CODE_PASSWORD = "AUTH:CODE:PASSWORD:";
 
     /**
+     * 修改邮箱验证码
+     */
+    String AUTH_CODE_EMAIL = "AUTH:CODE:EMAIL:";
+
+    /**
      * 游戏对局
      */
     String GAME_INFO = "GAME:INFO:";

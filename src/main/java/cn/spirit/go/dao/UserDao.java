@@ -30,4 +30,9 @@ public class UserDao {
                 .compose(res -> Future.succeededFuture(username));
     }
 
+    public Future<String> updateEmail(String username, String email) {
+        return AppContext.MONGO.updateCollection("user", JsonObject.of("username", username), JsonObject.of("$set", JsonObject.of("email", email)))
+                .compose(res -> Future.succeededFuture(username));
+    }
+
 }
