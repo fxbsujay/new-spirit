@@ -42,7 +42,7 @@ class Http {
 
     api(path, options) {
         return new Promise((resolve, reject) => {
-            fetch(this.apiPrefix + path, options).then(res => {
+            fetch(this.apiPrefix + path, {...options}).then(res => {
                 switch (res.status) {
                     case 200:
                         const contentType = res.headers.get('content-type')
@@ -65,13 +65,17 @@ class Http {
                         snackbar.error('网络异常')
                         break
                     case 500:
-                        console.log(res.statusText)
-                        if (Number.isInteger(res.statusText)) {
-                            snackbar.warning(res.statusText)
+                        if (Number.isInteger(parseInt(res.statusText))) {
+                            res.json().then(err => {
+                                snackbar.warning(err.message)
+                                reject(err)
+                            }).catch(() => {
+                                reject()
+                            })
                         } else {
                             snackbar.error('网络异常')
+                            reject()
                         }
-                        reject(res.statusText)
                         break
                 }
             })
