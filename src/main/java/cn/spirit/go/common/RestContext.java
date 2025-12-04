@@ -5,6 +5,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 public class RestContext {
@@ -24,7 +25,7 @@ public class RestContext {
     }
 
     public static void fail(RoutingContext ctx, RestStatus status) {
-        ctx.response().setStatusCode(status.getCode()).end(status.getMessage());
+        ctx.response().setStatusCode(500).setStatusMessage(status.getCode().toString()).end();
     }
 
     public static void fail(RoutingContext ctx) {

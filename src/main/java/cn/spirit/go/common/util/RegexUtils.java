@@ -62,7 +62,7 @@ public class RegexUtils {
      * 匹配对局编号
      */
     public static boolean mismatchGameCode(String code) {
-        return RegexUtils.matches(code, "[A-Z0-9]{5,}");
+        return !RegexUtils.matches(code, "[A-Z0-9]{5,}");
     }
 
     public static void main(String[] args) {
