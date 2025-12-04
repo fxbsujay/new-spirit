@@ -28,7 +28,8 @@ const refresh = () => {
     loading.value = false
 
     socket.send('GAME_JOIN', router.params.code)
-  }).catch(() => {
+  }).catch(code => {
+    console.log("code:", code)
     isExist.value = false
     loading.value = false
   })

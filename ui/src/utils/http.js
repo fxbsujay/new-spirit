@@ -34,14 +34,6 @@ export const buildURL = (url, params)=> {
     return url
 }
 
-class HttpError extends Error {
-
-    constructor(status, text) {
-        super(text)
-        this.status = status
-    }
-}
-
 class Http {
 
     constructor(apiPrefix) {
@@ -49,42 +41,39 @@ class Http {
     }
 
     api(path, options) {
-
         return new Promise((resolve, reject) => {
             fetch(this.apiPrefix + path, options).then(res => {
-                if (res.status === 200) {
-                    const contentType = res.headers.get('content-type')
-                    if (contentType && contentType.includes('application/json')){
-                        return res.json()
-                    } else {
-                        return res.text()
-                    }
-                } else {
-                    throw new HttpError(res.status, res.statusText)
-                }
-            }).then(res => resolve(res)).catch(err => {
-                if (err.status > 10000) {
-                    snackbar.warning(err.message)
-                } else {
-                    switch (err.status) {
-                        case 400:
-                            snackbar.warning('非法操作')
-                            break
-                        case 401:
-                            useUserStore().logout()
-                            break
-                        case 403:
-                            snackbar.warning('请登录后操作')
-                            break
-                        case 404:
+                switch (res.status) {
+                    case 200:
+                        const contentType = res.headers.get('content-type')
+                        if (contentType && contentType.includes('application/json')){
+                            resolve(res.json())
+                        } else {
+                            resolve(res.text())
+                        }
+                        break;
+                    case 400:
+                        snackbar.warning('非法操作')
+                        break
+                    case 401:
+                        useUserStore().logout()
+                        break
+                    case 403:
+                        snackbar.warning('请登录后操作')
+                        break
+                    case 404:
+                        snackbar.error('网络异常')
+                        break
+                    case 500:
+                        console.log(res.statusText)
+                        if (Number.isInteger(res.statusText)) {
+                            snackbar.warning(res.statusText)
+                        } else {
                             snackbar.error('网络异常')
-                            break
-                        case 500:
-                            snackbar.error('网络异常')
-                            break
-                    }
+                        }
+                        reject(res.statusText)
+                        break
                 }
-                reject(err)
             })
         })
     }
