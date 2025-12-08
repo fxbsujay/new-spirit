@@ -69,6 +69,11 @@
 import { ref, nextTick, useTemplateRef, reactive } from 'vue'
 import { computeBoard } from '@/components/go/goban'
 
+const { onBoardClick } = defineProps({
+  onBoardClick: {
+    type: Function,
+  }
+})
 const svg = useTemplateRef('svgRef')
 const lineNumbers = ref([])
 
@@ -111,18 +116,27 @@ const render = () => {
 }
 
 const boardClickHandle = event => {
+
   const x = parseInt((event.offsetX - boardSetting.ox + boardSetting.mid) /  boardSetting.ss)
   const y = parseInt((event.offsetY - boardSetting.oy + boardSetting.mid) /  boardSetting.ss)
-  if(points.value.find(item => item.x === x && item.y === y)) {
-    return
-  } else {
-    points.value.push({
-      x,
-      y,
-      type: points.value[points.value.length - 1].type === 'white' ? 'black' : 'white',
-    })
+  if(!points.value.find(item => item.x === x && item.y === y)) {
+    const type = points.value[points.value.length - 1].type === 'white' ? 'black' : 'white'
+    if (onBoardClick) {
+      if (onBoardClick(x, y, type)) {
+        points.value.push({
+          x,
+          y,
+          type,
+        })
+      }
+    } else {
+      points.value.push({
+        x,
+        y,
+        type,
+      })
+    }
   }
-  console.log(x, y, boardSetting)
 }
 
 render()

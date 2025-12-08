@@ -41,6 +41,10 @@ onBeforeUnmount(() => {
 
   console.log('---------A')
 })
+const onBoardClick = (x, y, type) => {
+  console.log(x, y, type)
+  return true
+}
 </script>
 
 <template>
@@ -106,7 +110,7 @@ onBeforeUnmount(() => {
     <div class="board">
       <Responsive :aspect-ratio="1">
         <div class="A">
-          <Go />
+          <Go :onBoardClick="onBoardClick"/>
         </div>
       </Responsive>
     </div>
