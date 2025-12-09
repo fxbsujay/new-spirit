@@ -7,8 +7,6 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.RoutingContext;
 
-import java.nio.charset.StandardCharsets;
-
 public class RestContext {
 
     public static void success(RoutingContext ctx, Object data) {

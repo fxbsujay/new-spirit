@@ -4,6 +4,7 @@ import http from '@/utils/http.js'
 import dayjs from 'dayjs'
 import Cookie from 'js-cookie'
 import router from '@/router/index.js'
+import { useSocketStore } from '@/stores/socket.js'
 
 export const useUserStore = defineStore('user', () => {
 
@@ -29,6 +30,8 @@ export const useUserStore = defineStore('user', () => {
     timestamp: 0,
   })
 
+  const socketStore = useSocketStore()
+
   const refreshInfo = () => {
     const userIsGuest = Cookie.get('userIsGuest')
     user.isGuest = userIsGuest !== 'false'
@@ -37,7 +40,10 @@ export const useUserStore = defineStore('user', () => {
         Object.assign(user, res)
         user.timestamp = dayjs().valueOf()
         setIsGuestCookie(false)
+        socketStore.reconnect()
       })
+    } else {
+      socketStore.reconnect()
     }
   }
 
@@ -52,6 +58,7 @@ export const useUserStore = defineStore('user', () => {
     setIsGuestCookie(true)
     user.isGuest = true
     http.post('/auth/signout').then(() => {
+      refreshInfo()
       if (router.currentRoute.value.path !== '/') {
         router.push('/')
       }

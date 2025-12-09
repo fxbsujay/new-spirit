@@ -69,31 +69,19 @@
 import { ref, nextTick, useTemplateRef, reactive } from 'vue'
 import { computeBoard } from '@/components/go/goban'
 
-const { onBoardClick } = defineProps({
+const { onBoardClick, points } = defineProps({
   onBoardClick: {
     type: Function,
+  },
+  points: {
+    default: [],
+    type: Array,
   }
 })
+
 const svg = useTemplateRef('svgRef')
 const lineNumbers = ref([])
 
-const points = ref([
-  {
-    type: 'black',
-    x: 0,
-    y: 0
-  },
-  {
-    type: 'white',
-    x: 6,
-    y: 2
-  },
-  {
-    type: 'white',
-    x: 2,
-    y: 2
-  }
-])
 const boardSetting = reactive({
   ss: 0,
   ox: 0,
@@ -113,30 +101,13 @@ const boardSetting = reactive({
 const render = () => {
   const setting = computeBoard(svg, 19, 19, 39, true)
   Object.assign(boardSetting, setting)
+  console.log(lineNumbers.value)
 }
 
 const boardClickHandle = event => {
-
   const x = parseInt((event.offsetX - boardSetting.ox + boardSetting.mid) /  boardSetting.ss)
   const y = parseInt((event.offsetY - boardSetting.oy + boardSetting.mid) /  boardSetting.ss)
-  if(!points.value.find(item => item.x === x && item.y === y)) {
-    const type = points.value[points.value.length - 1].type === 'white' ? 'black' : 'white'
-    if (onBoardClick) {
-      if (onBoardClick(x, y, type)) {
-        points.value.push({
-          x,
-          y,
-          type,
-        })
-      }
-    } else {
-      points.value.push({
-        x,
-        y,
-        type,
-      })
-    }
-  }
+  onBoardClick(x, y)
 }
 
 render()

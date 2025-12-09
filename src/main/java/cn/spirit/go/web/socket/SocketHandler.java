@@ -1,7 +1,5 @@
 package cn.spirit.go.web.socket;
 
-import cn.spirit.go.common.util.RegexUtils;
-import cn.spirit.go.model.dto.GameRoomDTO;
 import cn.spirit.go.service.GameRoomService;
 import cn.spirit.go.service.GameWaitService;
 import cn.spirit.go.web.SessionStore;
@@ -9,9 +7,13 @@ import cn.spirit.go.web.config.AppContext;
 import io.vertx.core.Handler;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class SocketHandler implements Handler<RoutingContext> {
 
@@ -50,7 +52,17 @@ public class SocketHandler implements Handler<RoutingContext> {
                                 gameRoomService.exitRoom(session.username, (String) pck.data);
                                 break;
                             case GAME_STEP:
-                                log.info("game add step {}", pck.data.toString());
+                                Map<String, Object> obj = (Map) pck.data;
+
+                                String code = (String) obj.get("code");
+                                Integer x = (Integer) obj.get("x");
+                                Integer y = (Integer) obj.get("y");
+
+                                boolean isSuccess = gameRoomService.addStep(session.username, code, x, y);
+                                if (!isSuccess) {
+                                    // 直接关闭链接
+                                    log.info("Failed to add step, username: {}, obj: {}", session.username, obj);
+                                }
                                 break;
                             default:
                                 log.error("Illegal websocket message packet type, from: {}, sessionId: {}", session.username, session.sessionId);

@@ -6,12 +6,16 @@ import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.web.socket.ClientManger;
 import cn.spirit.go.web.socket.PackageType;
 import cn.spirit.go.web.socket.SocketPackage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 public class GameRoomService {
+
+    private final Logger log = LoggerFactory.getLogger(GameRoomService.class);
 
     private final ClientManger clientManger = AppContext.getBean(ClientManger.class);
 
@@ -33,12 +37,15 @@ public class GameRoomService {
 
     /**
      * 玩家落子
+     * 0412-1760178234 横坐标纵坐标(x,y)-落子时间戳
      *
      * @param code      房间编号
      * @param username  玩家用户名
-     * @param step      0412-B-1760178234 纵坐标横坐标-棋子类型B黑W白-落子时间戳
+     * @param x         纵坐标
+     * @param y         纵坐标
      */
-    public boolean addStep(String code, String username, String step) {
+    public boolean addStep(String username, String code, Integer x, Integer y) {
+        log.info("game add step ,username={}, code={}, x={}, y={}", username, code, x, y);
         GameRoomDTO room = rooms.get(code);
         if (null == room) {
             return false;
@@ -48,10 +55,11 @@ public class GameRoomService {
             // TODO 没有落子，判断是不是黑棋先行
         }
 
-        String lastStep = room.steps.get(room.steps.size() - 1);
+        //String lastStep = room.steps.get(room.steps.size() - 1);
         // TODO 最后一步必须是另一方的落子，并判断落子位置是否重叠了
 
 
+        clientManger.sendToUser(SocketPackage.build(PackageType.GAME_STEP, room.info.black, room.info.white));
         return true;
     }
 

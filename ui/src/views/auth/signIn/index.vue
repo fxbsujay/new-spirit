@@ -1,8 +1,7 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import http from '@/utils/http.js'
-import {useUserStore} from '@/stores/user.js'
-import router from '@/router/index.js'
+import { useUserStore } from '@/stores/user.js'
 
 const formState = reactive({
   username: '',

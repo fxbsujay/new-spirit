@@ -7,12 +7,33 @@ import Icon from '@/components/icon/Icon.vue'
 import http from '@/utils/http'
 import { useRoute } from 'vue-router'
 import { useSocketStore } from '@/stores/socket.js'
+import { useUserStore } from '@/stores/user.js'
 
 const value = ref(false)
 const router = useRoute()
 const socket = useSocketStore()
+const userStore = useUserStore()
 const isExist = ref(false)
 const loading = ref(false)
+
+const points = ref([
+  {
+    type: 'black',
+    x: 0,
+    y: 0
+  },
+  {
+    type: 'white',
+    x: 6,
+    y: 2
+  },
+  {
+    type: 'white',
+    x: 2,
+    y: 2
+  }
+])
+const currentPlayerType = ref('')
 const game = reactive({
   info: {},
   white: {},
@@ -28,6 +49,7 @@ const refresh = () => {
     loading.value = false
 
     socket.send('GAME_JOIN', router.params.code)
+    currentPlayerType.value = userStore.user.username === game.info.black ? 'black' : 'white'
   }).catch(code => {
     console.log("code:", code)
     isExist.value = false
@@ -38,12 +60,21 @@ const refresh = () => {
 refresh()
 
 onBeforeUnmount(() => {
-
   console.log('---------A')
 })
-const onBoardClick = (x, y, type) => {
-  console.log(x, y, type)
-  return true
+const onBoardClick = (x, y) => {
+  if (!points.value.find(item => item.x === x && item.y === y)) {
+    points.value.push({
+      type: currentPlayerType.value,
+      x,
+      y
+    })
+    socket.send('GAME_STEP', {
+      code: game.info.code,
+      x,
+      y
+    })
+  }
 }
 </script>
 
@@ -110,7 +141,7 @@ const onBoardClick = (x, y, type) => {
     <div class="board">
       <Responsive :aspect-ratio="1">
         <div class="A">
-          <Go :onBoardClick="onBoardClick"/>
+          <Go :onBoardClick="onBoardClick" :points="points"/>
         </div>
       </Responsive>
     </div>
