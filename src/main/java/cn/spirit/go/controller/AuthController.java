@@ -97,7 +97,7 @@ public class AuthController {
 
         if (!RegexUtils.matches(password, RegexUtils.PASSWORD) ||
                 !RegexUtils.matches(email, RegexUtils.EMAIL) ||
-                !RegexUtils.matches(username, RegexUtils.USERNAME) || StringUtils.isBlank(code)) {
+                !RegexUtils.matches(username, RegexUtils.USERNAME) || !RegexUtils.matches(code, RegexUtils.CODE)) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
@@ -239,7 +239,7 @@ public class AuthController {
 
         if (!RegexUtils.matches(password, RegexUtils.PASSWORD) ||
                 !RegexUtils.matches(email, RegexUtils.EMAIL) ||
-                StringUtils.isBlank(code)) {
+                !RegexUtils.matches(code, RegexUtils.CODE)) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }

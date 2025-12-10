@@ -1,17 +1,21 @@
 package cn.spirit.go.service;
 
+import cn.spirit.go.common.LockConstant;
 import cn.spirit.go.model.dto.GamePlayDTO;
 import cn.spirit.go.model.dto.GameRoomDTO;
+import cn.spirit.go.model.dto.GameStepDTO;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.web.socket.ClientManger;
 import cn.spirit.go.web.socket.PackageType;
 import cn.spirit.go.web.socket.SocketPackage;
+import io.vertx.core.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public class GameRoomService {
 
@@ -44,23 +48,39 @@ public class GameRoomService {
      * @param x         纵坐标
      * @param y         纵坐标
      */
-    public boolean addStep(String username, String code, Integer x, Integer y) {
+    public void addStep(String username, String code, Integer x, Integer y) {
         log.info("game add step ,username={}, code={}, x={}, y={}", username, code, x, y);
+
         GameRoomDTO room = rooms.get(code);
         if (null == room) {
-            return false;
+            return;
+        }
+        // 判断参数合法性
+        if ((!room.info.black.equals(username) && !room.info.white.equals(username)) || x < 0 || y < 0 || x >= room.info.boardSize || y >= room.info.boardSize) {
+            return;
         }
 
         if (room.steps.isEmpty()) {
-            // TODO 没有落子，判断是不是黑棋先行
+            // 黑棋先手，是否是黑方
+            if (!room.info.black.equals(username)) {
+                return;
+            }
+        } else {
+            // 判断当前应该是是哪一方落子
+            if (room.steps.size() % 2 == 1) {
+                if (!room.info.white.equals(username)) return;
+            } else {
+                if (!room.info.black.equals(username)) return;
+            }
+            // 判断落子位置是否重叠
+            if (room.steps.contains(new GameStepDTO(x, y))) {
+                return;
+            }
         }
-
-        //String lastStep = room.steps.get(room.steps.size() - 1);
-        // TODO 最后一步必须是另一方的落子，并判断落子位置是否重叠了
-
-
-        clientManger.sendToUser(SocketPackage.build(PackageType.GAME_STEP, room.info.black, room.info.white));
-        return true;
+        GameStepDTO step = new GameStepDTO(x, y);
+        if (room.steps.add(step)) {
+            clientManger.sendToUser(SocketPackage.build(PackageType.GAME_STEP, username, step), room.info.black, room.info.white);
+        }
     }
 
     /**
@@ -197,4 +217,7 @@ public class GameRoomService {
         return rooms.get(code);
     }
 
+    private <T> Future<T> lock(String code, Supplier<Future<T>> block) {
+       return AppContext.vertx.sharedData().withLock(LockConstant.ROOM_LOCK + code, 1000, block);
+    }
 }

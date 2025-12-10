@@ -1,7 +1,6 @@
 package cn.spirit.go.model.dto;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class GameRoomDTO {
 
@@ -13,5 +12,20 @@ public class GameRoomDTO {
     /**
      * 步骤
      */
-    public List<String> steps = new ArrayList<>();
+    public Set<GameStepDTO> steps = new HashSet<>();
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        GameRoomDTO that = (GameRoomDTO) o;
+        return Objects.equals(info.code, that.info.code);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(info.code);
+    }
+
 }

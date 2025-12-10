@@ -1,5 +1,6 @@
 package cn.spirit.go.web.socket;
 
+import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.service.GameRoomService;
 import cn.spirit.go.service.GameWaitService;
 import cn.spirit.go.web.SessionStore;
@@ -57,12 +58,11 @@ public class SocketHandler implements Handler<RoutingContext> {
                                 String code = (String) obj.get("code");
                                 Integer x = (Integer) obj.get("x");
                                 Integer y = (Integer) obj.get("y");
-
-                                boolean isSuccess = gameRoomService.addStep(session.username, code, x, y);
-                                if (!isSuccess) {
-                                    // 直接关闭链接
-                                    log.info("Failed to add step, username: {}, obj: {}", session.username, obj);
+                                if (RegexUtils.mismatchGameCode(code) || x == null || y == null) {
+                                    ws.close();
+                                    return;
                                 }
+                                gameRoomService.addStep(session.username, code, x, y);
                                 break;
                             default:
                                 log.error("Illegal websocket message packet type, from: {}, sessionId: {}", session.username, session.sessionId);
