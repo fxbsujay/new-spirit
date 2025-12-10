@@ -2,7 +2,7 @@
 import Responsive from '@/components/responsive/index.vue'
 import Switch from '@/components/switch/index.vue'
 import Go from '@/components/go/Go.vue'
-import { ref, reactive, onBeforeUnmount } from 'vue'
+import { ref, reactive, onBeforeUnmount, watch } from 'vue'
 import Icon from '@/components/icon/Icon.vue'
 import http from '@/utils/http'
 import { useRoute } from 'vue-router'
@@ -33,6 +33,7 @@ const points = ref([
     y: 2
   }
 ])
+
 const currentPlayerType = ref('')
 const game = reactive({
   info: {},
@@ -40,16 +41,30 @@ const game = reactive({
   black: {}
 })
 
+const setListener = () => {
+  socket.setListener('GAME_JOIN', msg => {
+    socket.setListener('GAME_STEP', msg => {
+      points.value.push({
+        type: msg.sender === game.info.white ? 'white' : 'black',
+        x: msg.data.x,
+        y: msg.data.y
+      })
+    })
+    socket.setListener('GAME_EXIT', msg => {
+      console.log('GAME_EXIT', msg)
+    })
+  })
+}
+
 const refresh = () => {
   loading.value = true
   http.get('/game/info/' + router.params.code).then(res => {
     Object.assign(game, res)
-    console.log(game)
-    isExist.value = true
-    loading.value = false
-
+    setListener()
     socket.send('GAME_JOIN', router.params.code)
     currentPlayerType.value = userStore.user.username === game.info.black ? 'black' : 'white'
+    isExist.value = true
+    loading.value = false
   }).catch(code => {
     console.log("code:", code)
     isExist.value = false
@@ -57,18 +72,18 @@ const refresh = () => {
   })
 }
 
-refresh()
+if (socket.open) {
+  refresh()
+} else {
+  watch(() => socket.open, open => {
+    if (open) {
+      refresh()
+    }
+  })
+}
 
-onBeforeUnmount(() => {
-  console.log('---------A')
-})
 const onBoardClick = (x, y) => {
   if (!points.value.find(item => item.x === x && item.y === y)) {
-    points.value.push({
-      type: currentPlayerType.value,
-      x,
-      y
-    })
     socket.send('GAME_STEP', {
       code: game.info.code,
       x,

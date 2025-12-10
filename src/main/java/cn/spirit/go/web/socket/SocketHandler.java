@@ -8,12 +8,9 @@ import cn.spirit.go.web.config.AppContext;
 import io.vertx.core.Handler;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
 import java.util.Map;
 
 public class SocketHandler implements Handler<RoutingContext> {
@@ -47,14 +44,13 @@ public class SocketHandler implements Handler<RoutingContext> {
                             case SYS:
                                 break;
                             case GAME_EXIT:
-                                gameRoomService.joinRoom(session.username, (String) pck.data);
+                                gameRoomService.exitRoom(session.username, (String) pck.data);
                                 break;
                             case GAME_JOIN:
-                                gameRoomService.exitRoom(session.username, (String) pck.data);
+                                gameRoomService.joinRoom(session.username, (String) pck.data);
                                 break;
                             case GAME_STEP:
                                 Map<String, Object> obj = (Map) pck.data;
-
                                 String code = (String) obj.get("code");
                                 Integer x = (Integer) obj.get("x");
                                 Integer y = (Integer) obj.get("y");
@@ -72,8 +68,10 @@ public class SocketHandler implements Handler<RoutingContext> {
                     });
                     ws.closeHandler(e -> {
                         clientManger.cancel(session);
-                        gameWaitService.removeGame(session.username);
-                        gameRoomService.exitRoom(session.username);
+                        if (!clientManger.isOnLine(session.username)) {
+                            gameWaitService.removeGame(session.username);
+                            gameRoomService.exitRoom(session.username);
+                        }
                     });
                 } else {
                     ws.close();

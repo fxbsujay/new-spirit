@@ -64,7 +64,17 @@ public class ClientManger {
         if (null != sessions) {
             sessions.remove(session.sessionId);
             sockets.remove(session.sessionId);
+            if (sessions.isEmpty()) {
+                userSessions.remove(session.username);
+            }
         }
+    }
+
+    /**
+     * 用户是否在线
+     */
+    public boolean isOnLine(String username) {
+        return userSessions.containsKey(username);
     }
 
     /**
@@ -75,11 +85,12 @@ public class ClientManger {
      */
     public void sendToUser(SocketPackage pack, String ...usernames) {
         String msg = Json.encode(pack);
-        log.info("Sending message to usernames: {}, package: {}", Arrays.toString(usernames), msg);
+
         for (String username : usernames) {
             Set<String> sessions = userSessions.get(username);
             if (null != sessions) {
                 send(msg, sessions.toArray(new String[0]));
+                log.info("Sending message to usernames: {}, sessionIds: {}, package: {}", username, sessions, msg);
             }
         }
     }

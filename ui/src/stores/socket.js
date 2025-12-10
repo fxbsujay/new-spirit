@@ -1,42 +1,43 @@
 import { defineStore } from 'pinia'
 import router from '@/router/index.js'
 import { useUserStore } from '@/stores/user.js'
+import { reactive, ref } from 'vue'
+
 export const useSocketStore = defineStore('counter', () => {
 
   let socket = null
+  const open = ref(false)
   const userStore = useUserStore()
+  const msgSwitch = {}
 
   const reconnect = () => {
     if (socket) {
       socket.close()
     }
+    open.value = false
     socket = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/ws`)
     socket.onopen = function (event) {
-      console.log('WebSocket 连接成功', event)
+      open.value = true
+      socket.onmessage = function (event) {
+        const msg = JSON.parse(event.data)
+        switch (msg.type) {
+          case 'GAME_START':
+            router.push('/' + msg.data)
+            userStore.closeWaitGame()
+            break
+        }
+        if (msgSwitch[msg.type]) {
+          msgSwitch[msg.type](msg)
+        }
+      }
     }
-
     socket.onclose = function(event) {
-      if (event.wasClean) {
-        console.log(`连接已正常关闭，代码=${event.code}，原因=${event.reason}`)
-      } else {
-        console.log('连接中断')
-      }
-    }
-    socket.onmessage = function (event) {
-      const msg = JSON.parse(event.data)
-      console.log('socket message', msg)
-      switch (msg.type) {
-        case 'GAME_START':
-          router.push('/' + msg.data)
-          userStore.closeWaitGame()
-          break
-      }
+      open.value = false
     }
   }
 
-  reconnect()
-  const isConnected = () => {
-    return socket.readyState === WebSocket.OPEN
+  const setListener = (type, func) => {
+    msgSwitch[type] = func
   }
 
   const send = (type, data) => {
@@ -45,9 +46,10 @@ export const useSocketStore = defineStore('counter', () => {
       type,
       data
     }
+    console.log('send pck', pck)
     socket.send(JSON.stringify(pck))
   }
 
-  return { socket, reconnect, isConnected, send }
+  return { socket, open, reconnect, send, setListener }
 })
 

@@ -49,8 +49,6 @@ public class GameRoomService {
      * @param y         纵坐标
      */
     public void addStep(String username, String code, Integer x, Integer y) {
-        log.info("game add step ,username={}, code={}, x={}, y={}", username, code, x, y);
-
         GameRoomDTO room = rooms.get(code);
         if (null == room) {
             return;
@@ -77,8 +75,10 @@ public class GameRoomService {
                 return;
             }
         }
+
         GameStepDTO step = new GameStepDTO(x, y);
         if (room.steps.add(step)) {
+            log.info("{} add a step to the game {}, username={}, x={}, y={}, ", room.info.white.equals(username) ? 'W' : 'B', code, username, x, y);
             clientManger.sendToUser(SocketPackage.build(PackageType.GAME_STEP, username, step), room.info.black, room.info.white);
         }
     }
@@ -160,7 +160,7 @@ public class GameRoomService {
             }
         }
         if (sendMsg) {
-            clientManger.sendToUser(SocketPackage.build(PackageType.GAME_JOIN, code), username.equals(room.info.white) ? room.info.black : room.info.white);
+            clientManger.sendToUser(SocketPackage.build(PackageType.GAME_JOIN, code), room.info.black, room.info.white);
         }
     }
 
@@ -178,7 +178,7 @@ public class GameRoomService {
         }
         boolean remove = codes.remove(code);
         if (remove) {
-            clientManger.sendToUser(SocketPackage.build(PackageType.GAME_EXIT, code), username.equals(room.info.white) ? room.info.black : room.info.white);
+            clientManger.sendToUser(SocketPackage.build(PackageType.GAME_EXIT, code), room.info.black, room.info.white);
         }
         if (codes.isEmpty()) {
             userRooms.remove(username);
@@ -195,7 +195,7 @@ public class GameRoomService {
             if (null == room) {
                 continue;
             }
-            clientManger.sendToUser(SocketPackage.build(PackageType.GAME_EXIT, code), username.equals(room.info.white) ? room.info.black : room.info.white);
+            clientManger.sendToUser(SocketPackage.build(PackageType.GAME_EXIT, code), room.info.black, room.info.white);
         }
 
         if (codes.isEmpty()) {

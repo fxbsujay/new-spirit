@@ -101,7 +101,6 @@ const boardSetting = reactive({
 const render = () => {
   const setting = computeBoard(svg, 19, 19, 39, true)
   Object.assign(boardSetting, setting)
-  console.log(lineNumbers.value)
 }
 
 const boardClickHandle = event => {
