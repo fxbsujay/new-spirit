@@ -22,6 +22,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.Collections;
 import java.util.List;
 
 public class GameController {
@@ -71,14 +72,13 @@ public class GameController {
                 if (null == game) {
                     RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
                 } else {
-                    setGameInfoUsers(ctx, JsonObject.of("info", game), game.getString("white"), game.getString("black"));
+                    setGameInfoUsers(ctx, JsonObject.of("info", game, "steps", Collections.emptyList()), game.getString("white"), game.getString("black"));
                 }
             });
         } else {
-            setGameInfoUsers(ctx, JsonObject.of("info", room.info), room.info.white, room.info.black);
+            setGameInfoUsers(ctx, JsonObject.of("info", room.info, "steps", room.steps), room.info.white, room.info.black);
         }
     }
-
 
     private void setGameInfoUsers(RoutingContext ctx, JsonObject obj, String white, String black) {
         JsonObject query = JsonObject.of("$or", JsonArray.of(JsonObject.of("username", white), JsonObject.of("username", black)));

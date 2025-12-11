@@ -3,12 +3,15 @@ package cn.spirit.go.service;
 import cn.spirit.go.common.LockConstant;
 import cn.spirit.go.model.dto.GamePlayDTO;
 import cn.spirit.go.model.dto.GameRoomDTO;
+import cn.spirit.go.model.dto.GameSocket;
 import cn.spirit.go.model.dto.GameStepDTO;
+import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.web.socket.ClientManger;
 import cn.spirit.go.web.socket.PackageType;
 import cn.spirit.go.web.socket.SocketPackage;
 import io.vertx.core.Future;
+import io.vertx.core.http.ServerWebSocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashMap;
@@ -75,6 +78,7 @@ public class GameRoomService {
                 return;
             }
         }
+        // 判断是否超时,每一方的第一手不算时间,从第二手开始计时
 
         GameStepDTO step = new GameStepDTO(x, y);
         if (room.steps.add(step)) {
@@ -135,71 +139,49 @@ public class GameRoomService {
         dto.info = info;
         rooms.put(info.code, dto);
         clientManger.sendToUser(SocketPackage.build(PackageType.GAME_START, info.code), info.white, info.black);
+        addUserRoom(info.code, info.white, info.black);
         return info.code;
+    }
+
+    private void addUserRoom(String code, String ...usernames) {
+        for (String username : usernames) {
+            Set<String> codes = userRooms.get(username);
+            if (null != codes) {
+                codes.add(code);
+            } else {
+                codes = new HashSet<>();
+                codes.add(code);
+                userRooms.put(username, codes);
+            }
+        }
     }
 
     /**
      * 加入房间
      */
-    public void joinRoom(String username, String code) {
+    public boolean joinRoom(String code, GameSocket socket) {
         GameRoomDTO room = rooms.get(code);
-        if (null == room || (!room.info.white.equals(username) && !room.info.black.equals(username))) {
-            return;
+        if (null == room || (!room.info.white.equals(socket.username) && !room.info.black.equals(socket.username))) {
+            return false;
         }
-        Set<String> codes = userRooms.get(username);
-        boolean sendMsg = false;
-        if (null == codes) {
-            codes = new HashSet<>();
-            codes.add(code);
-            userRooms.put(username, codes);
-            sendMsg = true;
-        } else {
-            if (!codes.contains(code)) {
-                codes.add(code);
-                sendMsg = true;
-            }
-        }
-        if (sendMsg) {
+        boolean flag = room.sockets.add(socket);
+        if (flag) {
             clientManger.sendToUser(SocketPackage.build(PackageType.GAME_JOIN, code), room.info.black, room.info.white);
         }
+        return flag;
     }
 
     /**
      * 退出房间
      */
-    public void exitRoom(String username, String code) {
+    public void exitRoom(String code, GameSocket socket) {
         GameRoomDTO room = rooms.get(code);
-        if (null == room || (!room.info.white.equals(username) && !room.info.black.equals(username))) {
+        if (null == room || (!room.info.white.equals(socket.username) && !room.info.black.equals(socket.username))) {
             return;
         }
-        Set<String> codes = userRooms.get(username);
-        if (null == codes) {
-            return;
-        }
-        boolean remove = codes.remove(code);
-        if (remove) {
+        boolean flag = room.sockets.remove(socket);
+        if (flag) {
             clientManger.sendToUser(SocketPackage.build(PackageType.GAME_EXIT, code), room.info.black, room.info.white);
-        }
-        if (codes.isEmpty()) {
-            userRooms.remove(username);
-        }
-    }
-
-    public void exitRoom(String username) {
-        Set<String> codes = userRooms.remove(username);
-        if (null == codes) {
-            return;
-        }
-        for (String code : codes) {
-            GameRoomDTO room = rooms.get(code);
-            if (null == room) {
-                continue;
-            }
-            clientManger.sendToUser(SocketPackage.build(PackageType.GAME_EXIT, code), room.info.black, room.info.white);
-        }
-
-        if (codes.isEmpty()) {
-            userRooms.remove(username);
         }
     }
 

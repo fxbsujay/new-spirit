@@ -1,6 +1,8 @@
 package cn.spirit.go.model.dto;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Objects;
 
 public class GameRoomDTO {
 
@@ -13,6 +15,11 @@ public class GameRoomDTO {
      * 步骤
      */
     public Set<GameStepDTO> steps = new HashSet<>();
+
+    /**
+     * 客户端链接
+     */
+    public Set<GameSocket> sockets = new HashSet<>();
 
     @Override
     public boolean equals(Object o) {

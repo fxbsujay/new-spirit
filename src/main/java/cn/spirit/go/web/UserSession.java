@@ -19,7 +19,6 @@ public class UserSession {
      */
     public Boolean isGuest = false;
 
-
     @Override
     public String toString() {
         return "UserSession{" +

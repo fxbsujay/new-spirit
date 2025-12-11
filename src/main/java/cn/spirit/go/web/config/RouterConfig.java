@@ -4,6 +4,7 @@ import cn.spirit.go.common.RestContext;
 import cn.spirit.go.controller.AuthController;
 import cn.spirit.go.controller.GameController;
 import cn.spirit.go.controller.UserController;
+import cn.spirit.go.service.RoomSocketHandle;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.socket.SocketHandler;
 import io.vertx.core.Vertx;
@@ -22,6 +23,7 @@ public class RouterConfig {
         SessionStore sessionHandle = new SessionStore();
         router.get("/api/ping").handler(RestContext::success);
         router.route("/api/ws").handler(new SocketHandler());
+        new RoomSocketHandle(router);
 
         router.route().handler(BodyHandler.create());
         router.errorHandler(500, ctx -> {
