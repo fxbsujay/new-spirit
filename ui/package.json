@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "dayjs": "1.11.18",
+    "identicon.js": "^2.3.3",
     "less": "^4.2.0",
     "less-loader": "^12.2.0",
     "pinia": "^2.2.4",
@@ -19,8 +20,8 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.0",
     "fast-glob": "^3.3.3",
+    "js-cookie": "^3.0.5",
     "vite": "7.1.5",
-    "vite-plugin-svg-icons": "^2.0.1",
-    "js-cookie": "^3.0.5"
+    "vite-plugin-svg-icons": "^2.0.1"
   }
 }

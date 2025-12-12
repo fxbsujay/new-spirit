@@ -172,6 +172,7 @@ public class AuthController {
         JsonObject query = JsonObject.of("$or", new JsonArray()
                 .add(JsonObject.of("username", username))
                 .add(JsonObject.of("email", email)));
+
         userDao.findOne(query, "username").onSuccess(user -> {
             if (user != null) {
                 if (username.equals(user.getString("username"))) {

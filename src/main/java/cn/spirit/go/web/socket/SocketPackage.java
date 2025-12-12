@@ -18,7 +18,7 @@ public class SocketPackage {
         return pack;
     }
 
-    public static  SocketPackage build(PackageType type, Object data) {
+    public static SocketPackage build(PackageType type, Object data) {
         SocketPackage pack = new SocketPackage();
         pack.type = type;
         pack.sender = "";

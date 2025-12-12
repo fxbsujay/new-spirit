@@ -57,6 +57,9 @@ public class RoomSocketHandle implements Handler<RoutingContext> {
                         }
                         roomService.addStep(session.username, code, x, y);
                         break;
+                    case GAME_CHAT:
+                        roomService.send(code, pck);
+                        break;
                     default:
                         log.error("Illegal websocket message packet type, from: {}, sessionId: {}", session.username, session.sessionId);
                         ws.close();

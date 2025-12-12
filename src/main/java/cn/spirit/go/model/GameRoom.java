@@ -1,5 +1,8 @@
 package cn.spirit.go.model;
 
+import cn.spirit.go.common.enums.GameMode;
+import cn.spirit.go.common.enums.GameType;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Objects;
@@ -21,6 +24,41 @@ public class GameRoom {
      */
     public Set<GameSocket> sockets = new HashSet<>();
 
+    /**
+     * 白起超时时间
+     */
+    public Long whiteTimeout = -1L;
+
+    /**
+     * 黑棋超时时间
+     */
+    public Long blackTimeout = -1L;
+
+    /**
+     * 用户操作超时了
+     * @param username  玩家用户名
+     */
+    public boolean isTimeOut(String username) {
+        if (GameType.NONE == info.type) {
+            // 对局无时间限制或对局处在开始阶段
+            return false;
+        }
+
+        if (info.white.equals(username)) {
+
+        }
+
+        return false;
+    }
+
+    /**
+     * 添加步骤并延续对方的超时时间
+     * @param step  步骤
+     */
+    public boolean addStep(GameStep step) {
+        return steps.add(step);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) {
@@ -34,5 +72,7 @@ public class GameRoom {
     public int hashCode() {
         return Objects.hash(info.code);
     }
+
+
 
 }

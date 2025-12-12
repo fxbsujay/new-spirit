@@ -116,6 +116,7 @@ public class GameRoomService {
             return;
         }
 
+        GameStep step = new GameStep(x, y);
         if (room.steps.isEmpty()) {
             // 黑棋先手，是否是黑方
             if (!room.info.black.equals(username)) {
@@ -132,12 +133,18 @@ public class GameRoomService {
             if (room.steps.contains(new GameStep(x, y))) {
                 return;
             }
+
+            if (room.steps.size() >= 2) {
+                // TODO 判断是否超时,每一方的第一手不算时间,从第二手开始计时
+
+
+            }
         }
 
-        // TODO 判断是否超时,每一方的第一手不算时间,从第二手开始计时
 
-        GameStep step = new GameStep(x, y);
-        if (room.steps.add(step)) {
+
+
+        if (room.addStep(step)) {
             log.info("{} add a step to the game {}, username={}, x={}, y={}, ", room.info.white.equals(username) ? 'W' : 'B', code, username, x, y);
             send(code, SocketPackage.build(PackageType.GAME_STEP, username, step));
         }
