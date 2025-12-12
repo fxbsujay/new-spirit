@@ -25,14 +25,14 @@ public class GameRoom {
     public Set<GameSocket> sockets = new HashSet<>();
 
     /**
-     * 白起超时时间
+     * 白-剩余时间 毫秒 -1 为未开始计时或无需计时
      */
-    public Long whiteTimeout = -1L;
+    public Long whiteTime = -1L;
 
     /**
-     * 黑棋超时时间
+     * 黑-剩余时间 毫秒 -1 为未开始计时或无需计时
      */
-    public Long blackTimeout = -1L;
+    public Long blackTime = -1L;
 
     /**
      * 用户操作超时了
@@ -56,6 +56,9 @@ public class GameRoom {
      * @param step  步骤
      */
     public boolean addStep(GameStep step) {
+        if (GameType.NONE != info.type) {
+
+        }
         return steps.add(step);
     }
 
