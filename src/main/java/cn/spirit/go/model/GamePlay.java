@@ -1,8 +1,8 @@
-package cn.spirit.go.model.dto;
+package cn.spirit.go.model;
 
 import cn.spirit.go.common.enums.ChessPiece;
 
-public class GamePlayDTO extends GameWaitDTO {
+public class GamePlay extends GameWait {
     /**
      * 开始时间
      */

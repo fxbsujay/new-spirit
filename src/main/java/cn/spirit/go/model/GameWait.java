@@ -1,9 +1,9 @@
-package cn.spirit.go.model.dto;
+package cn.spirit.go.model;
 
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 
-public class GameWaitDTO {
+public class GameWait {
 
     /**
      * 编号

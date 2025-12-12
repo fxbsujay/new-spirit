@@ -63,7 +63,6 @@ public class AppContext {
                 .put("db_name", "spirit"));
 
         Redis client = Redis.createClient(vertx, new RedisOptions().addConnectionString("redis://localhost:6379"));
-
         REDIS = RedisAPI.api(client);
 
         MailConfig mailConfig = new MailConfig()

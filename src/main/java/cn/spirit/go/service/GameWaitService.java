@@ -4,7 +4,7 @@ import cn.spirit.go.common.LockConstant;
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.util.DateUtils;
-import cn.spirit.go.model.dto.GameWaitDTO;
+import cn.spirit.go.model.GameWait;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.web.socket.ClientManger;
@@ -37,7 +37,7 @@ public class GameWaitService {
     /**
      * code -> game
      */
-    private final Map<String, GameWaitDTO> games = new HashMap<>();
+    private final Map<String, GameWait> games = new HashMap<>();
 
     /**
      * 搜索休闲游戏
@@ -46,9 +46,9 @@ public class GameWaitService {
      * @param like      对局名称或编号
      * @param type      {@link GameType}
      */
-    public List<GameWaitDTO> searchGames(String username, String like, GameType type, int limit) {
-        List<GameWaitDTO> result = new ArrayList<>();
-        for (GameWaitDTO value : games.values()) {
+    public List<GameWait> searchGames(String username, String like, GameType type, int limit) {
+        List<GameWait> result = new ArrayList<>();
+        for (GameWait value : games.values()) {
             if (null != username && (username.equals(value.username)) ||
                 (null != like&& !like.equals(value.code) && !like.equals(value.username)) ||
                 (null != type && type != value.type) ||
@@ -68,7 +68,7 @@ public class GameWaitService {
      * @param session   Session
      * @param game      对局
      */
-    public Future<Boolean> addGame(UserSession session, GameWaitDTO game) {
+    public Future<Boolean> addGame(UserSession session, GameWait game) {
         return AppContext.vertx.sharedData().withLock(LockConstant.GAME_LOCK + session.username, 1000, () -> {
             if (userGames.containsKey(session.username)) {
                 log.warn("{} failed to create the game", session.username);
@@ -91,7 +91,7 @@ public class GameWaitService {
      *
      * @param username  用户名
      */
-    public Future<GameWaitDTO> removeGame(String username) {
+    public Future<GameWait> removeGame(String username) {
         return AppContext.vertx.sharedData().withLock(LockConstant.GAME_LOCK + username, 1000, () -> {
             String code = userGames.remove(username);
             if (null != code) {
@@ -101,11 +101,11 @@ public class GameWaitService {
         });
     }
 
-    public GameWaitDTO get(String code) {
+    public GameWait get(String code) {
         return games.get(code);
     }
 
-    public GameWaitDTO getByUsername(String username) {
+    public GameWait getByUsername(String username) {
         String code = userGames.get(username);
         if (null == code) {
             return null;

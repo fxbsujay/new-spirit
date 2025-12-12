@@ -1,10 +1,11 @@
-package cn.spirit.go.service;
+package cn.spirit.go.web.socket;
 
 import cn.spirit.go.common.util.RegexUtils;
-import cn.spirit.go.model.dto.GameSocket;
+import cn.spirit.go.model.GameSocket;
+import cn.spirit.go.service.GameRoomService;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.config.AppContext;
-import cn.spirit.go.web.socket.SocketPackage;
+import io.vertx.core.Handler;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
@@ -13,14 +14,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.Map;
 
-public class RoomSocketHandle {
+public class RoomSocketHandle implements Handler<RoutingContext> {
 
     private static final Logger log = LoggerFactory.getLogger(RoomSocketHandle.class);
 
     public GameRoomService roomService = AppContext.getBean(GameRoomService.class);
 
     public RoomSocketHandle(Router router) {
-        router.route("/api/ws/:code").handler(this::handle);
+        router.route("/api/ws/:code").handler(this);
     }
 
     public void handle(RoutingContext ctx) {

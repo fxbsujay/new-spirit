@@ -1,8 +1,8 @@
-package cn.spirit.go.model.dto;
+package cn.spirit.go.model;
 
 import java.util.Objects;
 
-public class GameStepDTO {
+public class GameStep {
 
     public Integer x;
 
@@ -10,7 +10,7 @@ public class GameStepDTO {
 
     public Long timestamp;
 
-    public GameStepDTO(Integer x, Integer y) {
+    public GameStep(Integer x, Integer y) {
         this.x = x;
         this.y = y;
         this.timestamp = System.currentTimeMillis();
@@ -19,7 +19,7 @@ public class GameStepDTO {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        GameStepDTO that = (GameStepDTO) o;
+        GameStep that = (GameStep) o;
         return Objects.equals(x, that.x) && Objects.equals(y, that.y);
     }
 

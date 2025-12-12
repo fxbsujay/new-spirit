@@ -1,20 +1,20 @@
-package cn.spirit.go.model.dto;
+package cn.spirit.go.model;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Objects;
 
-public class GameRoomDTO {
+public class GameRoom {
 
     /**
      * 游戏信息
      */
-    public GamePlayDTO info;
+    public GamePlay info;
 
     /**
      * 步骤
      */
-    public Set<GameStepDTO> steps = new HashSet<>();
+    public Set<GameStep> steps = new HashSet<>();
 
     /**
      * 客户端链接
@@ -26,7 +26,7 @@ public class GameRoomDTO {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        GameRoomDTO that = (GameRoomDTO) o;
+        GameRoom that = (GameRoom) o;
         return Objects.equals(info.code, that.info.code);
     }
 

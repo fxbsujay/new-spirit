@@ -1,4 +1,4 @@
-package cn.spirit.go.model.dto;
+package cn.spirit.go.model;
 
 import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.web.UserSession;
@@ -13,7 +13,7 @@ public class GameSocket {
 
     public String sessionId;
 
-    public ServerWebSocket socket;
+    private final ServerWebSocket socket;
 
     public GameSocket (UserSession session, ServerWebSocket socket) {
         this.sessionId = session.sessionId;
@@ -32,5 +32,15 @@ public class GameSocket {
     @Override
     public int hashCode() {
         return Objects.hashCode(socketId);
+    }
+
+    public ServerWebSocket getConnection() {
+        return socket;
+    }
+
+    public void send(String msg) {
+        if (!socket.isClosed()) {
+            socket.writeFinalTextFrame(msg);
+        }
     }
 }

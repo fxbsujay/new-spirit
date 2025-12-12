@@ -7,9 +7,9 @@ import cn.spirit.go.common.enums.RestStatus;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
-import cn.spirit.go.model.dto.GamePlayDTO;
-import cn.spirit.go.model.dto.GameRoomDTO;
-import cn.spirit.go.model.dto.GameWaitDTO;
+import cn.spirit.go.model.GamePlay;
+import cn.spirit.go.model.GameRoom;
+import cn.spirit.go.model.GameWait;
 import cn.spirit.go.service.GameRoomService;
 import cn.spirit.go.service.GameWaitService;
 import cn.spirit.go.web.SessionStore;
@@ -53,7 +53,7 @@ public class GameController {
         String type = ctx.request().getParam("type");
 
         UserSession session = SessionStore.sessionUser(ctx);
-        List<GameWaitDTO> games = gameWaitService.searchGames(session.isGuest ? null : session.username, like, null == type ? null : GameType.valueOf(type), 10);
+        List<GameWait> games = gameWaitService.searchGames(session.isGuest ? null : session.username, like, null == type ? null : GameType.valueOf(type), 10);
         RestContext.success(ctx, games);
     }
 
@@ -66,7 +66,7 @@ public class GameController {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
-        GameRoomDTO room = gameRoomService.get(code);
+        GameRoom room = gameRoomService.get(code);
         if (null == room) {
             gameDao.findOne(JsonObject.of("code", code)).onSuccess(game ->{
                 if (null == game) {
@@ -101,7 +101,7 @@ public class GameController {
      * 创建对局 休闲或好友
      */
     public void createGame(RoutingContext ctx) {
-        GameWaitDTO dto = ctx.body().asPojo(GameWaitDTO.class);
+        GameWait dto = ctx.body().asPojo(GameWait.class);
         if (null == dto.type || null == dto.mode || null == dto.boardSize || (!GameMode.CASUAL.equals(dto.mode) && !GameMode.FRIEND.equals(dto.mode))) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
@@ -153,7 +153,7 @@ public class GameController {
             return;
         }
         UserSession session = SessionStore.sessionUser(ctx);
-        GameWaitDTO g = gameWaitService.get(code);
+        GameWait g = gameWaitService.get(code);
         if (null == g || g.username.equals(session.username)) {
             RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
             return;
@@ -164,7 +164,7 @@ public class GameController {
                 RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
             } else {
                 // 对局的基本信息存在数据库中
-                GamePlayDTO entity = new GamePlayDTO();
+                GamePlay entity = new GamePlay();
                 entity.code = code;
                 entity.boardSize = game.boardSize;
                 entity.mode = game.mode;
