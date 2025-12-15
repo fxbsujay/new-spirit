@@ -46,6 +46,7 @@ public class RoomSocketHandle implements Handler<RoutingContext> {
                     ws.close();
                     return;
                 }
+                pck.sender = session.username;
                 switch (pck.type) {
                     case GAME_STEP:
                         Map<String, Object> obj = (Map) pck.data;
@@ -55,7 +56,7 @@ public class RoomSocketHandle implements Handler<RoutingContext> {
                             ws.close();
                             return;
                         }
-                        roomService.addStep(session.username, code, x, y);
+                        roomService.addStep(pck.sender, code, x, y);
                         break;
                     case GAME_CHAT:
                         roomService.send(code, pck);

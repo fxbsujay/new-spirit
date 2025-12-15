@@ -126,6 +126,7 @@ public class AuthController {
                                 "password", SecurityUtils.bCrypt(password),
                                 "avatar", "https://fxbsujay.github.io/favicon.ico",
                                 "nickname", username,
+                                "rating", 800,
                                 "status", UserStatus.NORMAL);
                         userDao.insert(obj).onSuccess(_id -> {
                             RestContext.success(ctx, username);

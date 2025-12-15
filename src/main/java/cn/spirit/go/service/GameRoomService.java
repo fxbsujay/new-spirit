@@ -77,7 +77,7 @@ public class GameRoomService {
         }
         boolean flag = room.sockets.add(socket);
         if (flag) {
-            send(code, SocketPackage.build(PackageType.GAME_JOIN, code));
+            send(code, SocketPackage.build(PackageType.GAME_JOIN, socket.username, code));
         }
         return flag;
     }
@@ -92,10 +92,9 @@ public class GameRoomService {
         }
         boolean flag = room.sockets.remove(socket);
         if (flag) {
-            send(code, SocketPackage.build(PackageType.GAME_EXIT, code));
+            send(code, SocketPackage.build(PackageType.GAME_EXIT, socket.username, code));
         }
     }
-
 
     /**
      * 玩家落子

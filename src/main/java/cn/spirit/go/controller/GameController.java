@@ -82,7 +82,7 @@ public class GameController {
 
     private void setGameInfoUsers(RoutingContext ctx, JsonObject obj, String white, String black) {
         JsonObject query = JsonObject.of("$or", JsonArray.of(JsonObject.of("username", white), JsonObject.of("username", black)));
-        userDao.findAll(query, "username", "nickname", "avarar").onSuccess(users -> {
+        userDao.findAll(query, "username", "nickname", "avatar", "rating").onSuccess(users -> {
             for (JsonObject user : users) {
                 if (user.getString("username").equals(white)) {
                     obj.put("white", user);

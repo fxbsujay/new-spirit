@@ -2,99 +2,24 @@
 import Responsive from '@/components/responsive/index.vue'
 import Switch from '@/components/switch/index.vue'
 import Go from '@/components/go/Go.vue'
-import { ref, reactive, onBeforeUnmount, watch } from 'vue'
+import { ref } from 'vue'
 import Icon from '@/components/icon/Icon.vue'
-import http from '@/utils/http'
 import { useRoute } from 'vue-router'
-import { useSocketStore } from '@/stores/socket.js'
-import { useUserStore } from '@/stores/user.js'
+import { GameSocket } from 'index'
 
 const value = ref(false)
 const router = useRoute()
-const socket = useSocketStore()
-const userStore = useUserStore()
-const isExist = ref(false)
-const loading = ref(false)
+const socket = new GameSocket(router.params.code)
 
-const points = ref([
-  {
-    type: 'black',
-    x: 0,
-    y: 0
-  },
-  {
-    type: 'white',
-    x: 6,
-    y: 2
-  },
-  {
-    type: 'white',
-    x: 2,
-    y: 2
-  }
-])
-
-const currentPlayerType = ref('')
-const game = reactive({
-  info: {},
-  white: {},
-  black: {}
-})
-
-const setListener = () => {
-  socket.setListener('GAME_JOIN', msg => {
-    socket.setListener('GAME_STEP', msg => {
-      points.value.push({
-        type: msg.sender === game.info.white ? 'white' : 'black',
-        x: msg.data.x,
-        y: msg.data.y
-      })
-    })
-    socket.setListener('GAME_EXIT', msg => {
-      console.log('GAME_EXIT', msg)
-    })
-  })
-}
-
-const refresh = () => {
-  loading.value = true
-  http.get('/game/info/' + router.params.code).then(res => {
-    Object.assign(game, res)
-    setListener()
-    socket.send('GAME_JOIN', router.params.code)
-    currentPlayerType.value = userStore.user.username === game.info.black ? 'black' : 'white'
-    isExist.value = true
-    loading.value = false
-  }).catch(code => {
-    console.log("code:", code)
-    isExist.value = false
-    loading.value = false
-  })
-}
-
-if (socket.open) {
-  refresh()
-} else {
-  watch(() => socket.open, open => {
-    if (open) {
-      refresh()
-    }
-  })
-}
+const { game, loading, success } = socket
 
 const onBoardClick = (x, y) => {
-  if (!points.value.find(item => item.x === x && item.y === y)) {
-    socket.send('GAME_STEP', {
-      code: game.info.code,
-      x,
-      y
-    })
-  }
+  socket.addStep(x, y)
 }
+
 </script>
 
 <template>
-
   <div class="main-container">
     <div class="side">
       <div class="card">
@@ -156,7 +81,7 @@ const onBoardClick = (x, y) => {
     <div class="board">
       <Responsive :aspect-ratio="1">
         <div class="A">
-          <Go :onBoardClick="onBoardClick" :points="points"/>
+          <Go :onBoardClick="onBoardClick" :points="game.steps"/>
         </div>
       </Responsive>
     </div>

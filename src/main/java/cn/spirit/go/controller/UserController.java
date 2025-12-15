@@ -38,9 +38,8 @@ public class UserController {
      */
     public void info(RoutingContext ctx) {
         UserSession session = SessionStore.sessionUser(ctx);
-        userDao.findOne(JsonObject.of("username", session.username), "nickname", "avatar", "status").onSuccess(user -> {
+        userDao.findOne(JsonObject.of("username", session.username), "nickname", "avatar", "status", "rating").onSuccess(user -> {
             user.put("username", session.username);
-            user.put("rating", 800);
             RestContext.success(ctx, user);
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
