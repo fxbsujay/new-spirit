@@ -1,6 +1,6 @@
-<script setup lang="ts">
+<script setup >
 import Loading from '@/components/loading/index.vue'
-import { reactive, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import dayjs from 'dayjs'
 import { useUserStore } from '@/stores/user'
 import http from '@/utils/http'
