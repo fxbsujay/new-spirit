@@ -34,13 +34,15 @@ export class GameSocket {
             this.socket.close()
         }
         const socket = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/ws/${this.code}`)
+        const that = this
         socket.onopen = function (event) {
             console.log('socket open', event)
             socket.onmessage = function (event) {
                 const msg = JSON.parse(event.data)
+                console.log('socket msg', msg)
                 switch (msg.type) {
                     case 'GAME_STEP':
-                        this.game.steps.push(msg.data)
+                        that.game.steps.push(msg.data)
                         break
                 }
             }

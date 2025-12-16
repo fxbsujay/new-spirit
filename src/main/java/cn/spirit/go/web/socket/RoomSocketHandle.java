@@ -37,6 +37,7 @@ public class RoomSocketHandle implements Handler<RoutingContext> {
                 ws.close();
                 return;
             }
+            log.info("game socket join success, code: {}, username: {}", code, session.username);
             ws.textMessageHandler(text -> {
                 SocketPackage pck;
                 try {

@@ -5,7 +5,7 @@ import Go from '@/components/go/Go.vue'
 import { ref } from 'vue'
 import Icon from '@/components/icon/Icon.vue'
 import { useRoute } from 'vue-router'
-import { GameSocket } from 'index'
+import { GameSocket } from './index'
 
 const value = ref(false)
 const router = useRoute()

@@ -21,7 +21,7 @@ public class WebSocketHandler implements Handler<RoutingContext> {
     private final GameWaitService gameWaitService = AppContext.getBean(GameWaitService.class);
 
     public WebSocketHandler(Router router) {
-        router.route("/api/ws/").handler(this);
+        router.route("/api/ws").handler(this);
     }
 
     public void handle(RoutingContext ctx) {

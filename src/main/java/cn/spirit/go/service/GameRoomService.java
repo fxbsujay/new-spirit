@@ -140,11 +140,8 @@ public class GameRoomService {
             }
         }
 
-
-
-
         if (room.addStep(step)) {
-            log.info("{} add a step to the game {}, username={}, x={}, y={}, ", room.info.white.equals(username) ? 'W' : 'B', code, username, x, y);
+            log.info("[{}] - add a step to the game {}, username={}, x={}, y={}, ", room.info.white.equals(username) ? 'W' : 'B', code, username, x, y);
             send(code, SocketPackage.build(PackageType.GAME_STEP, username, step));
         }
     }

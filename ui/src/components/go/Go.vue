@@ -49,8 +49,8 @@
       </g>
       <g class="shadow-layer">
         <circle
-            v-for="item in points"
-            :fill="`url(#shadow-${item.type})`"
+            v-for="(item, index) in points"
+            :fill="`url(#shadow-${index % 2 === 0 ? 'black' : 'white'})`"
             :cx="boardSetting.point.shadowSize"
             :cy="boardSetting.point.shadowSize"
             :r="boardSetting.point.shadowRadius *  0.95"
@@ -58,8 +58,8 @@
         />
       </g>
       <g class="grid">
-        <g v-for="item in points" :transform="`translate(${item.x * boardSetting.ss + boardSetting.ox - boardSetting.mid},${item.y * boardSetting.ss + boardSetting.oy - boardSetting.mid})`">
-          <use :href="`#${item.type}-shell`" :x="boardSetting.point.offset" :y="boardSetting.point.offset"></use>
+        <g v-for="(item, index) in points" :transform="`translate(${item.x * boardSetting.ss + boardSetting.ox - boardSetting.mid},${item.y * boardSetting.ss + boardSetting.oy - boardSetting.mid})`">
+          <use :href="`#${index % 2 === 0 ? 'black' : 'white'}-shell`" :x="boardSetting.point.offset" :y="boardSetting.point.offset"></use>
         </g>
       </g>
     </svg>

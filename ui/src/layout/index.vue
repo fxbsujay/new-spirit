@@ -29,7 +29,7 @@
           登录
         </RouterLink>
         <div class="user" v-else>
-          <img :src="b(`@/assets/img/avatar/01.jpg`)" :alt="user.nickname" class="avatar">
+          <img :src="user.avatar" :alt="user.nickname" class="avatar">
           <div class="dropdown">
             <div class="dropdown-content">
               <div class="links">

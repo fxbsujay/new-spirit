@@ -21,7 +21,7 @@
     "@vitejs/plugin-vue": "^6.0.0",
     "fast-glob": "^3.3.3",
     "js-cookie": "^3.0.5",
-    "vite": "7.2.7",
+    "vite": "7.1.5",
     "vite-plugin-svg-icons": "^2.0.1"
   }
 }

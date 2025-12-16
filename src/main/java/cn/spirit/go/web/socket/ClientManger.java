@@ -85,12 +85,11 @@ public class ClientManger {
      */
     public void sendToUser(SocketPackage pack, String ...usernames) {
         String msg = Json.encode(pack);
-
+        log.info("Sending message to usernames: {}, package: {}", usernames, msg);
         for (String username : usernames) {
             Set<String> sessions = userSessions.get(username);
             if (null != sessions) {
                 send(msg, sessions.toArray(new String[0]));
-                log.info("Sending message to usernames: {}, sessionIds: {}, package: {}", username, sessions, msg);
             }
         }
     }
