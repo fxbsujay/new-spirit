@@ -132,12 +132,6 @@ public class GameRoomService {
             if (room.steps.contains(new GameStep(x, y))) {
                 return;
             }
-
-            if (room.steps.size() >= 2) {
-                // TODO 判断是否超时,每一方的第一手不算时间,从第二手开始计时
-
-
-            }
         }
 
         if (room.addStep(step)) {

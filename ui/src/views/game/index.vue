@@ -6,15 +6,22 @@ import { ref } from 'vue'
 import Icon from '@/components/icon/Icon.vue'
 import { useRoute } from 'vue-router'
 import { GameSocket } from './index'
+import { useUserStore } from '@/stores/user.js'
+import {PRETTY_COORDINATE_SEQUENCE} from "@/components/go/goban.js";
 
 const value = ref(false)
 const router = useRoute()
+const userStore = useUserStore()
 const socket = new GameSocket(router.params.code)
 
 const { game, loading, success } = socket
 
 const onBoardClick = (x, y) => {
   socket.addStep(x, y)
+}
+
+const canAction = () => {
+  return game.info.white === userStore.user.username ? 'white' : game.info.black === userStore.user.username ?  'black' : ''
 }
 
 </script>
@@ -34,12 +41,12 @@ const onBoardClick = (x, y) => {
         <div class="player">
           <img class="player-icon" alt="白棋选手" src="@/assets/img/w.png" />
           <span class="player-name">{{ game.white.nickname }}</span>
-          <span class="player-score">836</span>
+          <span class="player-score">{{ game.white.rating }}</span>
         </div>
         <div class="player">
           <img class="player-icon" alt="黑棋选手" src="@/assets/img/b.png" />
           <span class="player-name">{{ game.black.nickname }}</span>
-          <span class="player-score">1700</span>
+          <span class="player-score">{{ game.black.rating }}</span>
         </div>
       </div>
       <div class="chat-wrap">
@@ -97,12 +104,11 @@ const onBoardClick = (x, y) => {
       </div>
       <div class="time-progress"></div>
       <div class="user-info">
-        <img src="@/assets/img/b.png" class="avatar" alt="头像"/>
-        <span class="username">Evan Guzman</span>
+        <img src="@/assets/img/w.png" class="avatar" alt="白棋玩家"/>
+        <span class="username">{{ userStore.user.username === game.info.white ? game.black.nickname : game.white.nickname }}</span>
         <span class="source-label">积分 -</span>
-        <span class="source-value">1742</span>
+        <span class="source-value">{{ userStore.user.username === game.info.white ? game.black.rating : game.white.rating }}</span>
       </div>
-
       <div class="controller">
         <div class="buttons">
           <div class="btn"><Icon name="video"/></div>
@@ -113,18 +119,18 @@ const onBoardClick = (x, y) => {
           <div class="btn"><Icon name="menu"/></div>
         </div>
         <div class="step-wrap">
-          <div class="step" v-for="i in 12">
-            <span class="number">{{i}}</span>
-            <span class="pos">a4</span>
-            <span class="pos">b3</span>
+          <div class="step" v-for="index in Math.ceil(game.steps.length / 2)">
+            <span class="number">{{index}}</span>
+            <span class="pos">{{PRETTY_COORDINATE_SEQUENCE[game.steps[(index - 1) * 2].x]}}{{ game.steps[(index - 1) * 2].y + 1}}</span>
+            <span class="pos" v-if="game.steps[index * 2 - 1]">{{PRETTY_COORDINATE_SEQUENCE[game.steps[index * 2 - 1].x]}}{{ game.steps[index * 2 - 1].y + 1}}</span>
           </div>
         </div>
       </div>
       <div class="user-info">
-        <img src="@/assets/img/b.png" class="avatar" alt="头像"/>
-        <span class="username">Evan Guzman</span>
+        <img src="@/assets/img/b.png" class="avatar" alt="黑棋玩家"/>
+        <span class="username">{{ userStore.user.username === game.info.white ? game.white.nickname : game.black.nickname }}</span>
         <span class="source-label">积分 -</span>
-        <span class="source-value">1742</span>
+        <span class="source-value">{{ userStore.user.username === game.info.white ? game.white.rating : game.black.rating }}</span>
       </div>
       <div class="time-progress"></div>
       <div class="game-time">

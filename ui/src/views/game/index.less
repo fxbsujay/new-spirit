@@ -285,21 +285,23 @@
   }
 
   .step {
-    display: flex;
-
+    display: grid;
+    grid-template-columns: 3rem repeat(2, 1fr);
     .number {
       text-align: center;
-      width: 3rem;
       background-color: #F7F6F5;
     }
     .pos {
       padding-inline-start: 1rem;
-      flex: 1;
 
       &:hover {
         cursor: pointer;
-        background-color: #D0E4F5;
+        background-color: #F7F6F5;
       }
+    }
+
+    &:last-child .pos:last-child{
+      background-color: rgba(85, 216, 246, 0.22);
     }
   }
 }

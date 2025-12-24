@@ -1,12 +1,14 @@
 package cn.spirit.go.model;
 
-import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class GameRoom {
 
+    private static final Logger log = LoggerFactory.getLogger(GameRoom.class);
     /**
      * 游戏信息
      */
@@ -49,7 +51,7 @@ public class GameRoom {
         }
 
         // 剩余时间 = 设定的每步加时时长 - (当前时间 - 开始计时时间))
-        return info.stepDuration * 1000 - (timestamp - steps.get(steps.size() - 1).timestamp);
+        return info.stepDuration - (timestamp - steps.get(steps.size() - 1).timestamp);
     }
 
     /**
@@ -59,7 +61,7 @@ public class GameRoom {
         if (info.type == GameType.NONE || steps.size() <= 2) {
             return false;
         }
-        return (remainingTime(timestamp) + (steps.size() % 2 == 0 ? blackRemainingTime : whiteRemainingTime) + info.duration * 1000) <= 0;
+        return (remainingTime(timestamp) + (steps.size() % 2 == 0 ? blackRemainingTime : whiteRemainingTime) + info.duration) <= 0;
     }
 
     public boolean isTimeout() {
@@ -80,14 +82,16 @@ public class GameRoom {
                 long remainingTime = remainingTime(step.timestamp) + (size % 2 == 0 ? blackRemainingTime : whiteRemainingTime);
                 if (size % 2 == 0) {
                     blackRemainingTime += remainingTime;
-                    if (blackRemainingTime + info.duration * 1000 < 0) {
+                    if (blackRemainingTime + info.duration < 0) {
                         // TODO 黑方超时 白方胜
+                        log.info("Black's time limit expired; White wins, time={}", blackRemainingTime);
                         return false;
                     }
                 } else {
                     whiteRemainingTime += remainingTime;
-                    if (whiteRemainingTime + info.duration * 1000 < 0) {
+                    if (whiteRemainingTime + info.duration < 0) {
                         // TODO 白方超时 黑方胜
+                        log.info("White's time limit expired; Black wins time={}", whiteRemainingTime);
                         return false;
                     }
                 }

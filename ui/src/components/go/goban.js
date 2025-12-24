@@ -124,17 +124,17 @@ export const computeBoard = (svg, width, height, squareSize, showLabel) => {
             return text
         }
 
-        for (let i = 1; i < width; ++i) {
-            const x = i * squareSize + squareSize - textOffset
+        for (let i = 1; i <= width; ++i) {
+            const x = i * squareSize + squareSize / 2 - textOffset
             const y = (squareSize / 2) + (squareSize / 4)
             labelsLayer.appendChild(createText(PRETTY_COORDINATE_SEQUENCE[i - 1], x.toFixed(0), y.toFixed(0)))
             const lastY = (height + 1) * squareSize + (squareSize / 2)
             labelsLayer.appendChild(createText(PRETTY_COORDINATE_SEQUENCE[i - 1], x.toFixed(0), lastY.toFixed(0)))
         }
 
-        for (let i = 1; i < height; ++i) {
+        for (let i = 1; i <= height; ++i) {
             let x = (squareSize / 2.5)
-            const y = i * squareSize + squareSize + textOffset
+            const y = i * squareSize + squareSize / 2 + textOffset
             const text = i.toString()
             if (text.length >= 2) {
                 x = x - (text.length * (textSize * 0.2))
@@ -176,4 +176,4 @@ export const computeBoard = (svg, width, height, squareSize, showLabel) => {
     }
 }
 
-const PRETTY_COORDINATE_SEQUENCE = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'
+export const PRETTY_COORDINATE_SEQUENCE = 'ABCDEFGHJKLMNOPQRSTUVWXYZ'

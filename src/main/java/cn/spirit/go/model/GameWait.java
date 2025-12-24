@@ -26,12 +26,12 @@ public class GameWait {
     public GameMode mode;
 
     /**
-     * 起始时长 单位：秒
+     * 起始时长 单位：毫秒
      */
     public Integer duration;
 
     /**
-     * 步长；如果Type为SHORT则为每步加时，如果为LONG则为每步限时，如果为NONE则为0 单位：秒
+     * 步长；如果Type为SHORT则为每步加时，如果为LONG则为每步限时，如果为NONE则为0 单位：毫秒
      */
     public Integer stepDuration;
 
