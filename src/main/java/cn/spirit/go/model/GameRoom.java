@@ -3,7 +3,6 @@ package cn.spirit.go.model;
 import cn.spirit.go.common.enums.GameType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.*;
 
 public class GameRoom {
@@ -101,13 +100,6 @@ public class GameRoom {
         return steps.add(step);
     }
 
-    /**
-     * 游戏结束 操作超时, 认输, 棋盘已满
-     */
-    public void finish() {
-
-    }
-
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) {
@@ -121,7 +113,5 @@ public class GameRoom {
     public int hashCode() {
         return Objects.hash(info.code);
     }
-
-
 
 }

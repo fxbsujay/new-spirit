@@ -3,6 +3,9 @@ package cn.spirit.go.model;
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 
+/**
+ * 游戏等待队列
+ */
 public class GameWait {
 
     /**
