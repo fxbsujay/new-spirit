@@ -27,6 +27,37 @@ export class GameSocket {
     }
 
     /**
+     * 游戏落子更新
+     * @param step
+     */
+    updateStep(step) {
+        const size = this.game.steps.length
+        if (this.game.info.type !== 'NONE' && size > 2) {
+            // 开始计算时长
+            const time = this.game.info.stepDuration - (step.timestamp - this.game.steps[size - 1].timestamp)
+            if (size % 2 === 0) {
+                // 黑棋
+                this.game.black.remainder += time;
+                console.log('black remainder', this.game.black.remainder)
+            } else {
+                // 白棋
+                this.game.white.remainder += time;
+                console.log('white remainder', this.game.white.remainder)
+            }
+        }
+        this.game.steps.push(step)
+        console.log('game steps', this.game.steps)
+    }
+
+    /**
+     * 计时器
+     */
+    timer() {
+
+
+    }
+
+    /**
      * 创建连接
      */
     reconnect() {
@@ -42,7 +73,7 @@ export class GameSocket {
                 console.log('socket msg', msg)
                 switch (msg.type) {
                     case 'GAME_STEP':
-                        that.game.steps.push(msg.data)
+                        that.updateStep(msg.data)
                         break
                 }
             }

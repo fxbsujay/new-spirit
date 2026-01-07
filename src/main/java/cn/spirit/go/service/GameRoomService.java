@@ -13,10 +13,8 @@ import io.vertx.core.Future;
 import io.vertx.core.json.Json;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 import java.util.function.Supplier;
 
 public class GameRoomService {
@@ -132,6 +130,7 @@ public class GameRoomService {
             if (room.steps.contains(new GameStep(x, y))) {
                 return;
             }
+            // 判断棋子
         }
 
         if (room.addStep(step)) {
@@ -235,4 +234,5 @@ public class GameRoomService {
     private <T> Future<T> lock(String code, Supplier<Future<T>> block) {
        return AppContext.vertx.sharedData().withLock(LockConstant.ROOM_LOCK + code, 1000, block);
     }
+
 }

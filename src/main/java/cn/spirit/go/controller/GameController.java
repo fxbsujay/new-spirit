@@ -1,6 +1,7 @@
 package cn.spirit.go.controller;
 
 import cn.spirit.go.common.RestContext;
+import cn.spirit.go.common.enums.ChessPiece;
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.RestStatus;
@@ -72,22 +73,29 @@ public class GameController {
                 if (null == game) {
                     RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
                 } else {
-                    setGameInfoUsers(ctx, JsonObject.of("info", game, "steps", Collections.emptyList()), game.getString("white"), game.getString("black"));
+                    setGameInfoUsers(ctx, JsonObject.of("info", game, "steps", Collections.emptyList()), game.getString("white"), game.getString("black"), 0L, 0L);
                 }
             });
         } else {
-            setGameInfoUsers(ctx, JsonObject.of("info", room.info, "steps", room.steps), room.info.white, room.info.black);
+            setGameInfoUsers(ctx,
+                    JsonObject.of("info", room.info, "steps", room.steps),
+                    room.info.white,
+                    room.info.black,
+                    Math.max(room.whiteRemainder + room.info.duration, 0),
+                    Math.max(room.blackRemainder + room.info.duration, 0));
         }
     }
 
-    private void setGameInfoUsers(RoutingContext ctx, JsonObject obj, String white, String black) {
+    private void setGameInfoUsers(RoutingContext ctx, JsonObject obj, String white, String black, Long whiteRemainder, Long blackRemainder) {
         JsonObject query = JsonObject.of("$or", JsonArray.of(JsonObject.of("username", white), JsonObject.of("username", black)));
         userDao.findAll(query, "username", "nickname", "avatar", "rating").onSuccess(users -> {
             for (JsonObject user : users) {
                 if (user.getString("username").equals(white)) {
                     obj.put("white", user);
+                    user.put("remainder", whiteRemainder);
                 } else {
                     obj.put("black", user);
+                    user.put("remainder", blackRemainder);
                 }
             }
             RestContext.success(ctx, obj);
@@ -177,6 +185,10 @@ public class GameController {
                 entity.type = game.type;
                 entity.duration = game.duration;
                 entity.stepDuration = game.stepDuration;
+                entity.timestamp = game.timestamp;
+                entity.startTime = System.currentTimeMillis();
+                entity.endTime = 0L;
+                entity.winner = ChessPiece.NOT_END;
                 if (System.currentTimeMillis() % 2 == 0) {
                     entity.white = session.username;
                     entity.black = game.username;

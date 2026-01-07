@@ -26,12 +26,12 @@ public class GameRoom {
     /**
      * 白-每一步剩余时间的累计 为
      */
-    public Long whiteRemainingTime = 0L;
+    public Long whiteRemainder = 0L;
 
     /**
      * 黑-每一步剩余时间的累计
      */
-    public Long blackRemainingTime = 0L;
+    public Long blackRemainder = 0L;
 
     /**
      * 用户这一步操作的剩余时间
@@ -60,7 +60,7 @@ public class GameRoom {
         if (info.type == GameType.NONE || steps.size() <= 2) {
             return false;
         }
-        return (remainingTime(timestamp) + (steps.size() % 2 == 0 ? blackRemainingTime : whiteRemainingTime) + info.duration) <= 0;
+        return (remainingTime(timestamp) + (steps.size() % 2 == 0 ? blackRemainder : whiteRemainder) + info.duration) <= 0;
     }
 
     public boolean isTimeout() {
@@ -78,20 +78,23 @@ public class GameRoom {
         if (info.type != GameType.NONE) {
             int size = steps.size();
             if (size > 2) {
-                long remainingTime = remainingTime(step.timestamp) + (size % 2 == 0 ? blackRemainingTime : whiteRemainingTime);
                 if (size % 2 == 0) {
-                    blackRemainingTime += remainingTime;
-                    if (blackRemainingTime + info.duration < 0) {
+                    blackRemainder += remainingTime(step.timestamp);
+                    if (blackRemainder + info.duration < 0) {
                         // TODO 黑方超时 白方胜
-                        log.info("Black's time limit expired; White wins, time={}", blackRemainingTime);
+                        log.info("Black's time limit expired; White wins, time={}", blackRemainder);
                         return false;
+                    } else {
+                        log.info("Black remaining time = {}", blackRemainder + info.duration);
                     }
                 } else {
-                    whiteRemainingTime += remainingTime;
-                    if (whiteRemainingTime + info.duration < 0) {
+                    whiteRemainder += remainingTime(step.timestamp);
+                    if (whiteRemainder + info.duration < 0) {
                         // TODO 白方超时 黑方胜
-                        log.info("White's time limit expired; Black wins time={}", whiteRemainingTime);
+                        log.info("White's time limit expired; Black wins time={}", whiteRemainder);
                         return false;
+                    } else {
+                        log.info("White remaining time = {}", whiteRemainder + info.duration);
                     }
                 }
             }

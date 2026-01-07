@@ -74,7 +74,7 @@ public class GameWaitService {
                 log.warn("{} failed to create the game", session.username);
                 return Future.succeededFuture(false);
             }
-            game.timestamp = System.currentTimeMillis() / 1000;
+            game.timestamp = System.currentTimeMillis();
             game.username = session.username;
             String code = generateCode();
             game.code = code;
