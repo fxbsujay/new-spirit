@@ -20,10 +20,6 @@ const onBoardClick = (x, y) => {
   socket.addStep(x, y)
 }
 
-const canAction = () => {
-  return game.info.white === userStore.user.username ? 'white' : game.info.black === userStore.user.username ?  'black' : ''
-}
-
 </script>
 
 <template>
@@ -144,6 +140,4 @@ const canAction = () => {
 
 <style scoped lang="less">
 @import "./index.less";
-
-
 </style>

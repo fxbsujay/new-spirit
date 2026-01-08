@@ -23,6 +23,7 @@ export class GameSocket {
             console.log(err)
             Object.assign(this.game, { info: {}, white: {}, black: {}, steps: [] })
             this.loading.value = false
+            this.success.value = false
         })
     }
 
