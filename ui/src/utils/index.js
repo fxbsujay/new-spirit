@@ -76,18 +76,23 @@ export const formatTime = ms => {
     const totalHours = Math.floor(totalMinutes / 60)
     const totalDays = Math.floor(totalHours / 24)
 
-    const timeParts = [
-        { value: totalDays, unit: '天' },
-        { value: totalHours % 24, unit: '小时' },
-        { value: totalMinutes % 60, unit: '分钟' },
-        { value: totalSeconds % 60, unit: '秒' },
-        { value: ms % 1000, unit: '毫秒' }
-    ]
+    const timeParts = [totalDays, totalHours % 24, totalMinutes % 60, totalSeconds % 60, ms % 1000 ]
 
-    const filteredParts = timeParts.filter(part => part.value > 0);
-    if (filteredParts.length === 0) {
-        return '0毫秒';
+    if (timeParts[0] >= 1) {
+        if (timeParts[1] >= 1) {
+            return padStartTwo(timeParts[0]) + '天' + padStartTwo(timeParts[1]) + '小时'
+        } else {
+            return padStartTwo(timeParts[0]) + '天'
+        }
+    } else if (timeParts[1] >= 1) {
+        return padStartTwo(timeParts[1]) + ':' + padStartTwo(timeParts[2]) + ':' + padStartTwo(timeParts[3])
+    } else if (timeParts[2] >= 1) {
+        return padStartTwo(timeParts[2]) + ':' + padStartTwo(timeParts[3])
+    } else {
+        return padStartTwo(timeParts[2]) + ':' + padStartTwo(timeParts[3]) + '.' + padStartTwo(timeParts[4])
     }
+}
 
-    return filteredParts.map(part => `${part.value}${part.unit}`).join(' ')
+export const padStartTwo = num => {
+    return num.toFixed(0).padStart(2, '0')
 }

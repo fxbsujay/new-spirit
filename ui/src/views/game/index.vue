@@ -7,7 +7,8 @@ import Icon from '@/components/icon/Icon.vue'
 import { useRoute } from 'vue-router'
 import { GameSocket } from './index'
 import { useUserStore } from '@/stores/user.js'
-import {PRETTY_COORDINATE_SEQUENCE} from "@/components/go/goban.js";
+import { PRETTY_COORDINATE_SEQUENCE } from '@/components/go/goban.js'
+import { formatTime } from '@/utils'
 
 const value = ref(false)
 const router = useRoute()
@@ -91,7 +92,7 @@ const onBoardClick = (x, y) => {
     <div class="side controller-side">
       <div class="game-time">
         <div class="time">
-          <time>15:32</time>
+          <time>{{ formatTime(game.white.remainder) }}</time>
         </div>
         <Icon name="signal" size="20px" color="#F0B01A"/>
         <div class="icon-box">
@@ -131,7 +132,7 @@ const onBoardClick = (x, y) => {
       <div class="time-progress"></div>
       <div class="game-time">
         <div class="time">
-          <time>15:32</time>
+          <time>{{ formatTime(game.black.remainder) }}</time>
         </div>
       </div>
     </div>
