@@ -34,7 +34,7 @@ public class GameRoom {
     public Long blackRemainder = 0L;
 
     /**
-     * 用户这一步操作的剩余时间
+     * 用户这一步操作所用时长
      * @param timestamp  操作时间戳
      * @return 超时多长时间 小于0 为为超时
      */
@@ -44,7 +44,7 @@ public class GameRoom {
             throw new RuntimeException("Game type is NONE, Unable to calculate remaining duration");
         }
         int size = steps.size();
-        if (size <= 2)  {
+        if (size == 0)  {
             // 对局前两手不计算时长
             throw new RuntimeException("The duration of the first two steps of a game match is not counted");
         }
@@ -77,26 +77,30 @@ public class GameRoom {
         }
         if (info.type != GameType.NONE) {
             int size = steps.size();
-            if (size > 2) {
+            if (size > 1) {
                 if (size % 2 == 0) {
-                    blackRemainder += remainingTime(step.timestamp);
-                    if (blackRemainder + info.duration < 0) {
+                    long remainder = blackRemainder + remainingTime(step.timestamp);
+                    if (remainder + info.duration < 0) {
                         // TODO 黑方超时 白方胜
                         log.info("Black's time limit expired; White wins, time={}", blackRemainder);
                         return false;
                     } else {
-                        log.info("Black remaining time = {}", blackRemainder + info.duration);
+                        blackRemainder = remainder;
                     }
                 } else {
+                    long remainder = whiteRemainder + remainingTime(step.timestamp);
                     whiteRemainder += remainingTime(step.timestamp);
-                    if (whiteRemainder + info.duration < 0) {
+                    if (remainder + info.duration < 0) {
                         // TODO 白方超时 黑方胜
                         log.info("White's time limit expired; Black wins time={}", whiteRemainder);
                         return false;
                     } else {
-                        log.info("White remaining time = {}", whiteRemainder + info.duration);
+                        whiteRemainder = remainder;
                     }
                 }
+
+                log.info("B time={}分钟{}秒", (blackRemainder + info.duration) / 1000 / 60 % 60, (blackRemainder + info.duration) / 1000 % 60);
+                log.info("W time={}分钟{}秒", (whiteRemainder + info.duration) / 1000 / 60 % 60, (whiteRemainder + info.duration) / 1000 % 60);
             }
         }
 

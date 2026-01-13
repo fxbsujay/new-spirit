@@ -126,14 +126,15 @@ public class GameController {
                 RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
                 return;
             }
-            dto.duration = dto.duration * 60 * 1000;
+            dto.duration *= 60 * 1000;
+            dto.stepDuration *= 1000;
         } else if (GameType.LONG.equals(dto.type) ) {
             // 基础时长不能大于114天，步长为0
             if (dto.duration > 14 || dto.stepDuration > 0) {
                 RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
                 return;
             }
-            dto.duration = dto.duration * 60 * 60 * 24 * 100;
+            dto.duration *=  60 * 60 * 24 * 100;
             dto.stepDuration = 0;
         } else {
             dto.duration = 0;

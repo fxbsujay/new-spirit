@@ -92,7 +92,7 @@ const onBoardClick = (x, y) => {
     <div class="side controller-side">
       <div class="game-time">
         <div class="time">
-          <time>{{ formatTime(game.white.remainder) }}</time>
+          <time>{{ formatTime(userStore.user.username === game.info.white ? game.black.remainder : game.white.remainder) }}</time>
         </div>
         <Icon name="signal" size="20px" color="#F0B01A"/>
         <div class="icon-box">
@@ -101,7 +101,8 @@ const onBoardClick = (x, y) => {
       </div>
       <div class="time-progress"></div>
       <div class="user-info">
-        <img src="@/assets/img/w.png" class="avatar" alt="白棋玩家"/>
+        <img v-if="userStore.user.username === game.info.white" src="@/assets/img/b.png" class="avatar" alt="黑棋玩家"/>
+        <img v-else src="@/assets/img/w.png" class="avatar" alt="白棋玩家"/>
         <span class="username">{{ userStore.user.username === game.info.white ? game.black.nickname : game.white.nickname }}</span>
         <span class="source-label">积分 -</span>
         <span class="source-value">{{ userStore.user.username === game.info.white ? game.black.rating : game.white.rating }}</span>
@@ -124,7 +125,8 @@ const onBoardClick = (x, y) => {
         </div>
       </div>
       <div class="user-info">
-        <img src="@/assets/img/b.png" class="avatar" alt="黑棋玩家"/>
+        <img v-if="userStore.user.username === game.info.white" src="@/assets/img/w.png" class="avatar" alt="白棋玩家"/>
+        <img v-else src="@/assets/img/b.png" class="avatar" alt="黑棋玩家"/>
         <span class="username">{{ userStore.user.username === game.info.white ? game.white.nickname : game.black.nickname }}</span>
         <span class="source-label">积分 -</span>
         <span class="source-value">{{ userStore.user.username === game.info.white ? game.white.rating : game.black.rating }}</span>
@@ -132,7 +134,7 @@ const onBoardClick = (x, y) => {
       <div class="time-progress"></div>
       <div class="game-time">
         <div class="time">
-          <time>{{ formatTime(game.black.remainder) }}</time>
+          <time>{{ formatTime(userStore.user.username === game.info.white ? game.white.remainder : game.black.remainder) }}</time>
         </div>
       </div>
     </div>
