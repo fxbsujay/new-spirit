@@ -69,7 +69,7 @@ public class GameController {
         }
         GameRoom room = gameRoomService.get(code);
         if (null == room) {
-            gameDao.findOne(JsonObject.of("code", code)).onSuccess(game ->{
+            gameDao.findOne(JsonObject.of("code", code), "code", "white", "black").onSuccess(game ->{
                 if (null == game) {
                     RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
                 } else {
@@ -81,8 +81,8 @@ public class GameController {
                     JsonObject.of("info", room.info, "steps", room.steps),
                     room.info.white,
                     room.info.black,
-                    Math.max(room.whiteRemainder + room.info.duration, 0),
-                    Math.max(room.blackRemainder + room.info.duration, 0));
+                    Math.max(room.whiteRemainder, 0),
+                    Math.max(room.blackRemainder, 0));
         }
     }
 
@@ -159,7 +159,7 @@ public class GameController {
     }
 
     /**
-     * 创建自定义对局,
+     * 加入自定义对局,
      */
     public void joinGame(RoutingContext ctx) {
         String code = ctx.pathParam("code");

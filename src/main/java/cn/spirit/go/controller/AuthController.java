@@ -7,7 +7,6 @@ import cn.spirit.go.common.enums.UserStatus;
 import cn.spirit.go.common.util.RandomUtils;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.common.util.SecurityUtils;
-import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.dao.UserDao;

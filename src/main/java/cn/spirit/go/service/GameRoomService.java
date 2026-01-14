@@ -30,12 +30,13 @@ public class GameRoomService {
 
     /**
      * 用户房间
+     * username -> code[]
      */
     private final Map<String, Set<String>> userRooms = new HashMap<>();
 
     /**
      * 订阅信息
-     * sessionId:游戏编号
+     * sessionId -> code[]
      */
     private final Map<String, Set<String>> subscribers = new HashMap<>();
 
@@ -46,6 +47,8 @@ public class GameRoomService {
     public String add(GamePlay info) {
         GameRoom dto = new GameRoom();
         dto.info = info;
+        dto.whiteRemainder = info.duration.longValue();
+        dto.blackRemainder = info.duration.longValue();
         rooms.put(info.code, dto);
         clientManger.sendToUser(SocketPackage.build(PackageType.GAME_START, info.code), info.white, info.black);
         addUserRoom(info.code, info.white, info.black);
@@ -157,7 +160,7 @@ public class GameRoomService {
             return false;
         }
         for (GameSocket socket : room.sockets) {
-            if (socket.username.equals(username)) {
+            if (!socket.getConnection().isClosed() && socket.username.equals(username)) {
                 return true;
             }
         }
@@ -179,6 +182,39 @@ public class GameRoomService {
         for (GameSocket socket : room.sockets) {
             socket.send(msg);
         }
+    }
+
+    /**
+     * 游戏结束
+     *
+     * @param code 编号
+     */
+    public GameRoom end(String code) {
+        GameRoom room = rooms.remove(code);
+        if (null == room) {
+            return null;
+        }
+        Set<String> whiteCodes = userRooms.get(room.info.white);
+        if (null != whiteCodes) {
+            whiteCodes.remove(code);
+            if (whiteCodes.isEmpty()) {
+                userRooms.remove(room.info.white);
+            }
+        }
+        Set<String> blackCodes = userRooms.get(room.info.black);
+        if (null != blackCodes) {
+            blackCodes.remove(code);
+            if (blackCodes.isEmpty()) {
+                userRooms.remove(room.info.black);
+            }
+        }
+        String msg = Json.encode(SocketPackage.build(PackageType.GAME_END, code));
+        for (GameSocket socket : room.sockets) {
+            socket.send(msg);
+            socket.getConnection().close();
+        }
+
+        return room;
     }
 
     /**
@@ -222,13 +258,6 @@ public class GameRoomService {
      */
     public void unsubscribeAll(String sessionId) {
         subscribers.remove(sessionId);
-    }
-
-    /**
-     * 关闭房间
-     */
-    public void close(String code) {
-        rooms.remove(code);
     }
 
     private <T> Future<T> lock(String code, Supplier<Future<T>> block) {
