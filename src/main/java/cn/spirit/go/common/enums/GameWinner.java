@@ -1,6 +1,6 @@
 package cn.spirit.go.common.enums;
 
-public enum ChessPiece {
+public enum GameWinner {
     /**
      * 白棋胜
      */

@@ -1,6 +1,6 @@
 package cn.spirit.go.model;
 
-import cn.spirit.go.common.enums.ChessPiece;
+import cn.spirit.go.common.enums.GameWinner;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.web.config.AppContext;
 import org.slf4j.Logger;
@@ -58,7 +58,7 @@ public class GameRoom {
     /**
      * 步骤操作是否超时
      */
-    public boolean isTimeout(long timestamp, ChessPiece piece) {
+    public boolean isTimeout(long timestamp, GameWinner piece) {
         if (info.type == GameType.NONE || steps.size() <= 2) {
             return false;
         }

@@ -1,6 +1,6 @@
 package cn.spirit.go.model;
 
-import cn.spirit.go.common.enums.ChessPiece;
+import cn.spirit.go.common.enums.GameWinner;
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 
@@ -54,7 +54,7 @@ public class GamePlay {
     /**
      * 获胜方 WHITE BLACK
      */
-    public ChessPiece winner;
+    public GameWinner winner;
 
     /**
      * 白棋用户

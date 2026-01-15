@@ -1,7 +1,7 @@
 package cn.spirit.go.controller;
 
 import cn.spirit.go.common.RestContext;
-import cn.spirit.go.common.enums.ChessPiece;
+import cn.spirit.go.common.enums.GameWinner;
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.RestStatus;
@@ -134,7 +134,7 @@ public class GameController {
                 RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
                 return;
             }
-            dto.duration *=  60 * 60 * 24 * 100;
+            dto.duration *=  60 * 60 * 24 * 1000;
             dto.stepDuration = 0;
         } else {
             dto.duration = 0;
@@ -189,7 +189,7 @@ public class GameController {
                 entity.timestamp = game.timestamp;
                 entity.startTime = System.currentTimeMillis();
                 entity.endTime = 0L;
-                entity.winner = ChessPiece.NOT_END;
+                entity.winner = GameWinner.NOT_END;
                 if (System.currentTimeMillis() % 2 == 0) {
                     entity.white = session.username;
                     entity.black = game.username;

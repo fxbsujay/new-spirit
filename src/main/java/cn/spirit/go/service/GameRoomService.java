@@ -1,6 +1,7 @@
 package cn.spirit.go.service;
 
 import cn.spirit.go.common.LockConstant;
+import cn.spirit.go.common.enums.GameWinner;
 import cn.spirit.go.model.GamePlay;
 import cn.spirit.go.model.GameRoom;
 import cn.spirit.go.model.GameSocket;
@@ -189,10 +190,10 @@ public class GameRoomService {
      *
      * @param code 编号
      */
-    public GameRoom end(String code) {
+    public void end(String code, GameWinner winner) {
         GameRoom room = rooms.remove(code);
         if (null == room) {
-            return null;
+            return;
         }
         Set<String> whiteCodes = userRooms.get(room.info.white);
         if (null != whiteCodes) {
@@ -214,7 +215,6 @@ public class GameRoomService {
             socket.getConnection().close();
         }
 
-        return room;
     }
 
     /**
