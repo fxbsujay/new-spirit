@@ -2,6 +2,7 @@ package cn.spirit.go.service;
 
 import cn.spirit.go.common.LockConstant;
 import cn.spirit.go.common.enums.GameWinner;
+import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.model.GamePlay;
 import cn.spirit.go.model.GameRoom;
 import cn.spirit.go.model.GameSocket;
@@ -12,6 +13,7 @@ import cn.spirit.go.web.socket.PackageType;
 import cn.spirit.go.web.socket.SocketPackage;
 import io.vertx.core.Future;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +24,10 @@ public class GameRoomService {
 
     private final Logger log = LoggerFactory.getLogger(GameRoomService.class);
 
+
     private final ClientManger clientManger = AppContext.getBean(ClientManger.class);
+
+    private final GameDao gameDao = AppContext.getBean(GameDao.class);
 
     /**
      * 房间信息
@@ -70,7 +75,7 @@ public class GameRoomService {
     }
 
     /**
-     * 加入房间
+     * 加入房间 只允许对局双方玩家进入
      */
     public boolean joinRoom(String code, GameSocket socket) {
         GameRoom room = rooms.get(code);
@@ -214,6 +219,13 @@ public class GameRoomService {
             socket.send(msg);
             socket.getConnection().close();
         }
+
+        room.info.winner = winner;
+        JsonObject obj = JsonObject.mapFrom(room.info);
+        obj.put("steps", room.steps);
+        gameDao.insert(obj).onSuccess(id -> {
+            log.info("Game End, winner={}, id={}", winner, id);
+        });
 
     }
 
