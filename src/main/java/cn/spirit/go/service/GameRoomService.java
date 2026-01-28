@@ -1,6 +1,7 @@
 package cn.spirit.go.service;
 
 import cn.spirit.go.common.LockConstant;
+import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.GameWinner;
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.model.GamePlay;
@@ -16,7 +17,6 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -123,29 +123,58 @@ public class GameRoomService {
         }
 
         GameStep step = new GameStep(x, y);
+
         if (room.steps.isEmpty()) {
             // 黑棋先手，是否是黑方
             if (!room.info.black.equals(username)) {
                 return;
             }
         } else {
-            // 判断当前应该是是哪一方落子
-            if (room.steps.size() % 2 == 1) {
-                if (!room.info.white.equals(username)) return;
-            } else {
-                if (!room.info.black.equals(username)) return;
-            }
-            // 判断落子位置是否重叠
-            if (room.steps.contains(new GameStep(x, y))) {
+            // 判断棋子是否重叠
+            if (room.steps.contains(step)) {
                 return;
             }
-            // 判断棋子
+
+            int size = room.steps.size();
+            GameWinner winner;
+            // 判断当前应该是是哪一方落子
+            if (size % 2 == 1) {
+                if (!room.info.white.equals(username)) {
+                    return;
+                } else {
+                    winner = GameWinner.BLACK;
+                }
+            } else {
+                if (!room.info.black.equals(username)) {
+                    return;
+                } else {
+                    winner = GameWinner.WHITE;
+                }
+            }
+
+            // 时间有限制并且前两手已经下完
+            if (room.info.type != GameType.NONE && size > 1) {
+                // 落子是否超时或违规
+                long time = room.remainingTime(step.timestamp);
+                if (winner == GameWinner.BLACK) {
+                    time += room.whiteRemainder;
+                    room.whiteRemainder = time;
+                } else {
+                    time += room.blackRemainder;
+                }
+                log.info("W time={}, B time={}", room.whiteRemainder,room.blackRemainder);
+                if (time <= 0) {
+                    // TODO 超时结算
+                    end(code, winner);
+                    return;
+                } else {
+                    // TODO 定时任务 {time} 毫秒后未走，游戏结束
+                }
+            }
         }
 
-        if (room.addStep(step)) {
-            log.info("[{}] - add a step to the game {}, username={}, x={}, y={}, ", room.info.white.equals(username) ? 'W' : 'B', code, username, x, y);
-            send(code, SocketPackage.build(PackageType.GAME_STEP, username, step));
-        }
+        room.steps.add(step);
+        log.info("[{}] - add a step to the game {}, username={}, x={}, y={}, ", room.info.white.equals(username) ? 'W' : 'B', code, username, x, y);
     }
 
     /**
