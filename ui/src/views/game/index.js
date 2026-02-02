@@ -38,6 +38,7 @@ export class GameSocket {
             const player = this.game.steps.length % 2 === 0 ? 'white' : 'black'
             this.game[player].remainder += this.game.info.stepDuration
         }
+        console.log('w', this.game.white.remainder, 'B', this.game.black.remainder)
         this.timerStart()
     }
 
@@ -69,7 +70,7 @@ export class GameSocket {
                     that.game[player].remainder = 0
                 }
                 lastTime = now
-            }, 10)
+            }, 1)
         } else {
             clearInterval(this.timer)
             this.timer = null

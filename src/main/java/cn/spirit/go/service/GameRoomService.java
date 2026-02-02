@@ -156,13 +156,18 @@ public class GameRoomService {
             if (room.info.type != GameType.NONE && size > 1) {
                 // 落子是否超时或违规
                 long time = room.remainingTime(step.timestamp);
+                log.info("time={}",time);
                 if (winner == GameWinner.BLACK) {
                     time += room.whiteRemainder;
                     room.whiteRemainder = time;
+                    log.info("W time={}", room.whiteRemainder);
+
                 } else {
                     time += room.blackRemainder;
+                    room.blackRemainder = time;
+                    log.info("B time={}",room.blackRemainder);
                 }
-                log.info("W time={}, B time={}", room.whiteRemainder,room.blackRemainder);
+
                 if (time <= 0) {
                     // TODO 超时结算
                     end(code, winner);
@@ -175,6 +180,8 @@ public class GameRoomService {
 
         room.steps.add(step);
         log.info("[{}] - add a step to the game {}, username={}, x={}, y={}, ", room.info.white.equals(username) ? 'W' : 'B', code, username, x, y);
+        SocketPackage build = SocketPackage.build(PackageType.GAME_STEP, username, step);
+        send(code, build);
     }
 
     /**
