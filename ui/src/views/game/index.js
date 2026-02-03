@@ -30,51 +30,36 @@ export class GameSocket {
 
     /**
      * 游戏落子更新
-     * @param step
+     *
+     * @param data { { step: { x: number, y: number, timestamp: number }, blackRemainder: number, whiteRemainder: number } }
      */
-    updateStep(step) {
-        this.game.steps.push(step)
-        if (this.game.info.type !== 'NONE' && this.game.steps.length > 1) {
-            const player = this.game.steps.length % 2 === 0 ? 'white' : 'black'
-            this.game[player].remainder += this.game.info.stepDuration
-        }
-        console.log('w', this.game.white.remainder, 'B', this.game.black.remainder)
-        this.timerStart()
+    updateStep(data) {
+        this.game.steps.push(data.step)
+        this.game.black.remainder = data.blackRemainder
+        this.game.white.remainder = data.whiteRemainder
+        console.log('B', this.game.black.remainder, 'W', this.game.white.remainder)
     }
 
     /**
      * 计时器
      */
     timerStart() {
+        requestAnimationFrame(() => this.timerStart())
         const size = this.game.steps.length
-        if (this.game.info.type !== 'NONE' && size > 1) {
-            const player = size % 2 === 0 ? 'black' : 'white'
-            if (this.timer) {
-                clearInterval(this.timer)
-            }
-            const that = this
-            let lastTime = that.game.steps[size - 1].timestamp
-
-            const now = Date.now()
-            const time = (now - lastTime)
-            that.game[player].remainder -= time
-            if (that.game[player].remainder < 0) {
-                that.game[player].remainder = 0
-            }
-            lastTime = now
-            this.timer = setInterval(() => {
-                const now = Date.now()
-                const time = (now - lastTime)
-                that.game[player].remainder -= time
-                if (that.game[player].remainder < 0) {
-                    that.game[player].remainder = 0
-                }
-                lastTime = now
-            }, 1)
-        } else {
-            clearInterval(this.timer)
-            this.timer = null
+        if (this.game.info.type === 'NONE' || size <= 1) {
+            return
         }
+        const player = size % 2 === 0 ? 'black' : 'white'
+        if (!this.lastTime) {
+            this.lastTime =  this.game.steps[size - 1].timestamp
+        }
+        const now = Date.now()
+        const time = (now - this.lastTime)
+        this.game[player].remainder -= time
+        if (this.game[player].remainder < 0) {
+            this.game[player].remainder = 0
+        }
+        this.lastTime = now
     }
 
     /**

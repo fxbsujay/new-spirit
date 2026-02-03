@@ -180,8 +180,7 @@ public class GameRoomService {
 
         room.steps.add(step);
         log.info("[{}] - add a step to the game {}, username={}, x={}, y={}, ", room.info.white.equals(username) ? 'W' : 'B', code, username, x, y);
-        SocketPackage build = SocketPackage.build(PackageType.GAME_STEP, username, step);
-        send(code, build);
+        send(code, SocketPackage.build(PackageType.GAME_STEP, username,  JsonObject.of("whiteRemainder", room.whiteRemainder, "blackRemainder", room.blackRemainder, "step", step)));
     }
 
     /**
