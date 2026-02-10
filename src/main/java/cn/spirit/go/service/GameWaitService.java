@@ -43,14 +43,14 @@ public class GameWaitService {
      * 搜索休闲游戏
      *
      * @param username  查询不是自己的对局
-     * @param like      对局名称或编号
+     * @param code      编号
      * @param type      {@link GameType}
      */
-    public List<GameWait> searchGames(String username, String like, GameType type, int limit) {
+    public List<GameWait> searchGames(String username, String code, GameType type, int limit) {
         List<GameWait> result = new ArrayList<>();
         for (GameWait value : games.values()) {
             if (null != username && (username.equals(value.username)) ||
-                (null != like&& !like.equals(value.code) && !like.equals(value.username)) ||
+                (null != code&& !code.equals(value.code)) ||
                 (null != type && type != value.type) ||
                 !GameMode.CASUAL.equals(value.mode)) {
                 continue;

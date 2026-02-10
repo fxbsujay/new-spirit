@@ -1,8 +1,7 @@
 package cn.spirit.go.model;
 
-import cn.spirit.go.common.enums.GameWinner;
 import cn.spirit.go.common.enums.GameType;
-import cn.spirit.go.web.config.AppContext;
+import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;
@@ -10,10 +9,21 @@ import java.util.*;
 public class GameRoom {
 
     private static final Logger log = LoggerFactory.getLogger(GameRoom.class);
+
     /**
      * 游戏信息
      */
     public GamePlay info;
+
+    /**
+     * 白棋玩家信息
+     */
+    public Player white;
+
+    /**
+     * 黑棋玩家信息
+     */
+    public Player black;
 
     /**
      * 步骤
@@ -67,6 +77,25 @@ public class GameRoom {
     @Override
     public int hashCode() {
         return Objects.hash(info.code);
+    }
+
+    public static class Player {
+
+        public String nickname;
+
+        public String username;
+
+        public String avatar;
+
+        public Integer rating;
+
+        public JsonObject toJson() {
+            return JsonObject.of(
+                    "nickname", nickname,
+                    "username",username,
+                    "avatar", avatar,
+                    "rating", rating);
+        }
     }
 
 }

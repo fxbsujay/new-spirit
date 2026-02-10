@@ -13,8 +13,4 @@ public enum GameWinner {
      * 平局
      */
     TIE,
-    /**
-     * 未结束
-     */
-    NOT_END;
 }

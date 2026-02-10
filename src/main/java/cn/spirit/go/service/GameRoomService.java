@@ -1,6 +1,7 @@
 package cn.spirit.go.service;
 
 import cn.spirit.go.common.LockConstant;
+import cn.spirit.go.common.enums.GameReason;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.GameWinner;
 import cn.spirit.go.dao.GameDao;
@@ -50,14 +51,14 @@ public class GameRoomService {
      * 添加房间，创建房间后通知玩家游戏开始，随后进入游戏界面，通知服务器玩家已进入房间，黑旗先行，双方都落子后游戏正式开始，不可取消
      * 进入游戏界面客户端发送加入房间通知，关闭游戏界面发生退出房间通知
      */
-    public String add(GamePlay info) {
+    public String add(GamePlay info, GameRoom.Player white, GameRoom.Player black) {
         GameRoom dto = new GameRoom();
         dto.info = info;
         dto.whiteRemainder = info.duration.longValue();
         dto.blackRemainder = info.duration.longValue();
         rooms.put(info.code, dto);
-        clientManger.sendToUser(SocketPackage.build(PackageType.GAME_START, info.code), info.white, info.black);
-        addUserRoom(info.code, info.white, info.black);
+        clientManger.sendToUser(SocketPackage.build(PackageType.GAME_START, info.code), white.username, black.username);
+        addUserRoom(info.code, white.username, black.username);
         return info.code;
     }
 
@@ -74,12 +75,16 @@ public class GameRoomService {
         }
     }
 
+    public Set<String> userRoomCodes(String username) {
+        return userRooms.get(username);
+    }
+
     /**
      * 加入房间 只允许对局双方玩家进入
      */
     public boolean joinRoom(String code, GameSocket socket) {
         GameRoom room = rooms.get(code);
-        if (null == room || (!room.info.white.equals(socket.username) && !room.info.black.equals(socket.username))) {
+        if (null == room || (!room.white.username.equals(socket.username) && !room.black.username.equals(socket.username))) {
             return false;
         }
         boolean flag = room.sockets.add(socket);
@@ -94,7 +99,7 @@ public class GameRoomService {
      */
     public void exitRoom(String code, GameSocket socket) {
         GameRoom room = rooms.get(code);
-        if (null == room || (!room.info.white.equals(socket.username) && !room.info.black.equals(socket.username))) {
+        if (null == room || (!room.white.username.equals(socket.username) && !room.black.username.equals(socket.username))) {
             return;
         }
         boolean flag = room.sockets.remove(socket);
@@ -118,7 +123,7 @@ public class GameRoomService {
             return;
         }
         // 判断参数合法性
-        if ((!room.info.black.equals(username) && !room.info.white.equals(username)) || x < 0 || y < 0 || x >= room.info.boardSize || y >= room.info.boardSize) {
+        if ((!room.black.username.equals(username) && !room.white.username.equals(username)) || x < 0 || y < 0 || x >= room.info.boardSize || y >= room.info.boardSize) {
             return;
         }
 
@@ -126,7 +131,7 @@ public class GameRoomService {
 
         if (room.steps.isEmpty()) {
             // 黑棋先手，是否是黑方
-            if (!room.info.black.equals(username)) {
+            if (!room.black.username.equals(username)) {
                 return;
             }
         } else {
@@ -139,13 +144,13 @@ public class GameRoomService {
             GameWinner winner;
             // 判断当前应该是是哪一方落子
             if (size % 2 == 1) {
-                if (!room.info.white.equals(username)) {
+                if (!room.white.username.equals(username)) {
                     return;
                 } else {
                     winner = GameWinner.BLACK;
                 }
             } else {
-                if (!room.info.black.equals(username)) {
+                if (!room.black.username.equals(username)) {
                     return;
                 } else {
                     winner = GameWinner.WHITE;
@@ -170,7 +175,7 @@ public class GameRoomService {
 
                 if (time <= 0) {
                     // TODO 超时结算
-                    end(code, winner);
+                    end(code, winner, GameReason.TIMEOUT);
                     return;
                 } else {
                     // TODO 定时任务 {time} 毫秒后未走，游戏结束
@@ -179,7 +184,7 @@ public class GameRoomService {
         }
 
         room.steps.add(step);
-        log.info("[{}] - add a step to the game {}, username={}, x={}, y={}, ", room.info.white.equals(username) ? 'W' : 'B', code, username, x, y);
+        log.info("[{}] - add a step to the game {}, username={}, x={}, y={}, ", room.white.username.equals(username) ? 'W' : 'B', code, username, x, y);
         send(code, SocketPackage.build(PackageType.GAME_STEP, username,  JsonObject.of("whiteRemainder", room.whiteRemainder, "blackRemainder", room.blackRemainder, "step", step)));
     }
 
@@ -197,7 +202,7 @@ public class GameRoomService {
      */
     public boolean isOnline(String code, String username) {
         GameRoom room = rooms.get(code);
-        if (null == room || (!room.info.white.equals(username) && !room.info.black.equals(username))) {
+        if (null == room || (!room.white.username.equals(username) && !room.black.username.equals(username))) {
             return false;
         }
         for (GameSocket socket : room.sockets) {
@@ -216,7 +221,7 @@ public class GameRoomService {
      */
     public void send(String code, SocketPackage pack) {
         GameRoom room = rooms.get(code);
-        if (room == null || (!room.info.white.equals(pack.sender) && !room.info.black.equals(pack.sender))) {
+        if (room == null || (!room.white.username.equals(pack.sender) && !room.black.username.equals(pack.sender))) {
             return;
         }
         String msg = Json.encode(pack);
@@ -229,24 +234,26 @@ public class GameRoomService {
      * 游戏结束
      *
      * @param code 编号
+     * @param winner 胜利方
+     * @param reason 胜利原因
      */
-    public void end(String code, GameWinner winner) {
+    public Future<String> end(String code, GameWinner winner, GameReason reason) {
         GameRoom room = rooms.remove(code);
         if (null == room) {
-            return;
+            return Future.succeededFuture(code);
         }
-        Set<String> whiteCodes = userRooms.get(room.info.white);
+        Set<String> whiteCodes = userRooms.get(room.white.username);
         if (null != whiteCodes) {
             whiteCodes.remove(code);
             if (whiteCodes.isEmpty()) {
-                userRooms.remove(room.info.white);
+                userRooms.remove(room.white.username);
             }
         }
-        Set<String> blackCodes = userRooms.get(room.info.black);
+        Set<String> blackCodes = userRooms.get(room.black.username);
         if (null != blackCodes) {
             blackCodes.remove(code);
             if (blackCodes.isEmpty()) {
-                userRooms.remove(room.info.black);
+                userRooms.remove(room.black.username);
             }
         }
         String msg = Json.encode(SocketPackage.build(PackageType.GAME_END, code));
@@ -255,13 +262,15 @@ public class GameRoomService {
             socket.getConnection().close();
         }
 
-        room.info.winner = winner;
         JsonObject obj = JsonObject.mapFrom(room.info);
+        obj.put("endTime", System.currentTimeMillis());
+        obj.put("winner", winner);
+        obj.put("reason", reason);
+        obj.put("whiter", room.white.username);
+        obj.put("black", room.black.username);
         obj.put("steps", room.steps);
-        gameDao.insert(obj).onSuccess(id -> {
-            log.info("Game End, winner={}, id={}", winner, id);
-        });
 
+        return gameDao.insert(obj).compose(id -> Future.succeededFuture(code));
     }
 
     /**
