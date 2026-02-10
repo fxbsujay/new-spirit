@@ -1,6 +1,5 @@
 package cn.spirit.go.model;
 
-import cn.spirit.go.common.enums.GameWinner;
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 

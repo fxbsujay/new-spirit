@@ -237,10 +237,10 @@ public class GameRoomService {
      * @param winner 胜利方
      * @param reason 胜利原因
      */
-    public Future<String> end(String code, GameWinner winner, GameReason reason) {
+    public Future<Void> end(String code, GameWinner winner, GameReason reason) {
         GameRoom room = rooms.remove(code);
         if (null == room) {
-            return Future.succeededFuture(code);
+            return Future.succeededFuture();
         }
         Set<String> whiteCodes = userRooms.get(room.white.username);
         if (null != whiteCodes) {
@@ -256,6 +256,8 @@ public class GameRoomService {
                 userRooms.remove(room.black.username);
             }
         }
+
+        // 通知玩家游戏结束
         String msg = Json.encode(SocketPackage.build(PackageType.GAME_END, code));
         for (GameSocket socket : room.sockets) {
             socket.send(msg);
@@ -270,7 +272,7 @@ public class GameRoomService {
         obj.put("black", room.black.username);
         obj.put("steps", room.steps);
 
-        return gameDao.insert(obj).compose(id -> Future.succeededFuture(code));
+        return gameDao.insert(obj).compose(id -> Future.succeededFuture());
     }
 
     /**

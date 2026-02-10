@@ -14,14 +14,12 @@ import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -274,8 +272,8 @@ public class GameController {
         }
         GameWinner winner = room.white.username.equals(session.username) ? GameWinner.WHITE : GameWinner.BLACK;
 
-        gameRoomService.end(code, winner, GameReason.SURRENDER).onSuccess(c -> {
-            RestContext.success(ctx, c);
+        gameRoomService.end(code, winner, GameReason.SURRENDER).onSuccess(v -> {
+            RestContext.success(ctx);
         }).onFailure(e -> {
             log.error("{}: {}", e.getMessage(), code);
             RestContext.fail(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
