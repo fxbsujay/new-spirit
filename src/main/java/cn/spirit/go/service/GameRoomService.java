@@ -56,6 +56,8 @@ public class GameRoomService {
         dto.info = info;
         dto.whiteRemainder = info.duration.longValue();
         dto.blackRemainder = info.duration.longValue();
+        dto.white = white;
+        dto.black = black;
         rooms.put(info.code, dto);
         clientManger.sendToUser(SocketPackage.build(PackageType.GAME_START, info.code), white.username, black.username);
         addUserRoom(info.code, white.username, black.username);

@@ -50,7 +50,7 @@ public class GameWaitService {
         List<GameWait> result = new ArrayList<>();
         for (GameWait value : games.values()) {
             if (null != username && (username.equals(value.username)) ||
-                (null != code&& !code.equals(value.code)) ||
+                (null != code && !code.equals(value.code)) ||
                 (null != type && type != value.type) ||
                 !GameMode.CASUAL.equals(value.mode)) {
                 continue;

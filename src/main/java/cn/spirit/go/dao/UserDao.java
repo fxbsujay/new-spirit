@@ -3,10 +3,8 @@ package cn.spirit.go.dao;
 import cn.spirit.go.common.util.SqlUtils;
 import cn.spirit.go.web.config.AppContext;
 import io.vertx.core.Future;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.util.List;
-import java.util.Set;
 
 public class UserDao {
 

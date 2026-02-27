@@ -5,11 +5,11 @@ import Dialog from '@/components/dialog/index.vue'
 import { reactive, ref, toRaw } from 'vue'
 import http from '@/utils/http'
 import { TypeConstant } from '@/constant'
-import { useUserStore } from '@/stores/user'
-import dayjs from 'dayjs'
+import { throttle } from '@/utils/index.js'
 
-const userStore = useUserStore()
+const emits = defineEmits(['createSuccess'])
 const visible = ref(false)
+const loading = ref(false)
 
 const ModeConstant = [
   { label: '休闲', value: 'CASUAL' },
@@ -37,7 +37,7 @@ const open = () => {
 }
 
 const close = () => {
-  visible.value = false
+  loading.value = false
   Object.assign(formState, {
     boardSize: 21,
     type: 'SHORT',
@@ -45,19 +45,21 @@ const close = () => {
     duration: 10,
     stepDuration: 0
   })
+  visible.value = false
 }
 
-const submitHandle = () => {
+const submitHandle = throttle(() => {
+  if (loading.value) {
+    return
+  }
+  loading.value = true
   http.post('/game/create', formState).then(() => {
-    Object.assign(userStore.waitGame, {
-      ...toRaw(formState),
-      timestamp: dayjs().unix()
-    })
     close()
-  })
-}
+    emits('createSuccess')
+  }).catch(() => loading.value = false)
+})
 
-defineExpose({ open, close })
+defineExpose({ open })
 </script>
 
 <template>

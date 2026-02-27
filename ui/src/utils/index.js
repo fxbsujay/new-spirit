@@ -24,14 +24,15 @@ export const debounce = (func, delay = 500, immediate = true) => {
  *
  * @param func {function} 执行的函数
  * @param delay {number} 多少秒之内执行一次
+ * @return {Function} 返回新函数
  */
-export const throttle = (func, delay) => {
-    let prev = Date.now()
+export const throttle = (func, delay = 500) => {
+    let prev
     return function () {
         const context = this
         const args = arguments
         const now = Date.now()
-        if (now - prev >= delay) {
+        if (!prev || now - prev >= delay) {
             func.apply(context, args)
             prev = Date.now()
         }
@@ -91,6 +92,10 @@ export const formatTime = ms => {
     } else {
         return padStartTwo(timeParts[2]) + ':' + padStartTwo(timeParts[3]) + '.' + padStartTwo(timeParts[4])
     }
+}
+
+export const formatDuration = (type, duration, stepDuration) => {
+
 }
 
 export const padStartTwo = num => {

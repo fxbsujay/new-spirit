@@ -39,7 +39,7 @@
   .banner {
     width: 100%;
     height: 100%;
-    background-color: #1b78d0;
+    background-color: #ffffff;
     img {
       width: 100%;
       height: 100%;
@@ -47,47 +47,54 @@
   }
 }
 
-.lists {
+.table {
+  border-collapse: collapse;
+  border-spacing: 0;
   margin-top: 1rem;
+  width: 100%;
 
 
-  .list-header, .item {
-    margin: 4px 0;
-    display: flex;
-    align-items: center;
-    white-space: nowrap;
-    line-height: 0;
-    user-select: none;
-    .col {
-      flex: 1;
-      padding: 0 1rem;
-    }
-    .name-col {
-      position: relative;
-      flex: 5;
-      line-height: 1rem;
-    }
-  }
-  .list-header {
-    color: @labelColor;
+  thead {
+    color: @titleColor;
     font-size: 12px;
-    padding: 4px 0;
-  }
-  .item {
-    padding: 12px 0;
-    @borderSize: 3px;
-    background-color: #ffffff;
-    cursor: pointer;
-    font-size: 14px;
-    line-height: 0;
-    border-bottom: @borderSize solid #F7F7F7;
-    &:hover {
-      background: rgba(0, 0, 0, 0.05);
-      border-bottom: @borderSize solid @linkActiveColor;
-    }
 
+    td {
+      padding: 14px 1rem;
+    }
+  }
+
+  tbody {
+    min-height: 600px;
+    background-image: url("/logo.png");
+    background-color: rgba(255, 255, 255, 0.9);;
+    background-size: 100% auto;
+    background-position: center;
+    tr {
+      @borderSize: 3px;
+      background-color: rgba(255, 255, 255, 0.95);
+      cursor: pointer;
+      font-size: 14px;
+      border-bottom: @borderSize solid #F7F7F7;
+      &:hover {
+        td {
+          background-color: rgba(0, 0, 0, 0.05);
+          border-bottom: @borderSize solid #f16529;
+        }
+      }
+      td {
+        white-space: nowrap;
+        overflow: hidden;
+        padding: 12px 1rem;
+      }
+
+      &.own-row td {
+        background-color: rgba(255, 98, 0, 0.22);
+        border-bottom: @borderSize solid #F7F7F7;
+      }
+    }
   }
 }
+
 .toggle-filter {
   display: flex;
   align-items: center;
@@ -106,7 +113,7 @@
     display: flex;
     align-items: center;
     background-color: #fff;
-    border-radius: @borderRadius;
+    border-radius: 2px;
     .search-input {
       height: 1rem;
       font: inherit;

@@ -4,6 +4,7 @@ import { ref, watch } from 'vue'
 import dayjs from 'dayjs'
 import { useUserStore } from '@/stores/user'
 import http from '@/utils/http'
+import { throttle } from '@/utils/index.js'
 
 const ModeConstant = [
   { label: '休闲赛', value: 'CASUAL' },
@@ -47,7 +48,10 @@ const clearTimer = () => {
   timeText.value = ''
 }
 
-const endWait = () => {
+const endWait = throttle(() => {
+  if (loading.value) {
+    return
+  }
   isStart.value = false
   loading.value = true
 
@@ -56,7 +60,7 @@ const endWait = () => {
     loading.value = false
     closeWaitGame()
   }).catch(() => loading.value = false)
-}
+})
 
 const detailedText = () => {
   if (!isStart.value) {

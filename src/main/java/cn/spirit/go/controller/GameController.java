@@ -50,10 +50,19 @@ public class GameController {
      */
     public void searchGame(RoutingContext ctx) {
         String code = ctx.request().getParam("code");
-        String type = ctx.request().getParam("type");
+        GameType type = GameType.convert(ctx.request().getParam("type"));
 
         UserSession session = SessionStore.sessionUser(ctx);
-        List<GameWait> games = gameWaitService.searchGames(session.isGuest ? null : session.username, code, null == type ? null : GameType.valueOf(type), 10);
+        List<GameWait> games;
+        if (session.isGuest) {
+            games = gameWaitService.searchGames(null, code, type, 10);
+        } else {
+            GameWait game = gameWaitService.getByUsername(session.username);
+            games = gameWaitService.searchGames(session.username, code, type, null != game ? 9 : 10);
+            if (null != game) {
+                games.add(0, game);
+            }
+        }
         RestContext.success(ctx, games);
     }
 
@@ -226,7 +235,7 @@ public class GameController {
             entity.startTime = System.currentTimeMillis();
 
             // 查询用户信息
-            JsonObject query = JsonObject.of("$in", JsonArray.of(game.username, session.username));
+            JsonObject query = JsonObject.of("username", JsonObject.of("$in", JsonArray.of(game.username, session.username)));
             userDao.findAll(query, "username", "nickname", "avatar", "rating").onSuccess(users -> {
                 GameRoom.Player[] players = new  GameRoom.Player[users.size()];
                 for (int i = 0; i < users.size(); i++) {
