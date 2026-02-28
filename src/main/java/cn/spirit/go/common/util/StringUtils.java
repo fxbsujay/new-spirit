@@ -212,7 +212,7 @@ public class StringUtils {
      *  <p>转为String</p>
      */
     public static String toString(Object object) {
-        if (object != null && object.toString().length() > 0) {
+        if (object != null && !object.toString().isEmpty()) {
             return object.toString();
         }
         return "";

@@ -203,7 +203,7 @@ public class GameController {
     }
 
     /**
-     * 加入自定义对局,
+     * 加入自定义对局
      */
     public void joinGame(RoutingContext ctx) {
         String code = ctx.pathParam("code");
@@ -211,12 +211,19 @@ public class GameController {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
+
         UserSession session = SessionStore.sessionUser(ctx);
+        if (null != gameWaitService.getByUsername(session.username)) {
+            RestContext.fail(ctx, RestStatus.GAME_CREATED);
+            return;
+        }
+
         GameWait g = gameWaitService.get(code);
         if (null == g || g.username.equals(session.username)) {
             RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
             return;
         }
+
 
         gameWaitService.removeGame(g.username).onSuccess(game -> {
             if (null == game || !game.code.equals(code)) {
