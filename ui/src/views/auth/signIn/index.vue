@@ -7,14 +7,18 @@ const formState = reactive({
   username: '',
   password: ''
 })
+const loading = ref(false)
 const passwordReveal = ref(false)
 const userStore = useUserStore()
 
 const submitHandle = () => {
+  loading.value = true
   http.post("/auth/signin", formState).then(() => {
     userStore.login()
-  }).catch(err => {
+    loading.value = false
+  }).catch(err =>  {
     console.log(err)
+    loading.value = false
   })
 }
 </script>
@@ -61,7 +65,11 @@ const submitHandle = () => {
             </div>
           </div>
         </div>
-        <button type="submit" class="primary button">登录</button>
+        <q-btn style="width: 100%;background-color: #312D2A" padding="10px" :loading="loading" size="1rem" color="with" label="登录" type="submit" >
+          <template #loading>
+            <q-spinner-facebook />
+          </template>
+        </q-btn>
         <div class="alternative">
           <RouterLink to="">重置密码</RouterLink>
           <RouterLink to="">邮箱登录</RouterLink>

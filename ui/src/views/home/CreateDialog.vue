@@ -1,7 +1,6 @@
 <script setup>
 
 import Slider from '@/components/slider/index.vue'
-import Dialog from '@/components/dialog/index.vue'
 import { reactive, ref, toRaw } from 'vue'
 import http from '@/utils/http'
 import { TypeConstant } from '@/constant'
@@ -63,13 +62,18 @@ defineExpose({ open })
 </script>
 
 <template>
-  <Dialog :visible="visible">
-    <div class="create-game-dialog">
-      <div class="header">
-        <h2 class="title">创建对局</h2>
-      </div>
+  <q-dialog v-model="visible" persistent>
+    <div class="create-game-dialog" style="background-color: #fff">
+      <q-tabs
+          style="margin-bottom: 1rem"
+          v-model="formState.type"
+          class="text-positive"
+      >
+        <q-tab v-for="item in TypeConstant" :name="item.value" :label="item.label" />
+      </q-tabs>
 
       <form class="form" @submit.prevent="submitHandle">
+
         <div class="row input-row">
           <div class="form-group col">
             <label class="form-label" >
@@ -111,29 +115,23 @@ defineExpose({ open })
         </div>
 
         <div class="form-footer">
-          <button class="button border" @click="close" >取消</button>
+          <button class="button border" @click="close"  type="button" >取消</button>
           <button class="button primary submit-btn" type="submit" >创建</button>
         </div>
       </form>
     </div>
-  </Dialog>
+  </q-dialog>
 </template>
 
 <style scoped lang="less">
 @import "@/assets/css/variable.less";
 .create-game-dialog {
-  padding: 1rem;
+  padding: 2rem;
   position: relative;
-  width: 400px;
+  width: 450px;
   max-width: 100%;
 
-  .header {
-    margin-bottom: 2rem;
-  }
-
   .form {
-    margin-top: 1rem;
-
     .border-input-wrap {
       .input {
         height: auto;

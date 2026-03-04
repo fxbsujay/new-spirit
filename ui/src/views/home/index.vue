@@ -45,13 +45,15 @@ const tableRowClickHandle = throttle(game => {
   }
 })
 
+const rating = () => {
+
+}
 </script>
 
 <template>
   <div class="lobby-wrap">
     <div class="lobby-side">
       <div class="">
-
       </div>
     </div>
     <div class="lobby-table">
@@ -102,8 +104,8 @@ const tableRowClickHandle = throttle(game => {
         <div>
 
         </div>
-        <button class="button border" @click=" createDialogRef.open()">创建游戏</button>
-        <button class="button border">积分赛</button>
+        <button class="button border" @click="createDialogRef.open()">创建游戏</button>
+        <button class="button border" @click="rating">积分赛</button>
         <button class="button border">人机对战</button>
       </div>
     </div>

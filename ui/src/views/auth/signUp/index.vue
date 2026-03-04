@@ -136,7 +136,11 @@ const passwordInputHandler = (event) => {
             </p>
           </div>
         </div>
-        <button type="submit" :disabled="loading" class="primary button">提交</button>
+        <q-btn style="width: 100%;background-color: #312D2A" padding="10px" :loading="loading" size="1rem" color="with" label="提交" type="submit" >
+          <template #loading>
+            <q-spinner-facebook />
+          </template>
+        </q-btn>
       </form>
     </div>
   </div>
