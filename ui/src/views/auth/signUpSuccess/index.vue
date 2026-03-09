@@ -7,7 +7,7 @@
       </div>
       <p>您好啊 {{username }}，恭喜您成为我们的一员，赶快前往登录吧</p>
       <RouterLink to="/sign-in">
-        <button class="button primary">立即登录</button>
+        <button class="black button">立即登录</button>
       </RouterLink>
     </div>
   </div>

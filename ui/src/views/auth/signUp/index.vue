@@ -20,6 +20,9 @@ const router = useRouter()
 const passwordReveal = ref(false)
 
 const submitHandle = debounce(() => {
+  if (loading.value) {
+    return
+  }
   if (stage.value) {
     sendCodeHandler()
   } else {
@@ -136,11 +139,7 @@ const passwordInputHandler = (event) => {
             </p>
           </div>
         </div>
-        <q-btn style="width: 100%;background-color: #312D2A" padding="10px" :loading="loading" size="1rem" color="with" label="提交" type="submit" >
-          <template #loading>
-            <q-spinner-facebook />
-          </template>
-        </q-btn>
+        <button type="submit" class="black button">提交</button>
       </form>
     </div>
   </div>

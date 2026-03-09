@@ -1,5 +1,6 @@
 <script setup>
 
+import Dialog from '@/components/dialog/index.vue'
 import Slider from '@/components/slider/index.vue'
 import { reactive, ref, toRaw } from 'vue'
 import http from '@/utils/http'
@@ -62,27 +63,11 @@ defineExpose({ open })
 </script>
 
 <template>
-  <q-dialog v-model="visible" persistent>
+  <Dialog :visible="visible">
     <div class="create-game-dialog" style="background-color: #fff">
-      <q-tabs
-          style="margin-bottom: 1rem"
-          v-model="formState.type"
-          class="text-positive"
-      >
-        <q-tab v-for="item in TypeConstant" :name="item.value" :label="item.label" />
-      </q-tabs>
-
       <form class="form" @submit.prevent="submitHandle">
 
         <div class="row input-row">
-          <div class="form-group col">
-            <label class="form-label" >
-              时间限制
-            </label>
-            <select v-model="formState.type" class="select">
-              <option v-for="item in TypeConstant" :value="item.value">{{ item.label }}</option>
-            </select>
-          </div>
           <div class="form-group col">
             <label class="form-label" >
               棋盘尺寸
@@ -116,11 +101,11 @@ defineExpose({ open })
 
         <div class="form-footer">
           <button class="button border" @click="close"  type="button" >取消</button>
-          <button class="button primary submit-btn" type="submit" >创建</button>
+          <button class="button black submit-btn" type="submit" >创建</button>
         </div>
       </form>
     </div>
-  </q-dialog>
+  </Dialog>
 </template>
 
 <style scoped lang="less">
@@ -184,6 +169,7 @@ defineExpose({ open })
 
     .button {
       min-width: 0;
+      width: 100%;
       border-radius: 2px;
     }
   }
