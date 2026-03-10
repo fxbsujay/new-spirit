@@ -2,10 +2,8 @@
   <header class="layout-header">
     <div class="header-row flex">
       <div class="site-title-nav flex-1">
-        <RouterLink to="/">
-          <div class="site-title">
-            <img src="/logo.png" class="logo" alt="logo">
-          </div>
+        <RouterLink to="/" class="site-title">
+          <img src="/logo.png" class="logo" alt="logo">
         </RouterLink>
         <nav class="nav-bar">
           <section>
@@ -26,7 +24,7 @@
           </section>
         </nav>
       </div>
-      <button class="button playing-btn">
+      <button class="button playing-btn" @click="drawerVisible = !drawerVisible">
         开始游戏
       </button>
       <div class="tools flex-1">
@@ -46,6 +44,7 @@
         </div>
       </div>
     </div>
+    <PlayDrawer :visible="drawerVisible" />
     <WaitPlayPanels />
   </header>
   <main class="layout-main">
@@ -53,10 +52,13 @@
   </main>
 </template>
 <script setup>
+import { ref } from 'vue'
+import PlayDrawer from './PlayDrawer.vue'
 import WaitPlayPanels from './WaitPlayPanels.vue'
 import { useUserStore } from '@/stores/user.js'
 const { user, logout, refreshInfo } = useUserStore()
 
+const drawerVisible = ref(false)
 refreshInfo()
 </script>
 <style lang="less" scoped>
