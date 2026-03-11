@@ -104,9 +104,9 @@ const rating = () => {
         <div>
 
         </div>
-        <button class="button border" @click="createDialogRef.open()">创建游戏</button>
-        <button class="button border" @click="rating">积分赛</button>
-        <button class="button border">人机对战</button>
+<!--        <button class="button border" @click="createDialogRef.open()">创建游戏</button>-->
+<!--        <button class="button border" @click="rating">积分赛</button>-->
+<!--        <button class="button border">人机对战</button>-->
       </div>
     </div>
   </div>

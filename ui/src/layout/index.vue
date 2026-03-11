@@ -24,8 +24,8 @@
           </section>
         </nav>
       </div>
-      <button class="button playing-btn" @click="drawerVisible = !drawerVisible">
-        开始游戏
+      <button class="button playing-btn" :class="drawerVisible ? 'cancel' : ''" @click="drawerVisible = !drawerVisible">
+        {{ drawerVisible ? '取消' : '开始游戏' }}
       </button>
       <div class="tools flex-1">
         <RouterLink to="/sign-in" v-if="user.isGuest">
