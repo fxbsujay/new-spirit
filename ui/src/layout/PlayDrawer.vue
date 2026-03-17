@@ -1,4 +1,6 @@
 <script setup>
+import Icon from '@/components/icon/Icon.vue'
+
 const props = defineProps({
   visible: Boolean,
 })
@@ -9,14 +11,30 @@ const props = defineProps({
     <div class="play-drawer" v-if="visible">
       <div class="drawer-content-wrapper">
         <div class="mode-selected">
-          <div class="item">休闲赛</div>
-          <div class="item">积分赛</div>
-          <div class="item">人机对战</div>
+          <div class="item">
+            <Icon name="game-mode-1" size="3rem" color="#1f1f1f"/>
+            <div class="mode-name">休闲赛</div>
+            <div class="mode-doc">轻松对局，不计积分，享受围棋乐趣</div>
+          </div>
+          <div class="item">
+            <Icon name="game-mode-2" size="3rem" color="#1f1f1f"/>
+            <div class="mode-name">积分赛</div>
+            <div class="mode-doc">正式对局，累计积分，提升段位等级</div>
+          </div>
+          <div class="item">
+            <Icon name="game-mode-3" size="3rem" color="#1f1f1f"/>
+            <div class="mode-name">人机对战</div>
+            <div class="mode-doc">与AI对弈，多个难度等级可选</div>
+          </div>
+          <div class="item">
+            <Icon name="game-mode-4" size="3rem" color="#1f1f1f"/>
+            <div class="mode-name">同屏对战</div>
+            <div class="mode-doc">同一设备，双人对弈，无需联网</div>
+          </div>
         </div>
       </div>
     </div>
   </transition>
-
 </template>
 
 <style scoped lang="less">
@@ -45,7 +63,19 @@ const props = defineProps({
 
     .item {
       padding: 1rem;
+      text-align: center;
+
+      .mode-name {
+        font-weight: bolder;
+      }
+
+      .mode-doc {
+        font-size: calc(1rem - 2px);
+        color: #1e293b;
+      }
     }
+
+
   }
 }
 
