@@ -142,7 +142,7 @@ public class GameController {
      */
     public void createGame(RoutingContext ctx) {
         GameWait dto = ctx.body().asPojo(GameWait.class);
-        if (null == dto.type || null == dto.mode || null == dto.boardSize || (!GameMode.CASUAL.equals(dto.mode) && !GameMode.FRIEND.equals(dto.mode))) {
+        if (null == dto.type || null == dto.mode || null == dto.boardSize || (!GameMode.CASUAL.equals(dto.mode) && !GameMode.LOCAL.equals(dto.mode))) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }

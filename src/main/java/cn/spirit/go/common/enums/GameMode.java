@@ -17,9 +17,9 @@ public enum GameMode {
      */
     ROBOT,
     /**
-     * 好友
+     * 同屏
      */
-    FRIEND;
+    LOCAL;
 
     public static GameMode convert(final String name) {
         if (StringUtils.isBlank(name)) {
