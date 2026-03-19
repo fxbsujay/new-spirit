@@ -2,7 +2,7 @@ package cn.spirit.go.web.socket;
 
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.model.GameSocket;
-import cn.spirit.go.service.GameRoomService;
+import cn.spirit.go.service.GamePoolService;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.config.AppContext;
 import io.vertx.core.Handler;
@@ -18,7 +18,7 @@ public class RoomSocketHandle implements Handler<RoutingContext> {
 
     private static final Logger log = LoggerFactory.getLogger(RoomSocketHandle.class);
 
-    public GameRoomService roomService = AppContext.getBean(GameRoomService.class);
+    public GamePoolService roomService = AppContext.getBean(GamePoolService.class);
 
     public RoomSocketHandle(Router router) {
         router.route("/api/ws/:code").handler(this);

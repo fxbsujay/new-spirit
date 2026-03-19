@@ -8,8 +8,8 @@ import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.GamePlay;
 import cn.spirit.go.model.GameRoom;
 import cn.spirit.go.model.GameWait;
-import cn.spirit.go.service.GameRoomService;
-import cn.spirit.go.service.GameWaitService;
+import cn.spirit.go.service.GamePoolService;
+import cn.spirit.go.service.GameCustomService;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
@@ -31,9 +31,9 @@ public class GameController {
 
     private final GameDao gameDao = AppContext.getBean(GameDao.class);
 
-    private final GameWaitService gameWaitService = AppContext.getBean(GameWaitService.class);
+    private final GameCustomService gameCustomService = AppContext.getBean(GameCustomService.class);
 
-    private final GameRoomService gameRoomService = AppContext.getBean(GameRoomService.class);
+    private final GamePoolService gamePoolService = AppContext.getBean(GamePoolService.class);
 
     public GameController(Router router, SessionStore sessionHandle) {
         router.get("/api/game/search").handler(ctx -> sessionHandle.handle(ctx, false)).handler(this::searchGame);
@@ -55,10 +55,10 @@ public class GameController {
         UserSession session = SessionStore.sessionUser(ctx);
         List<GameWait> games;
         if (session.isGuest) {
-            games = gameWaitService.searchGames(null, code, type, 10);
+            games = gameCustomService.searchGames(null, code, type, 10);
         } else {
-            GameWait game = gameWaitService.getByUsername(session.username);
-            games = gameWaitService.searchGames(session.username, code, type, null != game ? 9 : 10);
+            GameWait game = gameCustomService.getByUsername(session.username);
+            games = gameCustomService.searchGames(session.username, code, type, null != game ? 9 : 10);
             if (null != game) {
                 games.add(0, game);
             }
@@ -71,7 +71,7 @@ public class GameController {
      */
     public void playing(RoutingContext ctx) {
         UserSession session = SessionStore.sessionUser(ctx);
-        Set<String> codes = gameRoomService.userRoomCodes(session.username);
+        Set<String> codes = gamePoolService.userRoomCodes(session.username);
 
         if (null == codes || codes.isEmpty()) {
             RestContext.success(ctx, new JsonArray());
@@ -80,7 +80,7 @@ public class GameController {
         JsonArray list = new JsonArray();
 
         for (String code : codes) {
-            GameRoom room = gameRoomService.get(code);
+            GameRoom room = gamePoolService.get(code);
             if (null == room) {
                 continue;
             }
@@ -103,7 +103,7 @@ public class GameController {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
-        GameRoom room = gameRoomService.get(code);
+        GameRoom room = gamePoolService.get(code);
         if (null == room) {
             gameDao.findOne(JsonObject.of("code", code), "code", "white", "black").onSuccess(game ->{
                 if (null == game) {
@@ -177,7 +177,7 @@ public class GameController {
         userDao.findOne(JsonObject.of("username", session.username), "nickname", "rating").onSuccess(user -> {
             dto.score = user.getInteger("rating");
             dto.nickname = user.getString("nickname");
-            gameWaitService.addGame(session, dto).onSuccess(flag -> {
+            gameCustomService.addGame(session, dto).onSuccess(flag -> {
                 if (flag) {
                     RestContext.success(ctx);
                 } else {
@@ -195,7 +195,7 @@ public class GameController {
      */
     public void cancelGame(RoutingContext ctx) {
         UserSession session = SessionStore.sessionUser(ctx);
-        gameWaitService.removeGame(session.username).onSuccess(game -> {
+        gameCustomService.removeGame(session.username).onSuccess(game -> {
             RestContext.success(ctx, game != null);
         }).onFailure(__ -> {
             RestContext.fail(ctx, HttpResponseStatus.LOCKED);
@@ -213,19 +213,19 @@ public class GameController {
         }
 
         UserSession session = SessionStore.sessionUser(ctx);
-        if (null != gameWaitService.getByUsername(session.username)) {
+        if (null != gameCustomService.getByUsername(session.username)) {
             RestContext.fail(ctx, RestStatus.GAME_CREATED);
             return;
         }
 
-        GameWait g = gameWaitService.get(code);
+        GameWait g = gameCustomService.get(code);
         if (null == g || g.username.equals(session.username)) {
             RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
             return;
         }
 
 
-        gameWaitService.removeGame(g.username).onSuccess(game -> {
+        gameCustomService.removeGame(g.username).onSuccess(game -> {
             if (null == game || !game.code.equals(code)) {
                 RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
                 return;
@@ -256,9 +256,9 @@ public class GameController {
                 }
                 boolean flag = System.currentTimeMillis() % 2 == 0;
                 if (flag) {
-                    gameRoomService.add(entity, players[0], players[1]);
+                    gamePoolService.add(entity, players[0], players[1]);
                 } else {
-                    gameRoomService.add(entity, players[1], players[0]);
+                    gamePoolService.add(entity, players[1], players[0]);
                 }
                 RestContext.success(ctx, code);
             }).onFailure(e -> {
@@ -281,14 +281,14 @@ public class GameController {
             return;
         }
         UserSession session = SessionStore.sessionUser(ctx);
-        GameRoom room = gameRoomService.get(code);
+        GameRoom room = gamePoolService.get(code);
         if (null == room || (!room.white.username.equals(session.username) && !room.black.username.equals(session.username))) {
             RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
             return;
         }
         GameWinner winner = room.white.username.equals(session.username) ? GameWinner.WHITE : GameWinner.BLACK;
 
-        gameRoomService.end(code, winner, GameReason.SURRENDER).onSuccess(v -> {
+        gamePoolService.end(code, winner, GameReason.SURRENDER).onSuccess(v -> {
             RestContext.success(ctx);
         }).onFailure(e -> {
             log.error("{}: {}", e.getMessage(), code);

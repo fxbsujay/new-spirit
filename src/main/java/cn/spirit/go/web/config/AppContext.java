@@ -2,8 +2,8 @@ package cn.spirit.go.web.config;
 
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
-import cn.spirit.go.service.GameRoomService;
-import cn.spirit.go.service.GameWaitService;
+import cn.spirit.go.service.GamePoolService;
+import cn.spirit.go.service.GameCustomService;
 import cn.spirit.go.web.socket.ClientManger;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -80,8 +80,8 @@ public class AppContext {
         addBean(new UserDao());
         addBean(new GameDao());
 
-        addBean(new GameWaitService());
-        addBean(new GameRoomService());
+        addBean(new GameCustomService());
+        addBean(new GamePoolService());
         log.info("AppContext init success");
     }
 

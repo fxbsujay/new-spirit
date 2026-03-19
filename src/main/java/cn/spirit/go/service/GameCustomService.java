@@ -17,13 +17,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 休闲自定义对局
  * 没有  {@link ClientManger Socket} 连接不能创建游戏<br/>
  * 创建的游戏对局，等待对手加入游戏，游戏开始后删除游戏，用户连接断开后删除<br/>
  * 游戏未开始只存在内存中，不保存数据，游戏开始后保存数据
  */
-public class GameWaitService {
+public class GameCustomService {
 
-    private static final Logger log = LoggerFactory.getLogger(GameWaitService.class);
+    private static final Logger log = LoggerFactory.getLogger(GameCustomService.class);
 
     private Integer dailyGameCount = 0;
 

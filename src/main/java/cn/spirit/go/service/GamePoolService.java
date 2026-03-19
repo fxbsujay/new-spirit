@@ -21,10 +21,12 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.function.Supplier;
 
-public class GameRoomService {
+/**
+ * 比赛池
+ */
+public class GamePoolService {
 
-    private final Logger log = LoggerFactory.getLogger(GameRoomService.class);
-
+    private final Logger log = LoggerFactory.getLogger(GamePoolService.class);
 
     private final ClientManger clientManger = AppContext.getBean(ClientManger.class);
 
