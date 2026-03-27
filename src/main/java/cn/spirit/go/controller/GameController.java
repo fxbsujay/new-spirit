@@ -8,8 +8,8 @@ import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.GamePlay;
 import cn.spirit.go.model.GameRoom;
 import cn.spirit.go.model.GameWait;
-import cn.spirit.go.service.GamePoolService;
-import cn.spirit.go.service.GameCustomService;
+import cn.spirit.go.service.GoMatchService;
+import cn.spirit.go.service.GameLobbyService;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
@@ -20,6 +20,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.List;
 import java.util.Set;
 
@@ -31,9 +32,9 @@ public class GameController {
 
     private final GameDao gameDao = AppContext.getBean(GameDao.class);
 
-    private final GameCustomService gameCustomService = AppContext.getBean(GameCustomService.class);
+    private final GameLobbyService lobbyService = AppContext.getBean(GameLobbyService.class);
 
-    private final GamePoolService gamePoolService = AppContext.getBean(GamePoolService.class);
+    private final GoMatchService matchService = AppContext.getBean(GoMatchService.class);
 
     public GameController(Router router, SessionStore sessionHandle) {
         router.get("/api/game/search").handler(ctx -> sessionHandle.handle(ctx, false)).handler(this::searchGame);
@@ -55,10 +56,10 @@ public class GameController {
         UserSession session = SessionStore.sessionUser(ctx);
         List<GameWait> games;
         if (session.isGuest) {
-            games = gameCustomService.searchGames(null, code, type, 10);
+            games = lobbyService.searchGames(null, code, type, 10);
         } else {
-            GameWait game = gameCustomService.getByUsername(session.username);
-            games = gameCustomService.searchGames(session.username, code, type, null != game ? 9 : 10);
+            GameWait game = lobbyService.getByUsername(session.username);
+            games = lobbyService.searchGames(session.username, code, type, null != game ? 9 : 10);
             if (null != game) {
                 games.add(0, game);
             }
@@ -71,7 +72,7 @@ public class GameController {
      */
     public void playing(RoutingContext ctx) {
         UserSession session = SessionStore.sessionUser(ctx);
-        Set<String> codes = gamePoolService.userRoomCodes(session.username);
+        Set<String> codes = matchService.userRoomCodes(session.username);
 
         if (null == codes || codes.isEmpty()) {
             RestContext.success(ctx, new JsonArray());
@@ -80,7 +81,7 @@ public class GameController {
         JsonArray list = new JsonArray();
 
         for (String code : codes) {
-            GameRoom room = gamePoolService.get(code);
+            GameRoom room = matchService.get(code);
             if (null == room) {
                 continue;
             }
@@ -103,9 +104,9 @@ public class GameController {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
-        GameRoom room = gamePoolService.get(code);
+        GameRoom room = matchService.get(code);
         if (null == room) {
-            gameDao.findOne(JsonObject.of("code", code), "code", "white", "black").onSuccess(game ->{
+            gameDao.findOne(JsonObject.of("code", code), "code", "white", "black").onSuccess(game -> {
                 if (null == game) {
                     RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
                 } else {
@@ -138,7 +139,7 @@ public class GameController {
     }
 
     /**
-     * 创建对局 休闲或好友
+     * 创建休闲对局
      */
     public void createGame(RoutingContext ctx) {
         GameWait dto = ctx.body().asPojo(GameWait.class);
@@ -160,13 +161,13 @@ public class GameController {
             }
             dto.duration *= 60 * 1000;
             dto.stepDuration *= 1000;
-        } else if (GameType.LONG.equals(dto.type) ) {
+        } else if (GameType.LONG.equals(dto.type)) {
             // 基础时长不能大于114天，步长为0
             if (dto.duration > 14 || dto.stepDuration > 0) {
                 RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
                 return;
             }
-            dto.duration *=  60 * 60 * 24 * 1000;
+            dto.duration *= 60 * 60 * 24 * 1000;
             dto.stepDuration = 0;
         } else {
             dto.duration = 0;
@@ -177,7 +178,7 @@ public class GameController {
         userDao.findOne(JsonObject.of("username", session.username), "nickname", "rating").onSuccess(user -> {
             dto.score = user.getInteger("rating");
             dto.nickname = user.getString("nickname");
-            gameCustomService.addGame(session, dto).onSuccess(flag -> {
+            lobbyService.addGame(session, dto).onSuccess(flag -> {
                 if (flag) {
                     RestContext.success(ctx);
                 } else {
@@ -195,11 +196,9 @@ public class GameController {
      */
     public void cancelGame(RoutingContext ctx) {
         UserSession session = SessionStore.sessionUser(ctx);
-        gameCustomService.removeGame(session.username).onSuccess(game -> {
-            RestContext.success(ctx, game != null);
-        }).onFailure(__ -> {
-            RestContext.fail(ctx, HttpResponseStatus.LOCKED);
-        });
+        lobbyService.removeGame(session.username)
+                .onSuccess(game -> RestContext.success(ctx, game != null))
+                .onFailure(__ -> RestContext.fail(ctx, HttpResponseStatus.LOCKED));
     }
 
     /**
@@ -213,19 +212,19 @@ public class GameController {
         }
 
         UserSession session = SessionStore.sessionUser(ctx);
-        if (null != gameCustomService.getByUsername(session.username)) {
+        if (null != lobbyService.getByUsername(session.username)) {
             RestContext.fail(ctx, RestStatus.GAME_CREATED);
             return;
         }
 
-        GameWait g = gameCustomService.get(code);
+        GameWait g = lobbyService.get(code);
         if (null == g || g.username.equals(session.username)) {
             RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
             return;
         }
 
 
-        gameCustomService.removeGame(g.username).onSuccess(game -> {
+        lobbyService.removeGame(g.username).onSuccess(game -> {
             if (null == game || !game.code.equals(code)) {
                 RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
                 return;
@@ -244,7 +243,7 @@ public class GameController {
             // 查询用户信息
             JsonObject query = JsonObject.of("username", JsonObject.of("$in", JsonArray.of(game.username, session.username)));
             userDao.findAll(query, "username", "nickname", "avatar", "rating").onSuccess(users -> {
-                GameRoom.Player[] players = new  GameRoom.Player[users.size()];
+                GameRoom.Player[] players = new GameRoom.Player[users.size()];
                 for (int i = 0; i < users.size(); i++) {
                     JsonObject user = users.get(i);
                     GameRoom.Player p = new GameRoom.Player();
@@ -256,9 +255,9 @@ public class GameController {
                 }
                 boolean flag = System.currentTimeMillis() % 2 == 0;
                 if (flag) {
-                    gamePoolService.add(entity, players[0], players[1]);
+                    matchService.add(entity, players[0], players[1]);
                 } else {
-                    gamePoolService.add(entity, players[1], players[0]);
+                    matchService.add(entity, players[1], players[0]);
                 }
                 RestContext.success(ctx, code);
             }).onFailure(e -> {
@@ -281,19 +280,18 @@ public class GameController {
             return;
         }
         UserSession session = SessionStore.sessionUser(ctx);
-        GameRoom room = gamePoolService.get(code);
+        GameRoom room = matchService.get(code);
         if (null == room || (!room.white.username.equals(session.username) && !room.black.username.equals(session.username))) {
             RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
             return;
         }
         GameWinner winner = room.white.username.equals(session.username) ? GameWinner.WHITE : GameWinner.BLACK;
 
-        gamePoolService.end(code, winner, GameReason.SURRENDER).onSuccess(v -> {
-            RestContext.success(ctx);
-        }).onFailure(e -> {
-            log.error("{}: {}", e.getMessage(), code);
-            RestContext.fail(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
-        });
+        matchService.end(code, winner, GameReason.SURRENDER).onSuccess(v -> RestContext.success(ctx))
+                .onFailure(e -> {
+                    log.error("{}: {}", e.getMessage(), code);
+                    RestContext.fail(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+                });
     }
 
 }

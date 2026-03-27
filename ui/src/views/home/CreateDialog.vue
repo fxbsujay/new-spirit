@@ -4,7 +4,6 @@ import Dialog from '@/components/dialog/index.vue'
 import Slider from '@/components/slider/index.vue'
 import { reactive, ref, toRaw } from 'vue'
 import http from '@/utils/http'
-import { TypeConstant } from '@/constant'
 import { throttle } from '@/utils/index.js'
 
 const emits = defineEmits(['createSuccess'])
@@ -66,7 +65,6 @@ defineExpose({ open })
   <Dialog :visible="visible">
     <div class="create-game-dialog" style="background-color: #fff">
       <form class="form" @submit.prevent="submitHandle">
-
         <div class="row input-row">
           <div class="form-group col">
             <label class="form-label" >

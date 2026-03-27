@@ -22,11 +22,12 @@ import java.util.*;
 import java.util.function.Supplier;
 
 /**
- * 比赛池
+ * 比赛对局管理
+ * 负责比赛的开始，结束，计时，会话、检测服务
  */
-public class GamePoolService {
+public class GoMatchService {
 
-    private final Logger log = LoggerFactory.getLogger(GamePoolService.class);
+    private final Logger log = LoggerFactory.getLogger(GoMatchService.class);
 
     private final ClientManger clientManger = AppContext.getBean(ClientManger.class);
 

@@ -1,6 +1,6 @@
 package cn.spirit.go.web.socket;
 
-import cn.spirit.go.service.GameCustomService;
+import cn.spirit.go.service.GameLobbyService;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.config.AppContext;
 import io.vertx.core.Handler;
@@ -18,7 +18,7 @@ public class WebSocketHandler implements Handler<RoutingContext> {
 
     private final ClientManger clientManger = AppContext.getBean(ClientManger.class);
 
-    private final GameCustomService gameCustomService = AppContext.getBean(GameCustomService.class);
+    private final GameLobbyService gameCustomService = AppContext.getBean(GameLobbyService.class);
 
     public WebSocketHandler(Router router) {
         router.route("/api/ws").handler(this);

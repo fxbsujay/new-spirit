@@ -1,6 +1,7 @@
 package cn.spirit.go.web.config;
 
 import cn.spirit.go.common.RestContext;
+import cn.spirit.go.common.util.KataGoUtils;
 import cn.spirit.go.controller.AuthController;
 import cn.spirit.go.controller.GameController;
 import cn.spirit.go.controller.UserController;
@@ -20,8 +21,12 @@ public class RouterConfig {
     public static Router init(Vertx vertx) {
         Router router = Router.router(vertx);
 
+//        KataGoUtils utils = new KataGoUtils();
+
         SessionStore sessionHandle = new SessionStore();
         router.get("/api/ping").handler(RestContext::success);
+
+
         new WebSocketHandler(router);
         new RoomSocketHandle(router);
 
@@ -30,6 +35,18 @@ public class RouterConfig {
             log.error("500", ctx.failure());
             RestContext.fail(ctx);
         });
+
+//        router.post("/api/kata").handler(ctx -> {
+//            JsonObject json = ctx.body().asJsonObject();
+//            utils.analysis(json).onSuccess(resp -> {
+//                log.info("Kata analysis success: {}", resp);
+//                ctx.response()
+//                        .putHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.APPLICATION_JSON + ";charset=utf-8")
+//                        .end(resp);
+//            }).onFailure(resp -> {
+//                log.info(resp.getMessage(), resp.getCause());
+//            });
+//        });
 
         new AuthController(router);
         new GameController(router, sessionHandle);

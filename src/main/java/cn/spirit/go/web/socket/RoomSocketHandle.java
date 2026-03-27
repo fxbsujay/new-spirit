@@ -2,7 +2,7 @@ package cn.spirit.go.web.socket;
 
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.model.GameSocket;
-import cn.spirit.go.service.GamePoolService;
+import cn.spirit.go.service.GoMatchService;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.config.AppContext;
 import io.vertx.core.Handler;
@@ -18,7 +18,7 @@ public class RoomSocketHandle implements Handler<RoutingContext> {
 
     private static final Logger log = LoggerFactory.getLogger(RoomSocketHandle.class);
 
-    public GamePoolService roomService = AppContext.getBean(GamePoolService.class);
+    public GoMatchService matchService = AppContext.getBean(GoMatchService.class);
 
     public RoomSocketHandle(Router router) {
         router.route("/api/ws/:code").handler(this);
@@ -32,7 +32,7 @@ public class RoomSocketHandle implements Handler<RoutingContext> {
                 return;
             }
             GameSocket socket = new GameSocket(session, ws);
-            boolean flag = roomService.joinRoom(code, socket);
+            boolean flag = matchService.joinRoom(code, socket);
             if (!flag) {
                 ws.close();
                 return;
@@ -57,10 +57,10 @@ public class RoomSocketHandle implements Handler<RoutingContext> {
                             ws.close();
                             return;
                         }
-                        roomService.addStep(pck.sender, code, x, y);
+                        matchService.addStep(pck.sender, code, x, y);
                         break;
                     case GAME_CHAT:
-                        roomService.send(code, pck);
+                        matchService.send(code, pck);
                         break;
                     default:
                         log.error("Illegal websocket message packet type, from: {}, sessionId: {}", session.username, session.sessionId);
@@ -69,7 +69,7 @@ public class RoomSocketHandle implements Handler<RoutingContext> {
                 }
             });
             ws.closeHandler(e -> {
-                roomService.exitRoom(code, socket);
+                matchService.exitRoom(code, socket);
             });
         }).onFailure(e -> {
             ws.close();

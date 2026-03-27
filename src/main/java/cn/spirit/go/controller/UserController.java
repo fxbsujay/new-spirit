@@ -7,7 +7,7 @@ import cn.spirit.go.common.util.RandomUtils;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.common.util.SecurityUtils;
 import cn.spirit.go.dao.UserDao;
-import cn.spirit.go.service.GameCustomService;
+import cn.spirit.go.service.GameLobbyService;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
@@ -25,7 +25,7 @@ public class UserController {
 
     private final UserDao userDao = AppContext.getBean(UserDao.class);
 
-    private final GameCustomService gameCustomService = AppContext.getBean(GameCustomService.class);
+    private final GameLobbyService gameCustomService = AppContext.getBean(GameLobbyService.class);
 
     public UserController(Router router, SessionStore sessionHandle) {
         router.post("/api/user/info").handler(sessionHandle::handle).handler(this::info);
