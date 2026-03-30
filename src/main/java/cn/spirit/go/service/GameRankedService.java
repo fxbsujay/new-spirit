@@ -5,7 +5,6 @@ import cn.spirit.go.web.config.AppContext;
 import io.vertx.core.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -17,6 +16,8 @@ import java.util.Objects;
 public class GameRankedService {
 
     private static final Logger log = LoggerFactory.getLogger(GameRankedService.class);
+
+    private final List<Player> matchingQueue = new ArrayList<>();
 
     private final List<Player> waitingQueue = new ArrayList<>();
 
@@ -30,43 +31,74 @@ public class GameRankedService {
      * @param username  用户名
      * @param rating    积分
      */
-    public boolean ranking(String username, Integer rating) {
+    public Future<Boolean> ranking(String username, Integer rating) {
         Player player = new Player(username, rating);
-        if (waitingQueue.contains(player)) {
-            return false;
-        }
-
-        AppContext.vertx.sharedData().withLock(LockConstant.GAME_LOCK + username, 1000, () -> {
-            Player opponent = match(player, 200);
-            if (null == opponent) {
-                waitingQueue.add(player);
-            } else {
-                log.info("Game Matchmaking successful, Players: [{},{}]", player.username, opponent.username);
-                // 需要双方都接受对局才能开始
+        return AppContext.vertx.sharedData().withLock(LockConstant.GAME_LOCK + username, 200, () -> {
+            if (isMatching(username)) {
+                return Future.succeededFuture(false);
             }
-            return Future.succeededFuture();
-        });
+            matchingQueue.add(player);
 
-        return true;
+            // 开始匹配
+            match(player, 200).compose(opponent -> {
+                // 匹配完毕
+                if (null == opponent) {
+                    // 未匹配到玩家加入待匹配队列
+                    waitingQueue.add(player);
+                    return Future.succeededFuture(true);
+                } else {
+                    // TODO 匹配到对手，加入待接受对局池，双方都接受对局后开始游戏
+                    log.info("Game Matchmaking successful, Players: [{},{}]", player.username, opponent.username);
+
+                    // 删除对手的匹配
+                    matchingQueue.remove(opponent);
+                }
+                return Future.succeededFuture();
+            });
+            // 释放锁
+            return Future.succeededFuture(true);
+        });
+    }
+
+    public boolean isMatching(String username) {
+        Player player = new Player(username);
+        return waitingQueue.contains(player) || matchingQueue.contains(player);
     }
 
     /**
      * 取消匹配
      * 当玩家不在线时要取消匹配 {@link cn.spirit.go.web.socket.ClientManger}
      */
-    public boolean cancel(String username) {
-        return waitingQueue.remove(new Player(username, 0));
+    public Future<Boolean> cancel(String username) {
+        return AppContext.vertx.sharedData().withLock(
+                LockConstant.GAME_LOCK + username,
+                1000,
+                () -> Future.succeededFuture(waitingQueue.remove(new Player(username, 0)))
+        );
     }
 
-    private Player match(Player p, Integer range) {
+    private Future<Player> match(Player p, Integer range) {
+        if (waitingQueue.isEmpty() || range + 200 >= MAX_RANGE) {
+            return Future.succeededFuture(null);
+        }
         for (Player wp : waitingQueue) {
             if (Math.abs(p.compareTo(wp)) <= range) {
-                waitingQueue.remove(wp);
-                return wp;
+                 return AppContext.vertx.sharedData().withLock(LockConstant.ROOM_LOCK + wp.username, 200, () -> {
+                     // 删除等待匹配队列加入到正在匹配的队列
+                    if (waitingQueue.remove(wp)) {
+                        matchingQueue.add(wp);
+                        return Future.succeededFuture(wp);
+                    }
+                    return Future.succeededFuture(null);
+                 }).compose(opponent -> {
+                     // 要释放锁
+                     if (null == opponent) {
+                        return match(p, range + 200);
+                     } else {
+                         return Future.succeededFuture(opponent);
+                     }
+                 });
             }
-        }
-        if (range + 200 >= MAX_RANGE) {
-            return null;
         }
         return match(p, range + 200);
     }
@@ -85,6 +117,10 @@ public class GameRankedService {
             this.time = System.currentTimeMillis();
         }
 
+        private Player(String username) {
+            this(username, 0);
+        }
+
         @Override
         public int compareTo(Player o) {
             return this.rating - o.rating;
@@ -101,12 +137,5 @@ public class GameRankedService {
         public int hashCode() {
             return Objects.hashCode(username);
         }
-    }
-
-    private static class PendingGame {
-
-        public String p1;
-
-        public String p2;
     }
 }

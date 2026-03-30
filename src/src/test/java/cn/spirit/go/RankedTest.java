@@ -21,11 +21,28 @@ public class RankedTest {
     @DisplayName("Ranking")
     void useRanking(Vertx vertx, VertxTestContext testContext) {
         AppContext.init(vertx);
+
         GameRankedService service = new GameRankedService();
-        for (int i = 1; i <= 10; i++) {
-            boolean ranking = service.ranking("A-" + i, i);
-            log.info("Ranking: {}", ranking);
-        }
+
+        Thread t1 = new Thread(() -> {
+            for (int i = 1; i <= 10; i++) {
+                service.ranking("A-" + i, i).onSuccess(result -> {
+                    log.info("Ranking: {}", result);
+                });
+            }
+        });
+
+        t1.setName("T ONE");
+
+        Thread t2 = new Thread(() -> {
+            for (int i = 1; i <= 10; i++) {
+                service.ranking("A-" + i, i).onSuccess(result -> {
+                    log.info("Ranking: {}", result);
+                });
+            }
+        });
+
+        t2.setName("T Two");
 
         testContext.completeNow();
     }
