@@ -70,7 +70,7 @@ public class GameLobbyService {
      * @param game      对局
      */
     public Future<Boolean> addGame(UserSession session, GameWait game) {
-        return AppContext.vertx.sharedData().withLock(LockConstant.GAME_LOCK + session.username, 1000, () -> {
+        return AppContext.withLock(LockConstant.GAME_LOCK + session.username, 1000, () -> {
             if (userGames.containsKey(session.username)) {
                 log.warn("{} failed to create the game", session.username);
                 return Future.succeededFuture(false);
@@ -93,7 +93,7 @@ public class GameLobbyService {
      * @param username  用户名
      */
     public Future<GameWait> removeGame(String username) {
-        return AppContext.vertx.sharedData().withLock(LockConstant.GAME_LOCK + username, 1000, () -> {
+        return AppContext.withLock(LockConstant.GAME_LOCK + username, 1000, () -> {
             String code = userGames.remove(username);
             if (null != code) {
                 return Future.succeededFuture(games.remove(code));

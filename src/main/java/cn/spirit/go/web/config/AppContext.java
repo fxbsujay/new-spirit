@@ -107,28 +107,7 @@ public class AppContext {
         return MAIL.sendMail(message);
     }
 
-    public static <T> Future<T> withLock(String name, Supplier<T> block) {
-        return withLock(name, SharedDataImpl.DEFAULT_LOCK_TIMEOUT, block);
+    public static <T> Future<T> withLock(String name, long timeout, Supplier<Future<T>> block) {
+        return vertx.sharedData().withLock(name, timeout, block);
     }
-
-    public static <T> Future<T> withLock(String name, long timeout, Supplier<T> block) {
-        Promise<T> promise = Promise.promise();
-        vertx.sharedData().getLockWithTimeout(name, timeout).onComplete(r  -> {
-            if (r.succeeded()) {
-                Lock lock = r.result();
-                vertx.executeBlocking(block::get).onSuccess(t -> {
-                    promise.complete(t);
-                    lock.release();
-                }).onFailure(e -> {
-                    promise.fail(e);
-                    lock.release();
-                });
-            } else {
-                promise.fail( new VertxException("Timed out waiting to get lock " + name, true));
-            }
-        });
-
-        return promise.future();
-    }
-
 }

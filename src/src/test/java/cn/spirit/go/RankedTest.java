@@ -2,6 +2,7 @@ package cn.spirit.go;
 
 import cn.spirit.go.service.GameRankedService;
 import cn.spirit.go.web.config.AppContext;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -26,28 +27,24 @@ public class RankedTest {
 
         Thread t1 = new Thread(() -> {
             for (int i = 1; i <= 10; i++) {
-                service.ranking("A-" + i, i).onSuccess(result -> {
-                    log.info("Ranking: {}", result);
+                String name = "A-" + i;
+                service.ranking(name, i).onSuccess(result -> {
+                    log.info("Ranking A: {}, name: {}", result, name);
                 });
             }
         });
-
-        t1.setName("T ONE");
 
         Thread t2 = new Thread(() -> {
             for (int i = 1; i <= 10; i++) {
-                service.ranking("A-" + i, i).onSuccess(result -> {
-                    log.info("Ranking: {}", result);
+                String name = "A-" + i;
+                service.ranking(name, i).onSuccess(result -> {
+                    log.info("Ranking B: {}, name: {}", result, name);
                 });
             }
         });
 
-        t2.setName("T Two");
-
         t1.start();
         t2.start();
-
-
         testContext.completeNow();
     }
 }

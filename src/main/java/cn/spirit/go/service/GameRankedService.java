@@ -35,7 +35,7 @@ public class GameRankedService {
         Player player = new Player(username, rating);
         return AppContext.withLock(LockConstant.GAME_LOCK + username, 200, () -> {
             if (isMatching(username)) {
-                return false;
+                return Future.succeededFuture(false);
             }
             matchingQueue.add(player);
 
@@ -56,7 +56,7 @@ public class GameRankedService {
                 return Future.succeededFuture();
             });
             // 释放锁
-            return true;
+            return Future.succeededFuture(true);
         });
     }
 
@@ -73,7 +73,8 @@ public class GameRankedService {
         return AppContext.withLock(
                 LockConstant.GAME_LOCK + username,
                 1000,
-                () ->waitingQueue.remove(new Player(username, 0)));
+                () -> Future.succeededFuture(waitingQueue.remove(new Player(username, 0)))
+        );
     }
 
     private Future<Player> match(Player p, Integer range) {
@@ -86,9 +87,9 @@ public class GameRankedService {
                      // 删除等待匹配队列加入到正在匹配的队列
                     if (waitingQueue.remove(wp)) {
                         matchingQueue.add(wp);
-                        return wp;
+                        return Future.succeededFuture(wp);
                     }
-                    return null;
+                    return Future.succeededFuture(null);
                  }).compose(opponent -> {
                      // 要释放锁
                      if (null == opponent) {
