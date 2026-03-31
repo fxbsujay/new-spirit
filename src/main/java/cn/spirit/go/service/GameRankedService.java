@@ -33,9 +33,9 @@ public class GameRankedService {
      */
     public Future<Boolean> ranking(String username, Integer rating) {
         Player player = new Player(username, rating);
-        return AppContext.vertx.sharedData().withLock(LockConstant.GAME_LOCK + username, 200, () -> {
+        return AppContext.withLock(LockConstant.GAME_LOCK + username, 200, () -> {
             if (isMatching(username)) {
-                return Future.succeededFuture(false);
+                return false;
             }
             matchingQueue.add(player);
 
@@ -56,7 +56,7 @@ public class GameRankedService {
                 return Future.succeededFuture();
             });
             // 释放锁
-            return Future.succeededFuture(true);
+            return true;
         });
     }
 
@@ -70,11 +70,10 @@ public class GameRankedService {
      * 当玩家不在线时要取消匹配 {@link cn.spirit.go.web.socket.ClientManger}
      */
     public Future<Boolean> cancel(String username) {
-        return AppContext.vertx.sharedData().withLock(
+        return AppContext.withLock(
                 LockConstant.GAME_LOCK + username,
                 1000,
-                () -> Future.succeededFuture(waitingQueue.remove(new Player(username, 0)))
-        );
+                () ->waitingQueue.remove(new Player(username, 0)));
     }
 
     private Future<Player> match(Player p, Integer range) {
@@ -83,13 +82,13 @@ public class GameRankedService {
         }
         for (Player wp : waitingQueue) {
             if (Math.abs(p.compareTo(wp)) <= range) {
-                 return AppContext.vertx.sharedData().withLock(LockConstant.ROOM_LOCK + wp.username, 200, () -> {
+                 return AppContext.withLock(LockConstant.ROOM_LOCK + wp.username, 200, () -> {
                      // 删除等待匹配队列加入到正在匹配的队列
                     if (waitingQueue.remove(wp)) {
                         matchingQueue.add(wp);
-                        return Future.succeededFuture(wp);
+                        return wp;
                     }
-                    return Future.succeededFuture(null);
+                    return null;
                  }).compose(opponent -> {
                      // 要释放锁
                      if (null == opponent) {

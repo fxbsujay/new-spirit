@@ -44,6 +44,10 @@ public class RankedTest {
 
         t2.setName("T Two");
 
+        t1.start();
+        t2.start();
+
+
         testContext.completeNow();
     }
 }

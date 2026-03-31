@@ -6,8 +6,13 @@ import cn.spirit.go.service.GoMatchService;
 import cn.spirit.go.service.GameLobbyService;
 import cn.spirit.go.web.socket.ClientManger;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxException;
+import io.vertx.core.internal.VertxInternal;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.shareddata.Lock;
+import io.vertx.core.shareddata.impl.SharedDataImpl;
 import io.vertx.ext.mail.*;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.redis.client.*;
@@ -15,6 +20,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class AppContext {
 
@@ -97,6 +105,30 @@ public class AppContext {
         }
         log.info("Send email subject: {}, to: {}, content: {}", subject, to, content);
         return MAIL.sendMail(message);
+    }
+
+    public static <T> Future<T> withLock(String name, Supplier<T> block) {
+        return withLock(name, SharedDataImpl.DEFAULT_LOCK_TIMEOUT, block);
+    }
+
+    public static <T> Future<T> withLock(String name, long timeout, Supplier<T> block) {
+        Promise<T> promise = Promise.promise();
+        vertx.sharedData().getLockWithTimeout(name, timeout).onComplete(r  -> {
+            if (r.succeeded()) {
+                Lock lock = r.result();
+                vertx.executeBlocking(block::get).onSuccess(t -> {
+                    promise.complete(t);
+                    lock.release();
+                }).onFailure(e -> {
+                    promise.fail(e);
+                    lock.release();
+                });
+            } else {
+                promise.fail( new VertxException("Timed out waiting to get lock " + name, true));
+            }
+        });
+
+        return promise.future();
     }
 
 }
