@@ -1,14 +1,6 @@
 package cn.spirit.go.service;
 
-import cn.spirit.go.common.LockConstant;
-import cn.spirit.go.common.enums.GameMode;
-import cn.spirit.go.common.enums.GameType;
-import cn.spirit.go.common.util.DateUtils;
-import cn.spirit.go.model.GameWait;
-import cn.spirit.go.web.UserSession;
-import cn.spirit.go.web.config.AppContext;
-import cn.spirit.go.web.socket.ClientManger;
-import io.vertx.core.Future;
+import cn.spirit.go.model.CasualGameInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
@@ -18,17 +10,12 @@ import java.util.Map;
 
 /**
  * 游戏大厅-休闲自定义对局
- * 没有  {@link ClientManger Socket} 连接不能创建游戏<br/>
  * 创建的游戏对局，等待对手加入游戏，游戏开始后删除游戏，用户连接断开后删除<br/>
  * 游戏未开始只存在内存中，不保存数据，游戏开始后保存数据
  */
 public class GameLobbyService {
 
     private static final Logger log = LoggerFactory.getLogger(GameLobbyService.class);
-
-    private Integer dailyGameCount = 0;
-
-    private String dailyTime = DateUtils.getTime("yyyyMMdd");
 
     /**
      * username -> code
@@ -38,30 +25,10 @@ public class GameLobbyService {
     /**
      * code -> game
      */
-    private final Map<String, GameWait> games = new HashMap<>();
+    private final Map<String, CasualGameInfo> games = new HashMap<>();
 
-    /**
-     * 搜索休闲游戏
-     *
-     * @param username  查询不是自己的对局
-     * @param code      编号
-     * @param type      {@link GameType}
-     */
-    public List<GameWait> searchGames(String username, String code, GameType type, int limit) {
-        List<GameWait> result = new ArrayList<>();
-        for (GameWait value : games.values()) {
-            if (null != username && (username.equals(value.username)) ||
-                (null != code && !code.equals(value.code)) ||
-                (null != type && type != value.type) ||
-                !GameMode.CASUAL.equals(value.mode)) {
-                continue;
-            }
-            result.add(value);
-            if (result.size() >= limit) {
-                break;
-            }
-        }
-        return result;
+    public List<CasualGameInfo> getGames() {
+        return new ArrayList<>(games.values());
     }
 
     /**
@@ -69,21 +36,16 @@ public class GameLobbyService {
      * @param session   Session
      * @param game      对局
      */
-    public Future<Boolean> addGame(UserSession session, GameWait game) {
-        return AppContext.withLock(LockConstant.GAME_LOCK + session.username, 1000, () -> {
-            if (userGames.containsKey(session.username)) {
-                log.warn("{} failed to create the game", session.username);
-                return Future.succeededFuture(false);
-            }
-            game.timestamp = System.currentTimeMillis();
-            game.username = session.username;
-            String code = generateCode();
-            game.code = code;
-            userGames.put(game.username, code);
-            games.put(code, game);
-            log.info("{} has created a game, code = {}", game.username, code);
-            return Future.succeededFuture(true);
-        });
+    public boolean addGame(CasualGameInfo game) {
+        if (userGames.containsKey(game.username)) {
+            log.warn("{} failed to create the game", game.username);
+            return false;
+        }
+        game.timestamp = System.currentTimeMillis();
+        userGames.put(game.username, game.code);
+        games.put(game.code, game);
+        log.info("{} has created a game, code = {}", game.username, game.code);
+        return true;
     }
 
     /**
@@ -92,41 +54,24 @@ public class GameLobbyService {
      *
      * @param username  用户名
      */
-    public Future<GameWait> removeGame(String username) {
-        return AppContext.withLock(LockConstant.GAME_LOCK + username, 1000, () -> {
-            String code = userGames.remove(username);
-            if (null != code) {
-                return Future.succeededFuture(games.remove(code));
-            }
-            return Future.succeededFuture(null);
-        });
+    public CasualGameInfo removeGame(String username) {
+        String code = userGames.remove(username);
+        if (null != code) {
+            return games.remove(code);
+        }
+        return null;
     }
 
-    public GameWait get(String code) {
+    public CasualGameInfo get(String code) {
         return games.get(code);
     }
 
-    public GameWait getByUsername(String username) {
+    public CasualGameInfo getByUsername(String username) {
         String code = userGames.get(username);
         if (null == code) {
             return null;
         }
         return get(code);
-    }
-
-    /**
-     * 生成对局唯一编码
-     * 当前日期 + 机器码 + 当日创建次数
-     * 20250608 + 001 + 2
-     */
-    public String generateCode() {
-        String time = DateUtils.getTime("yyyyMMdd");
-        if (!time.equals(dailyTime)) {
-            dailyTime = time;
-            dailyGameCount = 0;
-        }
-        dailyGameCount++;
-        return Long.toString(Long.parseLong(dailyTime.substring(2) + AppContext.MAC_CODE + dailyGameCount), 36).toUpperCase();
     }
 
 }

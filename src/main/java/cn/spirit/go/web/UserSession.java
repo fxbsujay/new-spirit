@@ -17,7 +17,7 @@ public class UserSession {
     /**
      * 是不是访客
      */
-    public Boolean isGuest = false;
+    public Boolean visitor = false;
 
     @Override
     public String toString() {

@@ -31,35 +31,35 @@ public class GameRankedService {
      * @param username  用户名
      * @param rating    积分
      */
-    public Future<Boolean> ranking(String username, Integer rating) {
+    public Boolean ranking(String username, Integer rating) {
         Player player = new Player(username, rating);
-        return AppContext.withLock(LockConstant.GAME_LOCK + username, 200, () -> {
-            if (isMatching(username)) {
-                return Future.succeededFuture(false);
+        if (isMatching(username)) {
+            return false;
+        }
+        matchingQueue.add(player);
+
+        // 开始匹配
+        match(player, 200).compose(opponent -> {
+            // 匹配完毕
+            if (null == opponent) {
+                // 未匹配到玩家加入待匹配队列
+                waitingQueue.add(player);
+                return Future.succeededFuture(true);
+            } else {
+                // TODO 匹配到对手，加入待接受对局池，双方都接受对局后开始游戏
+                log.info("Game Matchmaking successful, Players: [{},{}]", player.username, opponent.username);
+
+                // 删除对手的匹配
+                matchingQueue.remove(opponent);
             }
-            matchingQueue.add(player);
-
-            // 开始匹配
-            match(player, 200).compose(opponent -> {
-                // 匹配完毕
-                if (null == opponent) {
-                    // 未匹配到玩家加入待匹配队列
-                    waitingQueue.add(player);
-                    return Future.succeededFuture(true);
-                } else {
-                    // TODO 匹配到对手，加入待接受对局池，双方都接受对局后开始游戏
-                    log.info("Game Matchmaking successful, Players: [{},{}]", player.username, opponent.username);
-
-                    // 删除对手的匹配
-                    matchingQueue.remove(opponent);
-                }
-                return Future.succeededFuture();
-            });
-            // 释放锁
-            return Future.succeededFuture(true);
+            return Future.succeededFuture();
         });
+        return true;
     }
 
+    /**
+     * 是否在排位中
+     */
     public boolean isMatching(String username) {
         Player player = new Player(username);
         return waitingQueue.contains(player) || matchingQueue.contains(player);
@@ -69,12 +69,8 @@ public class GameRankedService {
      * 取消匹配
      * 当玩家不在线时要取消匹配 {@link cn.spirit.go.web.socket.ClientManger}
      */
-    public Future<Boolean> cancel(String username) {
-        return AppContext.withLock(
-                LockConstant.GAME_LOCK + username,
-                1000,
-                () -> Future.succeededFuture(waitingQueue.remove(new Player(username, 0)))
-        );
+    public Boolean cancel(String username) {
+        return waitingQueue.remove(new Player(username, 0));
     }
 
     private Future<Player> match(Player p, Integer range) {
@@ -83,7 +79,7 @@ public class GameRankedService {
         }
         for (Player wp : waitingQueue) {
             if (Math.abs(p.compareTo(wp)) <= range) {
-                 return AppContext.withLock(LockConstant.ROOM_LOCK + wp.username, 200, () -> {
+                 return AppContext.withLock(LockConstant.GAME_LOCK + wp.username, () -> {
                      // 删除等待匹配队列加入到正在匹配的队列
                     if (waitingQueue.remove(wp)) {
                         matchingQueue.add(wp);

@@ -46,7 +46,7 @@ public class SessionStore {
      */
     public void handle(RoutingContext ctx, Boolean isLogged) {
         validate(ctx).onSuccess(u -> {
-            if (u.isGuest) {
+            if (u.visitor) {
                 if (isLogged) {
                     RestContext.fail(ctx, HttpResponseStatus.UNAUTHORIZED);
                     return;
@@ -66,7 +66,7 @@ public class SessionStore {
         String sid = getSessionId(ctx);
         if (StringUtils.isBlank(sid) || sid.length() != 32) {
             UserSession session = new UserSession();
-            session.isGuest = true;
+            session.visitor = true;
             String newSid = setSessionCookie(ctx);
             session.sessionId = newSid;
             session.username = newSid;
@@ -75,7 +75,7 @@ public class SessionStore {
         return getSession(sid).compose(u -> {
             if (null == u) {
                 UserSession session = new UserSession();
-                session.isGuest = true;
+                session.visitor = true;
                 session.sessionId = sid;
                 session.username = sid;
                 return Future.succeededFuture(session);
@@ -120,6 +120,10 @@ public class SessionStore {
         return ctx.get(SESSION_USER);
     }
 
+    public static String username(RoutingContext ctx) {
+        return sessionUser(ctx).username;
+    }
+
     public static void setSessionCookie(RoutingContext ctx, String sid) {
         Cookie cookie = Cookie.cookie(SESSION_COOKIE_NAME, sid);
         cookie.setPath("/api");
@@ -151,7 +155,7 @@ public class SessionStore {
                 userSession.sessionId = sessionId;
                 userSession.username = value[0];
                 userSession.ip = value[1];
-                userSession.isGuest = false;
+                userSession.visitor = false;
                 return userSession;
             }
             return null;

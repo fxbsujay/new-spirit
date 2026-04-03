@@ -28,7 +28,7 @@
         {{ drawerVisible ? '取消' : '开始游戏' }}
       </button>
       <div class="tools flex-1">
-        <RouterLink to="/sign-in" v-if="user.isGuest">
+        <RouterLink to="/sign-in" v-if="user.visitor">
           登录
         </RouterLink>
         <div class="user flex" v-else>

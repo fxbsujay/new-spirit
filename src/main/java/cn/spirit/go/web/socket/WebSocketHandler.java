@@ -1,6 +1,6 @@
 package cn.spirit.go.web.socket;
 
-import cn.spirit.go.service.GameLobbyService;
+import cn.spirit.go.service.GameManager;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.config.AppContext;
 import io.vertx.core.Handler;
@@ -18,7 +18,8 @@ public class WebSocketHandler implements Handler<RoutingContext> {
 
     private final ClientManger clientManger = AppContext.getBean(ClientManger.class);
 
-    private final GameLobbyService gameCustomService = AppContext.getBean(GameLobbyService.class);
+    private final GameManager gameManager = AppContext.getBean(GameManager.class);
+
 
     public WebSocketHandler(Router router) {
         router.route("/api/ws").handler(this);
@@ -30,7 +31,7 @@ public class WebSocketHandler implements Handler<RoutingContext> {
                 ws.closeHandler(e -> {
                     clientManger.cancel(session);
                     if (!clientManger.isOnLine(session.username)) {
-                        gameCustomService.removeGame(session.username);
+                        gameManager.cancelAllGame(session.username);
                     }
                 });
             } else {

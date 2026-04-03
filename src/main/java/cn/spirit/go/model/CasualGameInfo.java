@@ -1,12 +1,11 @@
 package cn.spirit.go.model;
 
-import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 
 /**
- * 游戏等待队列
+ * 休闲游戏
  */
-public class GameWait {
+public class CasualGameInfo {
 
     /**
      * 编号
@@ -22,11 +21,6 @@ public class GameWait {
      * 类型 SHORT 实时的短时长 LONG 通讯长时长 NONE 无限制
      */
     public GameType type;
-
-    /**
-     * 模式 CASUAL 休闲 RANK 积分 ROBOT 人机 FRIEND 好友
-     */
-    public GameMode mode;
 
     /**
      * 起始时长 单位：毫秒

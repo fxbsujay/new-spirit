@@ -7,9 +7,9 @@ import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.GamePlay;
 import cn.spirit.go.model.GameRoom;
-import cn.spirit.go.model.GameWait;
+import cn.spirit.go.model.CasualGameInfo;
+import cn.spirit.go.service.GameManager;
 import cn.spirit.go.service.GoMatchService;
-import cn.spirit.go.service.GameLobbyService;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
@@ -20,8 +20,6 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 import java.util.Set;
 
 public class GameController {
@@ -32,7 +30,7 @@ public class GameController {
 
     private final GameDao gameDao = AppContext.getBean(GameDao.class);
 
-    private final GameLobbyService lobbyService = AppContext.getBean(GameLobbyService.class);
+    private final GameManager gameManager = AppContext.getBean(GameManager.class);
 
     private final GoMatchService matchService = AppContext.getBean(GoMatchService.class);
 
@@ -50,21 +48,13 @@ public class GameController {
      * 搜索对局
      */
     public void searchGame(RoutingContext ctx) {
-        String code = ctx.request().getParam("code");
-        GameType type = GameType.convert(ctx.request().getParam("type"));
-
-        UserSession session = SessionStore.sessionUser(ctx);
-        List<GameWait> games;
-        if (session.isGuest) {
-            games = lobbyService.searchGames(null, code, type, 10);
-        } else {
-            GameWait game = lobbyService.getByUsername(session.username);
-            games = lobbyService.searchGames(session.username, code, type, null != game ? 9 : 10);
-            if (null != game) {
-                games.add(0, game);
-            }
+        String page = ctx.request().getParam("page");
+        if (null == page) {
+            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+            return;
         }
-        RestContext.success(ctx, games);
+        GameType type = GameType.convert(ctx.request().getParam("type"));
+        RestContext.success(ctx, gameManager.searchGames(SessionStore.sessionUser(ctx), type, Integer.parseInt(page)));
     }
 
     /**
@@ -142,8 +132,8 @@ public class GameController {
      * 创建休闲对局
      */
     public void createGame(RoutingContext ctx) {
-        GameWait dto = ctx.body().asPojo(GameWait.class);
-        if (null == dto.type || null == dto.mode || null == dto.boardSize || (!GameMode.CASUAL.equals(dto.mode) && !GameMode.LOCAL.equals(dto.mode))) {
+        CasualGameInfo dto = ctx.body().asPojo(CasualGameInfo.class);
+        if (null == dto.type || null == dto.boardSize) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
@@ -174,11 +164,11 @@ public class GameController {
             dto.stepDuration = 0;
         }
 
-        UserSession session = SessionStore.sessionUser(ctx);
-        userDao.findOne(JsonObject.of("username", session.username), "nickname", "rating").onSuccess(user -> {
+        dto.username = SessionStore.username(ctx);
+        userDao.findOne(JsonObject.of("username", dto.username), "nickname", "rating").onSuccess(user -> {
             dto.score = user.getInteger("rating");
             dto.nickname = user.getString("nickname");
-            lobbyService.addGame(session, dto).onSuccess(flag -> {
+            gameManager.createCasualGame(dto).onSuccess(flag -> {
                 if (flag) {
                     RestContext.success(ctx);
                 } else {
@@ -195,8 +185,7 @@ public class GameController {
      * 取消游戏
      */
     public void cancelGame(RoutingContext ctx) {
-        UserSession session = SessionStore.sessionUser(ctx);
-        lobbyService.removeGame(session.username)
+        gameManager.cancelCasualGame(SessionStore.username(ctx))
                 .onSuccess(game -> RestContext.success(ctx, game != null))
                 .onFailure(__ -> RestContext.fail(ctx, HttpResponseStatus.LOCKED));
     }
@@ -211,20 +200,19 @@ public class GameController {
             return;
         }
 
-        UserSession session = SessionStore.sessionUser(ctx);
-        if (null != lobbyService.getByUsername(session.username)) {
+        String username = SessionStore.username(ctx);
+        if (null != gameManager.getCasualGameByUsername(username)) {
             RestContext.fail(ctx, RestStatus.GAME_CREATED);
             return;
         }
 
-        GameWait g = lobbyService.get(code);
-        if (null == g || g.username.equals(session.username)) {
+        CasualGameInfo g = gameManager.getCasualGame(code);
+        if (null == g || g.username.equals(username)) {
             RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
             return;
         }
 
-
-        lobbyService.removeGame(g.username).onSuccess(game -> {
+        gameManager.cancelCasualGame(g.username).onSuccess(game -> {
             if (null == game || !game.code.equals(code)) {
                 RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
                 return;
@@ -233,7 +221,7 @@ public class GameController {
             GamePlay entity = new GamePlay();
             entity.code = code;
             entity.boardSize = game.boardSize;
-            entity.mode = game.mode;
+            entity.mode = GameMode.CASUAL;
             entity.type = game.type;
             entity.duration = game.duration;
             entity.stepDuration = game.stepDuration;
@@ -241,7 +229,7 @@ public class GameController {
             entity.startTime = System.currentTimeMillis();
 
             // 查询用户信息
-            JsonObject query = JsonObject.of("username", JsonObject.of("$in", JsonArray.of(game.username, session.username)));
+            JsonObject query = JsonObject.of("username", JsonObject.of("$in", JsonArray.of(game.username, username)));
             userDao.findAll(query, "username", "nickname", "avatar", "rating").onSuccess(users -> {
                 GameRoom.Player[] players = new GameRoom.Player[users.size()];
                 for (int i = 0; i < users.size(); i++) {

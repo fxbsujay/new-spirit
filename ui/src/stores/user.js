@@ -11,7 +11,7 @@ export const useUserStore = defineStore('user', () => {
   const user = reactive({
     avatar: null,
     email: null,
-    isGuest: true,
+    visitor: true,
     nickname: null,
     username: null,
     timestamp: 0
@@ -33,13 +33,13 @@ export const useUserStore = defineStore('user', () => {
   const socketStore = useSocketStore()
 
   const refreshInfo = () => {
-    const userIsGuest = Cookie.get('userIsGuest')
-    user.isGuest = userIsGuest !== 'false'
-    if (!user.isGuest && !user.timestamp) {
+    const userIsVisitor = Cookie.get('userIsVisitor')
+    user.visitor = userIsVisitor !== 'false'
+    if (!user.visitor && !user.timestamp) {
       http.post("/user/info").then(res => {
         Object.assign(user, res)
         user.timestamp = dayjs().valueOf()
-        setIsGuestCookie(false)
+        setIsVisitorCookie(false)
         socketStore.reconnect()
       })
     } else {
@@ -48,15 +48,15 @@ export const useUserStore = defineStore('user', () => {
   }
 
   const login = () => {
-    user.isGuest = false
-    setIsGuestCookie(false)
+    user.visitor = false
+    setIsVisitorCookie(false)
     refreshInfo()
     router.push('/')
   }
 
   const logout = () => {
-    setIsGuestCookie(true)
-    user.isGuest = true
+    setIsVisitorCookie(true)
+    user.visitor = true
     http.post('/auth/signout').then(() => {
       refreshInfo()
       if (router.currentRoute.value.path !== '/') {
@@ -65,8 +65,8 @@ export const useUserStore = defineStore('user', () => {
     })
   }
 
-  const setIsGuestCookie = value => {
-    Cookie.set('userIsGuest', value, { expires: 999 })
+  const setIsVisitorCookie = value => {
+    Cookie.set('userIsVisitor', value, { expires: 999 })
   }
 
   const closeWaitGame = () => {

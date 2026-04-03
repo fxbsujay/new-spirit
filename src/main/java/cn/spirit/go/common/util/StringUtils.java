@@ -39,7 +39,7 @@ public class StringUtils {
             if (start > 0 && src[start -1] =='\\') {
                 builder.append(src, offset, start - offset -1).append(openToken);
                 offset = start + openToken.length();
-            }else {
+            } else {
                 if (expression == null) {
                     expression = new StringBuilder();
                 } else {
@@ -186,7 +186,6 @@ public class StringUtils {
         return isNotBlank(str) ? str.trim() : "";
     }
 
-
     /**
      * <p>Description: Clear all blanks in string</p>
      * <p>清除字符串中全部空白</p>
@@ -234,7 +233,6 @@ public class StringUtils {
      *
      * @param cs  the CharSequence to check, may be null
      * @return {@code true} if the CharSequence is
-     *
      */
     public static boolean isNotBlank(final CharSequence cs) {
         return !isBlank(cs);

@@ -323,8 +323,4 @@ public class GoMatchService {
         subscribers.remove(sessionId);
     }
 
-    private <T> Future<T> lock(String code, Supplier<Future<T>> block) {
-       return AppContext.vertx.sharedData().withLock(LockConstant.ROOM_LOCK + code, 1000, block);
-    }
-
 }

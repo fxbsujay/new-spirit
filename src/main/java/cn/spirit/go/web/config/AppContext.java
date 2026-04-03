@@ -2,17 +2,12 @@ package cn.spirit.go.web.config;
 
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
+import cn.spirit.go.service.GameManager;
 import cn.spirit.go.service.GoMatchService;
-import cn.spirit.go.service.GameLobbyService;
 import cn.spirit.go.web.socket.ClientManger;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.VertxException;
-import io.vertx.core.internal.VertxInternal;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.shareddata.Lock;
-import io.vertx.core.shareddata.impl.SharedDataImpl;
 import io.vertx.ext.mail.*;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.redis.client.*;
@@ -20,8 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class AppContext {
@@ -88,7 +81,7 @@ public class AppContext {
         addBean(new UserDao());
         addBean(new GameDao());
 
-        addBean(new GameLobbyService());
+        addBean(new GameManager());
         addBean(new GoMatchService());
         log.info("AppContext init success");
     }
@@ -105,6 +98,10 @@ public class AppContext {
         }
         log.info("Send email subject: {}, to: {}, content: {}", subject, to, content);
         return MAIL.sendMail(message);
+    }
+
+    public static <T> Future<T> withLock(String name, Supplier<Future<T>> block) {
+        return withLock(name, 1000, block);
     }
 
     public static <T> Future<T> withLock(String name, long timeout, Supplier<Future<T>> block) {
