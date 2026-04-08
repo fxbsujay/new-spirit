@@ -31,7 +31,7 @@ public class WebSocketHandler implements Handler<RoutingContext> {
                 ws.closeHandler(e -> {
                     clientManger.cancel(session);
                     if (!clientManger.isOnLine(session.username)) {
-                        gameManager.cancelAllGame(session.username);
+                        gameManager.cancelAllWaitGame(session.username);
                     }
                 });
             } else {

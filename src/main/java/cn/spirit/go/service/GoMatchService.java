@@ -1,6 +1,5 @@
 package cn.spirit.go.service;
 
-import cn.spirit.go.common.LockConstant;
 import cn.spirit.go.common.enums.GameReason;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.GameWinner;
@@ -19,7 +18,6 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;
-import java.util.function.Supplier;
 
 /**
  * 比赛对局管理
@@ -183,6 +181,9 @@ public class GoMatchService {
                     end(code, winner, GameReason.TIMEOUT);
                     return;
                 } else {
+                    long timer = AppContext.vertx.setTimer(time, id -> {
+
+                    });
                     // TODO 定时任务 {time} 毫秒后未走，游戏结束
                 }
             }

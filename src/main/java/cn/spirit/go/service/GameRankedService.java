@@ -26,7 +26,6 @@ public class GameRankedService {
     /**
      * 积分赛匹配
      * 玩家不能有其他模式的等待队列，比如大厅已经创建的自定义对局但未开始
-     * 当玩家不在线时不允许创建对局 {@link cn.spirit.go.web.socket.ClientManger}
      *
      * @param username  用户名
      * @param rating    积分
@@ -67,7 +66,6 @@ public class GameRankedService {
 
     /**
      * 取消匹配
-     * 当玩家不在线时要取消匹配 {@link cn.spirit.go.web.socket.ClientManger}
      */
     public Boolean cancel(String username) {
         return waitingQueue.remove(new Player(username, 0));

@@ -54,7 +54,7 @@ public class GameController {
             return;
         }
         GameType type = GameType.convert(ctx.request().getParam("type"));
-        RestContext.success(ctx, gameManager.searchGames(SessionStore.sessionUser(ctx), type, Integer.parseInt(page)));
+        RestContext.success(ctx, gameManager.searchLobbyGames(SessionStore.sessionUser(ctx), type, Integer.parseInt(page)));
     }
 
     /**

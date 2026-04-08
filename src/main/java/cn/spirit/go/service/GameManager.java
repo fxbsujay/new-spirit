@@ -15,6 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+/**
+ * 游戏对局管理器
+ */
 public class GameManager {
 
     private static final Logger log = LoggerFactory.getLogger(GameManager.class);
@@ -23,16 +26,25 @@ public class GameManager {
 
     private String dailyTime = DateUtils.getTime("yyyyMMdd");
 
-    private final GameLobbyService lobbyService = AppContext.getBean(GameLobbyService.class);
+    /**
+     * 大厅
+     */
+    private final GameLobbyService lobbyService = new GameLobbyService();
 
-    private final GameRankedService rankedService = AppContext.getBean(GameRankedService.class);
+    /**
+     * 排位
+     */
+    private final GameRankedService rankedService = new GameRankedService();
 
+    /**
+     * session 客户端
+     */
     private final ClientManger clientManger = AppContext.getBean(ClientManger.class);
 
     /**
      * 搜索游戏大厅
      */
-    public Page<CasualGameInfo> searchGames(UserSession session, GameType type, int page) {
+    public Page<CasualGameInfo> searchLobbyGames(UserSession session, GameType type, int page) {
         Page<CasualGameInfo> result = new Page<>();
         List<CasualGameInfo> games = new ArrayList<>();
         if (page < 0) {
@@ -112,11 +124,11 @@ public class GameManager {
     }
 
     /**
-     * 取消自己所有的比赛
+     * 取消自己所有等待中的比赛,大厅创建的比赛以及排放比赛
      *
      * @param username  用户名
      */
-    public void cancelAllGame(String username) {
+    public void cancelAllWaitGame(String username) {
        lock(username, () -> {
             lobbyService.removeGame(username);
             rankedService.cancel(username);
@@ -127,7 +139,7 @@ public class GameManager {
     /**
      * 开始排位
      */
-    public Future<Boolean> ranking(String username, int rating) {
+    public Future<Boolean> startRanking(String username, int rating) {
         return lock(username, () -> {
             if (!clientManger.isOnLine(username) || lobbyService.getByUsername(username) != null) {
                 return Future.succeededFuture(false);
@@ -148,11 +160,11 @@ public class GameManager {
      *
      * @param username  用户名
      */
-    public Boolean isExist(String username) {
+    public Boolean isExistWaitGame(String username) {
         return lobbyService.getByUsername(username) != null || rankedService.isMatching(username);
     }
 
-    private <T> Future<T> lock(String username, Supplier<Future<T>> block) {
+    private synchronized <T> Future<T> lock(String username, Supplier<Future<T>> block) {
         return AppContext.withLock(LockConstant.GAME_LOCK + username, block);
     }
 
@@ -161,7 +173,7 @@ public class GameManager {
      * 当前日期 + 机器码 + 当日创建次数
      * 20250608 + 001 + 2
      */
-    public String generateCode() {
+    private String generateCode() {
         String time = DateUtils.getTime("yyyyMMdd");
         if (!time.equals(dailyTime)) {
             dailyTime = time;
