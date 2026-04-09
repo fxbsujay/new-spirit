@@ -1,4 +1,5 @@
 <script setup>
+import Slider from '@/components/slider/index.vue'
 import Icon from '@/components/icon/Icon.vue'
 import { ref, reactive } from 'vue'
 import { TypeConstant } from '@/constant'
@@ -15,9 +16,17 @@ const BoardSizeConstant = [
   {label: '25x25', value: 25}
 ]
 
+const RuleConstant = [
+  {label: '中国规则', value: 1},
+  {label: '韩国', value: 2},
+]
 const formShow = ref(false)
 const formState = reactive({
-  type: 'SHORT'
+  type: 'SHORT',
+  rule: 1,
+  boardSize: 21,
+  duration: 10,
+  stepDuration: 0
 })
 
 const modeChangeHandle = (mode) => {
@@ -60,31 +69,37 @@ const typeChangeHandle = (type) => {
           </div>
           <span class="tip">! 鼠标点击上分选择模式开始游戏</span>
         </div>
-        <form v-else class="form" style="margin-top: 20px">
-          <div class="flex" style="gap: 8px">
-            <div class="row input-row flex-1">
+        <form v-else class="form">
+          <div class="flex flex-column gap-8" style="min-width: 250px">
+            <div class="row">
               <div class="form-group col">
-                <label class="form-label">
-                  规则
-                </label>
-                <select class="select">
-                  <option v-for="item in BoardSizeConstant" :value="item.value">{{ item.label }}</option>
+                <span class="form-label">
+                  游戏规则
+                </span>
+                <select class="select" v-model="formState.rule">
+                  <option v-for="item in RuleConstant" :value="item.value">{{ item.label }}</option>
                 </select>
               </div>
             </div>
-            <div class="row input-row flex-1">
+            <div class="row">
               <div class="form-group col">
-                <label class="form-label">
+                <span class="form-label">
                   棋盘尺寸
-                </label>
-                <select class="select">
+                </span>
+                <select class="select" v-model="formState.boardSize">
                   <option v-for="item in BoardSizeConstant" :value="item.value">{{ item.label }}</option>
                 </select>
               </div>
             </div>
           </div>
-          <div class="tabs-horiz">
-            <button type="button" v-for="item in TypeConstant" :class="formState.type === item.value ? 'active' : ''" @click="typeChangeHandle(item.value)">{{ item.label}}</button>
+          <div class="flex flex-column gap-8 flex-1">
+            <div class="tabs-horiz">
+              <button type="button" v-for="item in TypeConstant" :class="formState.type === item.value ? 'active' : ''" @click="typeChangeHandle(item.value)">{{ item.label}}</button>
+            </div>
+            <div class="flex gap-8 duration-slider">
+              <Slider v-model="formState.duration" :step="1" :min="1" :max="180"/>
+              <Slider v-model="formState.duration" :step="1" :min="1" :max="180"/>
+            </div>
           </div>
         </form>
       </div>
@@ -100,7 +115,7 @@ const typeChangeHandle = (type) => {
   position: absolute;
   top: 100%;
   z-index: @headerZIndex - 1;
-  height: 25vh;
+  height: fit-content;
   overflow: hidden;
   width: 100%;
   box-shadow: 0 30px 28px 8px rgba(0, 0, 0, 0.05);
@@ -158,14 +173,40 @@ const typeChangeHandle = (type) => {
   .tip {
     font-size: 14px;
     color: #717171;
+    margin-top: 1rem;
   }
 
   .form {
     width: 100%;
-    max-width: 600px;
-    margin: auto;
+    margin: 1rem auto;
+    display: flex;
+    gap: 2rem;
+
+    .row {
+      width: 100%;
+    }
+
+    .form-label {
+      color: @c-dark;
+      font-weight: 600;
+      display: inline-block;
+      margin-bottom: .5rem;
+    }
+
+    .select {
+      height: 2.5rem;
+      border-radius: 3px;
+      padding: .2rem .2rem;
+      border: 1px solid rgba(127, 135, 160, .3);
+
+      &:hover {
+        border-color: @c-primary;
+      }
+    }
   }
+
   .tabs-horiz {
+    width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -181,15 +222,24 @@ const typeChangeHandle = (type) => {
       border-bottom: 2px solid transparent;
       white-space: nowrap;
       overflow: hidden;
+      font-weight: bolder;
 
       &.active {
         color: @c-primary;
-        border-bottom: 2px solid @c-primary;
+        border-bottom: 3px solid @c-primary;
       }
 
       &:hover {
-        background-color: rgba(245, 63, 63, 0.05);
+        background-color: rgba(63, 245, 218, 0.05);
       }
+    }
+  }
+
+  .duration-slider {
+    width: 100%;
+
+    .slider-wrap {
+      --color: @c-orange;
     }
   }
 }

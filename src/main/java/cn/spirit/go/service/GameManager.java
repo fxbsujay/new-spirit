@@ -42,6 +42,11 @@ public class GameManager {
     private final ClientManger clientManger = AppContext.getBean(ClientManger.class);
 
     /**
+     * 对局房间
+     */
+    private final GoMatchService matchService = new GoMatchService();
+
+    /**
      * 搜索游戏大厅
      */
     public Page<CasualGameInfo> searchLobbyGames(UserSession session, GameType type, int page) {

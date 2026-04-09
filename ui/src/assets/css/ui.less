@@ -1,8 +1,42 @@
 @import "./variable.less";
 
+.container {
+  margin: 0 auto;
+  max-width: 1440px;
+}
+
+.form {
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-label {
+    font-size: 14px;
+    color: @labelColor;
+  }
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.col {
+  flex-basis: 0;
+  flex-grow: 1;
+  max-width: 100%;
+}
+
 .flex {
   display: flex;
   align-items: center;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+.gap-8 {
+  gap: 8px;
 }
 
 .justify-center {
