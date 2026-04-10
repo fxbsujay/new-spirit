@@ -1,9 +1,8 @@
 
 <script setup>
 import Responsive from '@/components/responsive/index.vue'
-import CreateDialog from './CreateDialog.vue'
 import snackbar from '@/components/snackbar/index.js'
-import { ref, reactive, useTemplateRef } from 'vue'
+import { ref } from 'vue'
 import Icon from '@/components/icon/Icon.vue'
 import http from '@/utils/http'
 import router from "@/router/index.js";
@@ -12,7 +11,6 @@ import { TypeConstant } from '@/constant/index.js'
 import { useUserStore } from '@/stores/user.js'
 
 const userStore = useUserStore()
-const createDialogRef = useTemplateRef('createDialogRef')
 const games = ref([])
 const tableLoading = ref(false)
 
@@ -104,13 +102,12 @@ const rating = () => {
         <div>
 
         </div>
-        <button class="button border" @click="createDialogRef.open()">创建游戏</button>
+        <button class="button border" @click="">创建游戏</button>
         <button class="button border" @click="rating">积分赛</button>
         <button class="button border">人机对战</button>
       </div>
     </div>
   </div>
-  <CreateDialog  ref="createDialogRef" @createSuccess="searchHandle"/>
 
 </template>
 <style lang="less" scoped>

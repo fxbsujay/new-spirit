@@ -1,24 +1,23 @@
 <script setup>
-import Slider from '@/components/slider/index.vue'
 import Icon from '@/components/icon/Icon.vue'
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import { TypeConstant } from '@/constant'
 
-defineProps({
+const props = defineProps({
   visible: Boolean
 })
 
 const BoardSizeConstant = [
-  {label: '9x9', value: 9},
-  {label: '13x13', value: 13},
-  {label: '19x19', value: 19},
-  {label: '21x21', value: 21},
-  {label: '25x25', value: 25}
+  { label: '9x9', value: 9 },
+  { label: '13x13', value: 13 },
+  { label: '19x19', value: 19 },
+  { label: '21x21', value: 21 },
+  { label: '25x25', value: 25 }
 ]
 
 const RuleConstant = [
-  {label: '中国规则', value: 1},
-  {label: '韩国', value: 2},
+  { label: '中国规则', value: 1 },
+  { label: '韩国', value: 2 }
 ]
 const formShow = ref(false)
 const formState = reactive({
@@ -38,6 +37,10 @@ const modeChangeHandle = (mode) => {
 const typeChangeHandle = (type) => {
   formState.type = type
 }
+
+watch(() => props.visible, () => {
+  formShow.value = false
+})
 </script>
 
 <template>
@@ -70,37 +73,49 @@ const typeChangeHandle = (type) => {
           <span class="tip">! 鼠标点击上分选择模式开始游戏</span>
         </div>
         <form v-else class="form">
-          <div class="flex flex-column gap-8" style="min-width: 250px">
-            <div class="row">
-              <div class="form-group col">
+          <div class="flex" style="gap: 2rem">
+            <div class="tabs-horiz">
+              <button type="button" v-for="item in TypeConstant" :class="formState.type === item.value ? 'active' : ''"
+                      @click="typeChangeHandle(item.value)">{{ item.label }}
+              </button>
+            </div>
+            <div class="flex flex-column gap-8 flex-1">
+              <div class="row gap-8">
+                <div class="form-group col">
                 <span class="form-label">
                   游戏规则
                 </span>
-                <select class="select" v-model="formState.rule">
-                  <option v-for="item in RuleConstant" :value="item.value">{{ item.label }}</option>
-                </select>
-              </div>
-            </div>
-            <div class="row">
-              <div class="form-group col">
+                  <select class="select" v-model="formState.rule">
+                    <option v-for="item in RuleConstant" :value="item.value">{{ item.label }}</option>
+                  </select>
+                </div>
+                <div class="form-group col">
                 <span class="form-label">
                   棋盘尺寸
                 </span>
-                <select class="select" v-model="formState.boardSize">
-                  <option v-for="item in BoardSizeConstant" :value="item.value">{{ item.label }}</option>
-                </select>
+                  <select class="select" v-model="formState.boardSize">
+                    <option v-for="item in BoardSizeConstant" :value="item.value">{{ item.label }}</option>
+                  </select>
+                </div>
               </div>
+              <div class="row gap-8" v-if="formState.type !== 'NONE'">
+                <div class="form-group col">
+                  <span class="form-label">
+                    {{ formState.type === 'SHORT' ? '各方限时（分钟）' : '每步允许天数' }}
+                  </span>
+                  <input class="range" type="range" v-model="formState.duration" min="0" max="38"/>
+                </div>
+                <div class="form-group col" v-if="formState.type === 'SHORT'">
+                  <span class="form-label" style="text-align: right; width: 100%">
+                    每步加时（秒）
+                  </span>
+                  <input class="range" type="range" v-model="formState.stepDuration" min="0" max="30"/>
+                </div>
+              </div>
+              <span class="form-label" v-else>请随意安排时间</span>
             </div>
           </div>
-          <div class="flex flex-column gap-8 flex-1">
-            <div class="tabs-horiz">
-              <button type="button" v-for="item in TypeConstant" :class="formState.type === item.value ? 'active' : ''" @click="typeChangeHandle(item.value)">{{ item.label}}</button>
-            </div>
-            <div class="flex gap-8 duration-slider">
-              <Slider v-model="formState.duration" :step="1" :min="1" :max="180"/>
-              <Slider v-model="formState.duration" :step="1" :min="1" :max="180"/>
-            </div>
-          </div>
+          <button class="button">A</button>
         </form>
       </div>
     </div>
@@ -165,7 +180,7 @@ const typeChangeHandle = (type) => {
       &:hover {
         background-color: rgba(245, 63, 63, 0.05);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        border: 2px solid #f5763f;
+        border: 2px solid @c-orange;
       }
     }
   }
@@ -179,68 +194,78 @@ const typeChangeHandle = (type) => {
   .form {
     width: 100%;
     margin: 1rem auto;
-    display: flex;
-    gap: 2rem;
 
     .row {
       width: 100%;
     }
 
     .form-label {
-      color: @c-dark;
-      font-weight: 600;
       display: inline-block;
       margin-bottom: .5rem;
     }
 
-    .select {
-      height: 2.5rem;
-      border-radius: 3px;
-      padding: .2rem .2rem;
-      border: 1px solid rgba(127, 135, 160, .3);
-
-      &:hover {
-        border-color: @c-primary;
-      }
+    .form-left {
+      min-width: 250px;
     }
   }
 
   .tabs-horiz {
-    width: 100%;
+    width: 250px;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
 
     button {
+      width: 100%;
       user-select: none;
       background-color: white;
-      flex: 1 1 auto;
+      flex: 1;
+      font-size: 14px;
       text-align: center;
       padding: .8em .2em;
       cursor: pointer;
       border: none;
-      border-bottom: 2px solid transparent;
       white-space: nowrap;
       overflow: hidden;
       font-weight: bolder;
+      margin: .2rem 0;
+      border-left: 3px solid transparent;
+      color: @c-dark-light;
 
       &.active {
-        color: @c-primary;
-        border-bottom: 3px solid @c-primary;
+        color: @c-dark;
+        background-color: rgba(0, 0, 0, 0.05);
+        border-color: @c-primary;
       }
 
       &:hover {
-        background-color: rgba(63, 245, 218, 0.05);
+        color: @c-dark;
+        background-color: rgba(0, 0, 0, 0.05);
       }
     }
   }
 
-  .duration-slider {
+  .range {
+    cursor: pointer;
     width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: rgba(0, 0, 0, 0.05);
+    border: 0;
+    color: #000;
+    border-radius: 7px;
+  }
 
-    .slider-wrap {
-      --color: @c-orange;
-    }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 14px;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    border: 1px solid rgba(0, 0, 0, 0.2);
   }
 }
 
