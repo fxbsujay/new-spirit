@@ -145,6 +145,7 @@ const detailedText = () => {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    padding: 4px 0;
   }
 
   .type {
@@ -180,5 +181,6 @@ const detailedText = () => {
   border-radius: 2px;
   border-color: #351FF2;
   opacity: 0;
+  width: 100%;
 }
 </style>

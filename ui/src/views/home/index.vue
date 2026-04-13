@@ -2,7 +2,7 @@
 <script setup>
 import Responsive from '@/components/responsive/index.vue'
 import snackbar from '@/components/snackbar/index.js'
-import { ref } from 'vue'
+import { ref, watch, reactive } from 'vue'
 import Icon from '@/components/icon/Icon.vue'
 import http from '@/utils/http'
 import router from "@/router/index.js";
@@ -10,8 +10,12 @@ import { throttle } from '@/utils/index.js'
 import { TypeConstant } from '@/constant/index.js'
 import { useUserStore } from '@/stores/user.js'
 
-const userStore = useUserStore()
-const games = ref([])
+const { user, waitGame } = useUserStore()
+const games = reactive({
+  page: 1,
+  total: 0,
+  list: []
+})
 const tableLoading = ref(false)
 
 const searchHandle = throttle(() => {
@@ -19,9 +23,13 @@ const searchHandle = throttle(() => {
     return
   }
   tableLoading.value = true
-  games.value = []
-  http.get('/game/search').then(res => {
-    games.value = res
+  Object.assign(games, {
+    page: 1,
+    total: 0,
+    list: []
+  })
+  http.get('/game/search', { page: games.page }).then(res => {
+    Object.assign(games, res)
     tableLoading.value = false
   }).catch(() => {
     tableLoading.value = false
@@ -31,7 +39,7 @@ const searchHandle = throttle(() => {
 searchHandle()
 
 const tableRowClickHandle = throttle(game => {
-  if (game.username === userStore.user.username) {
+  if (game.username === user.username) {
     http.post('/game/cancel/').then(() => {
       searchHandle()
       snackbar.success('已取消对局')
@@ -43,9 +51,10 @@ const tableRowClickHandle = throttle(game => {
   }
 })
 
-const rating = () => {
+watch(waitGame, () => {
+  searchHandle()
+})
 
-}
 </script>
 
 <template>
@@ -82,7 +91,7 @@ const rating = () => {
         </tr>
         </thead>
         <tbody>
-        <tr v-for="item in games" @click="tableRowClickHandle(item)" :class="item.username === userStore.user.username ? 'own-row' : ''" :title="item.username === userStore.user.username ? '取消对局' : '加入对局'">
+        <tr v-for="item in games.list" @click="tableRowClickHandle(item)" :class="item.username === user.username ? 'own-row' : ''" :title="item.username === user.username ? '取消对局' : '加入对局'">
           <td>{{ item.nickname }}</td>
           <td>{{ item.boardSize }}x{{ item.boardSize }}</td>
           <td>10h+6s</td>
@@ -95,17 +104,9 @@ const rating = () => {
     <div class="lobby-play">
       <Responsive :aspect-ratio="0.5">
         <div class="banner">
-          <img alt=""/>
+          <img alt="" style="width: auto; height: 100%" src="https://picsum.photos/200/100"/>
         </div>
       </Responsive>
-      <div class="play-btn">
-        <div>
-
-        </div>
-        <button class="button border" @click="">创建游戏</button>
-        <button class="button border" @click="rating">积分赛</button>
-        <button class="button border">人机对战</button>
-      </div>
     </div>
   </div>
 

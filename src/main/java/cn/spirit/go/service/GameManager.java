@@ -55,6 +55,8 @@ public class GameManager {
         if (page < 0) {
             page = 0;
         }
+
+        CasualGameInfo userGame = null;
         if (session.visitor) {
             for (CasualGameInfo game : lobbyService.getGames()) {
                 if (null != type && type != game.type) {
@@ -69,15 +71,20 @@ public class GameManager {
                 }
                 games.add(game);
             }
+            userGame = lobbyService.getByUsername(session.username);
         }
         int min = page * 10;
         if (games.isEmpty() || min > games.size()) {
             result.page = page;
+            if (null != userGame) {
+                result.list.add(userGame);
+            }
+            result.list.addAll(games);
+            result.total = result.list.size();
             return result;
         }
         int max;
         if (!session.visitor) {
-            CasualGameInfo userGame = lobbyService.getByUsername(session.username);
             if (null != userGame) {
                 max = min + 9;
                 result.list.add(userGame);
