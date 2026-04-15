@@ -40,15 +40,11 @@ searchHandle()
 
 const tableRowClickHandle = throttle(game => {
   if (game.username === user.username) {
-    http.post('/game/cancel/').then(() => {
-      searchHandle()
-      snackbar.success('已取消对局')
-    })
-  } else {
-    http.post('/game/join/' + game.code).then(() => {
-      router.push('/' + game.code)
-    })
+    return
   }
+  http.post('/game/join/' + game.code).then(() => {
+    router.push('/' + game.code)
+  })
 })
 
 watch(waitGame, () => {
@@ -91,7 +87,7 @@ watch(waitGame, () => {
         </tr>
         </thead>
         <tbody>
-        <tr v-for="item in games.list" @click="tableRowClickHandle(item)" :class="item.username === user.username ? 'own-row' : ''" :title="item.username === user.username ? '取消对局' : '加入对局'">
+        <tr v-for="item in games.list" @click="tableRowClickHandle(item)" :class="item.username === user.username ? 'own-row' : ''" :title="item.username === user.username ? '自己的对局' : '加入对局'">
           <td>{{ item.nickname }}</td>
           <td>{{ item.boardSize }}x{{ item.boardSize }}</td>
           <td>10h+6s</td>

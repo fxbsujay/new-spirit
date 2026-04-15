@@ -39,6 +39,8 @@ const formState = reactive({
 const modeChangeHandle = (mode) => {
   if (mode === 'CASUAL') {
     formShow.value = true
+  } else if (mode === 'RANK') {
+
   }
 }
 

@@ -13,6 +13,11 @@ public class CasualGameInfo {
     public String code;
 
     /**
+     * 规则
+     */
+    public Integer rule;
+
+    /**
      * 棋盘大小
      */
     public Integer boardSize;
