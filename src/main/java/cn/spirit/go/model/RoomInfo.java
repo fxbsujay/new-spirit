@@ -3,7 +3,7 @@ package cn.spirit.go.model;
 import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 
-public class GamePlay {
+public class RoomInfo {
 
     /**
      * 编号
@@ -34,11 +34,6 @@ public class GamePlay {
      * 步长；如果Type为SHORT则为每步加时，如果为LONG则为每步限时，如果为NONE则为0 单位：毫秒
      */
     public Integer stepDuration;
-
-    /**
-     * 创建时间
-     */
-    public Long timestamp;
 
     /**
      * 开始时间

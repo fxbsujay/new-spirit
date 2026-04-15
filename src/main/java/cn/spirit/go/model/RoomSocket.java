@@ -7,9 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.Objects;
 
-public class GameSocket {
+public class RoomSocket {
 
-    private static final Logger log = LoggerFactory.getLogger(GameSocket.class);
+    private static final Logger log = LoggerFactory.getLogger(RoomSocket.class);
 
     public String socketId;
 
@@ -19,7 +19,7 @@ public class GameSocket {
 
     private final ServerWebSocket socket;
 
-    public GameSocket (UserSession session, ServerWebSocket socket) {
+    public RoomSocket(UserSession session, ServerWebSocket socket) {
         this.sessionId = session.sessionId;
         this.username = session.username;
         this.socket = socket;
@@ -40,7 +40,7 @@ public class GameSocket {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        GameSocket that = (GameSocket) o;
+        RoomSocket that = (RoomSocket) o;
         return Objects.equals(socketId, that.socketId);
     }
 

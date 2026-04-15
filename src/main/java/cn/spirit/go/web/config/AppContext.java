@@ -1,15 +1,22 @@
 package cn.spirit.go.web.config;
 
+import cn.spirit.go.common.RestContext;
+import cn.spirit.go.controller.AuthController;
+import cn.spirit.go.controller.GameController;
+import cn.spirit.go.controller.UserController;
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.service.GameManager;
-import cn.spirit.go.service.GoMatchService;
+import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.socket.ClientManger;
+import cn.spirit.go.web.socket.WebSocketHandler;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mail.*;
 import io.vertx.ext.mongo.MongoClient;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.redis.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +63,7 @@ public class AppContext {
         return (T) beans.get(clazz);
     }
 
-    public static void init(Vertx vertx) {
+    public static Router init(Vertx vertx) {
         AppContext.vertx = vertx;
 
         MONGO = MongoClient.createShared(vertx, new JsonObject()
@@ -81,9 +88,43 @@ public class AppContext {
         addBean(new UserDao());
         addBean(new GameDao());
 
-        addBean(new GameManager());
-        addBean(new GoMatchService());
+
+        Router router = Router.router(vertx);
+        addBean(new GameManager(router));
+
+//        KataGoUtils utils = new KataGoUtils();
+
+        SessionStore sessionHandle = new SessionStore();
+        router.get("/api/ping").handler(RestContext::success);
+
+
+        new WebSocketHandler(router);
+
+        router.route().handler(BodyHandler.create());
+        router.errorHandler(500, ctx -> {
+            log.error("500", ctx.failure());
+            RestContext.fail(ctx);
+        });
+
+//        router.post("/api/kata").handler(ctx -> {
+//            JsonObject json = ctx.body().asJsonObject();
+//            utils.analysis(json).onSuccess(resp -> {
+//                log.info("Kata analysis success: {}", resp);
+//                ctx.response()
+//                        .putHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.APPLICATION_JSON + ";charset=utf-8")
+//                        .end(resp);
+//            }).onFailure(resp -> {
+//                log.info(resp.getMessage(), resp.getCause());
+//            });
+//        });
+
+        new AuthController(router);
+        new GameController(router, sessionHandle);
+        new UserController(router, sessionHandle);
+
         log.info("AppContext init success");
+
+        return router;
     }
 
     public static Future<MailResult> sendMail(String subject, String to, String content, boolean html) {

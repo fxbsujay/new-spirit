@@ -1,29 +1,40 @@
 package cn.spirit.go.model;
 
 import cn.spirit.go.common.enums.GameType;
-import io.vertx.core.json.JsonObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import java.util.*;
 
-public class GameRoom {
-
-    private static final Logger log = LoggerFactory.getLogger(GameRoom.class);
+public class Room {
 
     /**
-     * 游戏信息
+     * 基本信息
      */
-    public GamePlay info;
+    public RoomInfo info;
 
     /**
-     * 白棋玩家信息
+     * 白棋用户
      */
-    public Player white;
+    public String white;
 
     /**
-     * 黑棋玩家信息
+     * 黑棋用户
      */
-    public Player black;
+    public String black;
+
+    /**
+     * 白-每一步剩余时间的累计
+     */
+    public Long whiteRemainder = 0L;
+
+    /**
+     * 黑-每一步剩余时间的累计
+     */
+    public Long blackRemainder = 0L;
+
+    /**
+     * 棋盘棋子
+     */
+    public char[][] board = new char[21][21];
 
     /**
      * 步骤
@@ -33,17 +44,8 @@ public class GameRoom {
     /**
      * 客户端链接
      */
-    public Set<GameSocket> sockets = new HashSet<>();
+    public Set<RoomSocket> sockets = new HashSet<>();
 
-    /**
-     * 白-每一步剩余时间的累计 为
-     */
-    public Long whiteRemainder = 0L;
-
-    /**
-     * 黑-每一步剩余时间的累计
-     */
-    public Long blackRemainder = 0L;
 
     /**
      * 用户这一步操作所用时长
@@ -65,37 +67,25 @@ public class GameRoom {
         return info.stepDuration - (timestamp - steps.get(steps.size() - 1).timestamp);
     }
 
+    /**
+     * 现在是否是白棋走棋
+     */
+    public boolean isWhiteNow() {
+        return steps.size() % 2 == 1;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        GameRoom that = (GameRoom) o;
+        Room that = (Room) o;
         return Objects.equals(info.code, that.info.code);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(info.code);
-    }
-
-    public static class Player {
-
-        public String nickname;
-
-        public String username;
-
-        public String avatar;
-
-        public Integer rating;
-
-        public JsonObject toJson() {
-            return JsonObject.of(
-                    "nickname", nickname,
-                    "username",username,
-                    "avatar", avatar,
-                    "rating", rating);
-        }
     }
 
 }

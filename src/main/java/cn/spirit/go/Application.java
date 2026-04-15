@@ -1,7 +1,6 @@
 package cn.spirit.go;
 
 import cn.spirit.go.web.config.AppContext;
-import cn.spirit.go.web.config.RouterConfig;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.vertx.core.Future;
 import io.vertx.core.VerticleBase;
@@ -23,8 +22,7 @@ public class Application extends VerticleBase {
     @Override
     public Future<?> start() {
         DatabindCodec.mapper().registerModule(new JavaTimeModule());
-        AppContext.init(vertx);
-        Router router = RouterConfig.init(vertx);
+        Router router = AppContext.init(vertx);
         return vertx.createHttpServer()
                 .requestHandler(router)
                 .listen(8899)

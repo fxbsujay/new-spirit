@@ -5,14 +5,19 @@ import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.util.DateUtils;
 import cn.spirit.go.model.CasualGameInfo;
 import cn.spirit.go.model.Page;
+import cn.spirit.go.model.Room;
+import cn.spirit.go.model.RoomInfo;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.web.socket.ClientManger;
 import io.vertx.core.Future;
+import io.vertx.ext.web.Router;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -44,7 +49,11 @@ public class GameManager {
     /**
      * 对局房间
      */
-    private final GoMatchService matchService = new GoMatchService();
+    private final GameRoomService roomService;
+
+    public GameManager(Router router) {
+        roomService = new GameRoomService(router, clientManger);
+    }
 
     /**
      * 搜索游戏大厅
@@ -178,6 +187,33 @@ public class GameManager {
 
     private synchronized <T> Future<T> lock(String username, Supplier<Future<T>> block) {
         return AppContext.withLock(LockConstant.GAME_LOCK + username, block);
+    }
+
+    /**
+     * 搜索正在进行中的对局，自己的房间
+     */
+    public List<Room> searchRooms(String username) {
+        Set<String> userRoomCodes = roomService.getUserRoomCodes(username);
+
+        if (userRoomCodes.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Room> rooms = new ArrayList<>();
+        for (String code : userRoomCodes) {
+            Room room = roomService.get(code);
+            if (null != room) {
+                rooms.add(room);
+            }
+        }
+        return rooms;
+    }
+
+    public Room getRoom(String code) {
+        return roomService.get(code);
+    }
+
+    public String createRoom(RoomInfo info, String white, String black) {
+        return roomService.createRoom(info, white, black);
     }
 
     /**

@@ -3,13 +3,9 @@ package cn.spirit.go.controller;
 import cn.spirit.go.common.RestContext;
 import cn.spirit.go.common.enums.*;
 import cn.spirit.go.common.util.RegexUtils;
-import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
-import cn.spirit.go.model.GamePlay;
-import cn.spirit.go.model.GameRoom;
-import cn.spirit.go.model.CasualGameInfo;
+import cn.spirit.go.model.*;
 import cn.spirit.go.service.GameManager;
-import cn.spirit.go.service.GoMatchService;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
@@ -20,7 +16,8 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.Set;
+
+import java.util.*;
 
 public class GameController {
 
@@ -28,20 +25,15 @@ public class GameController {
 
     private final UserDao userDao = AppContext.getBean(UserDao.class);
 
-    private final GameDao gameDao = AppContext.getBean(GameDao.class);
-
     private final GameManager gameManager = AppContext.getBean(GameManager.class);
-
-    private final GoMatchService matchService = AppContext.getBean(GoMatchService.class);
 
     public GameController(Router router, SessionStore sessionHandle) {
         router.get("/api/game/search").handler(ctx -> sessionHandle.handle(ctx, false)).handler(this::searchGame);
-        router.get("/api/game/playing").handler(sessionHandle::handle).handler(this::playing);
         router.post("/api/game/create").handler(sessionHandle::handle).handler(this::createGame);
         router.post("/api/game/cancel").handler(sessionHandle::handle).handler(this::cancelGame);
         router.post("/api/game/join/:code").handler(sessionHandle::handle).handler(this::joinGame);
-        router.get("/api/game/info/:code").handler(sessionHandle::handle).handler(this::info);
-        router.post("/api/game/end/:code").handler(sessionHandle::handle).handler(this::endGame);
+        router.get("/api/room/ongoing").handler(sessionHandle::handle).handler(this::ongoingRooms);
+        router.get("/api/room/info/:code").handler(sessionHandle::handle).handler(this::roomInfo);
     }
 
     /**
@@ -58,73 +50,74 @@ public class GameController {
     }
 
     /**
-     * 查询自己的对局
+     * 查询自己进行中的对局
      */
-    public void playing(RoutingContext ctx) {
+    public void ongoingRooms(RoutingContext ctx) {
         UserSession session = SessionStore.sessionUser(ctx);
-        Set<String> codes = matchService.userRoomCodes(session.username);
+        List<Room> rooms = gameManager.searchRooms(session.username);
 
-        if (null == codes || codes.isEmpty()) {
-            RestContext.success(ctx, new JsonArray());
+        if (null == rooms || rooms.isEmpty()) {
+            RestContext.success(ctx, Collections.emptyList());
             return;
         }
-        JsonArray list = new JsonArray();
 
-        for (String code : codes) {
-            GameRoom room = matchService.get(code);
-            if (null == room) {
-                continue;
-            }
-            list.add(JsonObject.of(
-                    "info", room.info,
-                    "steps", room.steps,
-                    "white", room.white.toJson().put("remainder", room.whiteRemainder),
-                    "black", room.black.toJson().put("remainder", room.blackRemainder)));
+        Set<String> usernames = new HashSet<>();
+        for (Room room : rooms) {
+            usernames.add(room.white);
+            usernames.add(room.black);
         }
-
-        RestContext.success(ctx, list);
+        JsonObject query = JsonObject.of("username", JsonObject.of("$in", usernames));
+        userDao.findAll(query, "username", "nickname", "avatar", "rating").onSuccess(users -> {
+            JsonArray list = new JsonArray();
+            Map<String, JsonObject> userMap = new HashMap<>();
+            for (JsonObject user : users) {
+                userMap.put(user.getString("username"), user);
+            }
+            for (Room room : rooms) {
+                list.add(JsonObject.of(
+                        "info", room.info,
+                        "steps", room.steps,
+                        "white", userMap.get(room.white).put("remainder", room.whiteRemainder),
+                        "black", userMap.get(room.black).put("remainder", room.blackRemainder)));
+            }
+            RestContext.success(ctx, list);
+        }).onFailure(cause -> {
+            log.error(cause.getMessage(), cause);
+            RestContext.fail(ctx);
+        });
     }
 
     /**
-     * 查询对局
+     * 查询对局信息
      */
-    public void info(RoutingContext ctx) {
+    public void roomInfo(RoutingContext ctx) {
         String code = ctx.pathParam("code");
         if (RegexUtils.mismatchGameCode(code)) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
-        GameRoom room = matchService.get(code);
+        Room room = gameManager.getRoom(code);
         if (null == room) {
-            gameDao.findOne(JsonObject.of("code", code), "code", "white", "black").onSuccess(game -> {
-                if (null == game) {
-                    RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
-                } else {
-                    String white = game.getString("white");
-                    String black = game.getString("black");
-                    JsonObject query = JsonObject.of("$in", JsonArray.of(white, black));
-                    userDao.findAll(query, "username", "nickname", "avatar", "rating").onSuccess(users -> {
-                        JsonObject obj = JsonObject.of("info", game);
-                        for (JsonObject user : users) {
-                            if (user.getString("username").equals(white)) {
-                                obj.put("white", user);
-                            } else {
-                                obj.put("black", user);
-                            }
-                        }
-                        RestContext.success(ctx, obj);
-                    }).onFailure(e -> {
-                        log.error(e.getMessage(), e);
-                        RestContext.fail(ctx);
-                    });
-                }
-            });
+
         } else {
-            RestContext.success(ctx, JsonObject.of(
-                    "info", room.info,
-                    "steps", room.steps,
-                    "white", room.white.toJson().put("remainder", room.whiteRemainder),
-                    "black", room.black.toJson().put("remainder", room.blackRemainder)));
+            JsonObject query = JsonObject.of("username", JsonObject.of("$in", JsonArray.of(room.white, room.black)));
+            userDao.findAll(query, "username", "nickname", "avatar", "rating").onSuccess(users -> {
+                JsonObject res = JsonObject.of(
+                        "info", room.info,
+                        "steps", room.steps);
+                for (JsonObject user : users) {
+                   if (room.white.equals(user.getString("username"))) {
+                       res.put("white", user.put("remainder", room.whiteRemainder));
+                   } else {
+                       res.put("black", user.put("remainder", room.blackRemainder));
+                   }
+                }
+                RestContext.success(ctx, res);
+            }).onFailure(cause -> {
+                log.error(cause.getMessage(), cause);
+                RestContext.fail(ctx);
+            });
+
         }
     }
 
@@ -218,68 +211,25 @@ public class GameController {
                 return;
             }
             // 对局的基本信息存在数据库中
-            GamePlay entity = new GamePlay();
-            entity.code = code;
-            entity.boardSize = game.boardSize;
-            entity.mode = GameMode.CASUAL;
-            entity.type = game.type;
-            entity.duration = game.duration;
-            entity.stepDuration = game.stepDuration;
-            entity.timestamp = game.timestamp;
-            entity.startTime = System.currentTimeMillis();
+            RoomInfo info = new RoomInfo();
+            info.code = code;
+            info.boardSize = game.boardSize;
+            info.mode = GameMode.CASUAL;
+            info.type = game.type;
+            info.duration = game.duration;
+            info.stepDuration = game.stepDuration;
+            info.startTime = System.currentTimeMillis();
 
-            // 查询用户信息
-            JsonObject query = JsonObject.of("username", JsonObject.of("$in", JsonArray.of(game.username, username)));
-            userDao.findAll(query, "username", "nickname", "avatar", "rating").onSuccess(users -> {
-                GameRoom.Player[] players = new GameRoom.Player[users.size()];
-                for (int i = 0; i < users.size(); i++) {
-                    JsonObject user = users.get(i);
-                    GameRoom.Player p = new GameRoom.Player();
-                    p.username = user.getString("username");
-                    p.avatar = user.getString("avatar");
-                    p.nickname = user.getString("nickname");
-                    p.rating = user.getInteger("rating");
-                    players[i] = p;
-                }
-                boolean flag = System.currentTimeMillis() % 2 == 0;
-                if (flag) {
-                    matchService.add(entity, players[0], players[1]);
-                } else {
-                    matchService.add(entity, players[1], players[0]);
-                }
-                RestContext.success(ctx, code);
-            }).onFailure(e -> {
-                log.error("{}: {}", e.getMessage(), code);
-                RestContext.fail(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
-            });
+            boolean flag = System.currentTimeMillis() % 2 == 0;
+            if (flag) {
+                gameManager.createRoom(info, g.username, username);
+            } else {
+                gameManager.createRoom(info, username, g.username);
+            }
+            RestContext.success(ctx, code);
         }).onFailure(e -> {
             log.error("{}: {}", e.getMessage(), code);
             RestContext.fail(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         });
     }
-
-    /**
-     * 认输结束游戏,
-     */
-    public void endGame(RoutingContext ctx) {
-        String code = ctx.pathParam("code");
-        if (RegexUtils.mismatchGameCode(code)) {
-            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
-            return;
-        }
-        UserSession session = SessionStore.sessionUser(ctx);
-        GameRoom room = matchService.get(code);
-        if (null == room || (!room.white.username.equals(session.username) && !room.black.username.equals(session.username))) {
-            RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
-            return;
-        }
-        GameWinner winner = room.white.username.equals(session.username) ? GameWinner.WHITE : GameWinner.BLACK;
-
-        matchService.end(code, winner, GameReason.SURRENDER).onSuccess(v -> RestContext.success(ctx))
-                .onFailure(e -> {
-                    log.error("{}: {}", e.getMessage(), code);
-                    RestContext.fail(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
-                });
-    }
-
 }
