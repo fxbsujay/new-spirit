@@ -10,6 +10,8 @@ import cn.spirit.go.model.RoomInfo;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.web.socket.ClientManger;
+import cn.spirit.go.web.socket.PackageType;
+import cn.spirit.go.web.socket.SocketPackage;
 import io.vertx.core.Future;
 import io.vertx.ext.web.Router;
 import org.slf4j.Logger;
@@ -52,7 +54,7 @@ public class GameManager {
     private final GameRoomService roomService;
 
     public GameManager(Router router) {
-        roomService = new GameRoomService(router, clientManger);
+        roomService = new GameRoomService(router);
     }
 
     /**
@@ -213,7 +215,9 @@ public class GameManager {
     }
 
     public String createRoom(RoomInfo info, String white, String black) {
-        return roomService.createRoom(info, white, black);
+        String room = roomService.createRoom(info, white, black);
+        clientManger.sendToUser(SocketPackage.build(PackageType.GAME_START, info.code), white, black);
+        return room;
     }
 
     /**

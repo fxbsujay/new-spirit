@@ -6,7 +6,6 @@ import cn.spirit.go.common.enums.GameWinner;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.model.*;
 import cn.spirit.go.web.SessionStore;
-import cn.spirit.go.web.socket.ClientManger;
 import cn.spirit.go.web.socket.PackageType;
 import cn.spirit.go.web.socket.SocketPackage;
 import io.vertx.core.Future;
@@ -24,7 +23,6 @@ public class GameRoomService implements Handler<RoutingContext> {
 
     private final Logger log = LoggerFactory.getLogger(GameRoomService.class);
 
-    private final ClientManger clientManger;
 
     /**
      * 房间信息
@@ -38,8 +36,7 @@ public class GameRoomService implements Handler<RoutingContext> {
     private final Map<String, Set<String>> userRooms = new HashMap<>();
 
 
-    public GameRoomService(Router router, ClientManger clientManger) {
-        this.clientManger = clientManger;
+    public GameRoomService(Router router) {
         router.route("/api/ws/:code").handler(this);
     }
 
@@ -57,8 +54,6 @@ public class GameRoomService implements Handler<RoutingContext> {
         room.white = white;
         room.black = black;
         rooms.put(info.code, room);
-        clientManger.sendToUser(SocketPackage.build(PackageType.GAME_START, info.code), white, black);
-
         addUserRoom(info.code, white);
         addUserRoom(info.code, black);
         return info.code;
