@@ -23,7 +23,6 @@ public class GameRoomService implements Handler<RoutingContext> {
 
     private final Logger log = LoggerFactory.getLogger(GameRoomService.class);
 
-
     /**
      * 房间信息
      */
@@ -48,7 +47,7 @@ public class GameRoomService implements Handler<RoutingContext> {
      * @return 房间号
      */
     public String createRoom(RoomInfo info, String white, String black) {
-        Room room = new Room();
+        Room room = new Room(info.boardSize);
         room.whiteRemainder = info.duration.longValue();
         room.blackRemainder = info.duration.longValue();
         room.white = white;
@@ -86,11 +85,6 @@ public class GameRoomService implements Handler<RoutingContext> {
                 return;
             }
         } else {
-            // 判断棋子是否重叠
-            if (room.steps.contains(step)) {
-                return;
-            }
-
             int size = room.steps.size();
             GameWinner winner;
             // 判断当前应该是是哪一方落子
@@ -107,7 +101,11 @@ public class GameRoomService implements Handler<RoutingContext> {
                     winner = GameWinner.WHITE;
                 }
             }
-            // TODO 判断是否为禁入点
+
+            // 提子判气
+            if (!room.place(x, y, winner == GameWinner.WHITE ? Room.WHITE : Room.BLACK)) {
+                return;
+            }
 
             // 时间有限制并且前两手已经下完
             if (room.info.type != GameType.NONE && size > 1) {
@@ -126,20 +124,16 @@ public class GameRoomService implements Handler<RoutingContext> {
                 }
 
                 if (time <= 0) {
-                    // TODO 超时结算
                     end(code, winner, GameReason.TIMEOUT);
                     return;
                 } else {
-                    // TODO 定时任务 {time} 毫秒后未走，游戏结束
-//                    long timer = AppContext.vertx.setTimer(time, id -> {
-//
-//                    });
+
                 }
             }
         }
 
         room.steps.add(step);
-        // TODO 提子
+
         log.info("[{}] - add a step to the game {}, username={}, x={}, y={}, ", room.white.equals(username) ? 'W' : 'B', code, username, x, y);
         send(code, SocketPackage.build(PackageType.GAME_STEP, username,  JsonObject.of("whiteRemainder", room.whiteRemainder, "blackRemainder", room.blackRemainder, "step", step)));
     }
@@ -245,7 +239,7 @@ public class GameRoomService implements Handler<RoutingContext> {
         }
         boolean flag = room.sockets.add(socket);
         if (flag) {
-            send(code, SocketPackage.build(PackageType.GAME_JOIN, socket.username, code));
+            send(code, SocketPackage.build(PackageType.GAME_CONNECTION, socket.username, code));
         }
         return flag;
     }
@@ -260,7 +254,7 @@ public class GameRoomService implements Handler<RoutingContext> {
         }
         boolean flag = room.sockets.remove(socket);
         if (flag) {
-            send(code, SocketPackage.build(PackageType.GAME_EXIT, socket.username, code));
+            send(code, SocketPackage.build(PackageType.GAME_DISCONNECTION, socket.username, code));
         }
     }
 

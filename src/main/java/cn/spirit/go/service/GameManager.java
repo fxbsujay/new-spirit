@@ -1,6 +1,7 @@
 package cn.spirit.go.service;
 
 import cn.spirit.go.common.LockConstant;
+import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.util.DateUtils;
 import cn.spirit.go.model.CasualGameInfo;
@@ -167,7 +168,22 @@ public class GameManager {
             if (!clientManger.isOnLine(username) || lobbyService.getByUsername(username) != null) {
                 return Future.succeededFuture(false);
             }
-            return Future.succeededFuture(rankedService.ranking(username, rating));
+            return Future.succeededFuture(rankedService.ranking(username, rating, opponent -> {
+                RoomInfo info = new RoomInfo();
+                info.code = generateCode();
+                info.mode = GameMode.RANK;
+                info.type = GameType.NONE;
+                info.boardSize = 19;
+                // 60分钟 60秒
+                info.duration = 60 * 60 * 1000;
+                info.stepDuration = 60 * 1000;
+                info.startTime = System.currentTimeMillis();
+                if (System.currentTimeMillis() % 2 == 0) {
+                    createRoom(info, username, opponent);
+                } else {
+                    createRoom(info, opponent, username);
+                }
+            }));
         });
     }
 
@@ -214,10 +230,10 @@ public class GameManager {
         return roomService.get(code);
     }
 
-    public String createRoom(RoomInfo info, String white, String black) {
-        String room = roomService.createRoom(info, white, black);
+    public void createRoom(RoomInfo info, String white, String black) {
+        String code = roomService.createRoom(info, white, black);
         clientManger.sendToUser(SocketPackage.build(PackageType.GAME_START, info.code), white, black);
-        return room;
+        log.info("Room creation successful, with code: {}", code);
     }
 
     /**

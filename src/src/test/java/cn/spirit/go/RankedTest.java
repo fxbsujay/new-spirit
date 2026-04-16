@@ -2,7 +2,6 @@ package cn.spirit.go;
 
 import cn.spirit.go.service.GameRankedService;
 import cn.spirit.go.web.config.AppContext;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -11,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.function.Consumer;
 
 @DisplayName("GameRankedService")
 @ExtendWith(VertxExtension.class)
@@ -25,21 +25,21 @@ public class RankedTest {
 
         GameRankedService service = new GameRankedService();
 
+        Consumer<String> matchSuccess = user -> {
+            log.info("match success: {}", user);
+        };
+
         Thread t1 = new Thread(() -> {
             for (int i = 1; i <= 10; i++) {
                 String name = "A-" + i;
-                service.ranking(name, i).onSuccess(result -> {
-                    log.info("Ranking A: {}, name: {}", result, name);
-                });
+                service.ranking(name, i, matchSuccess);
             }
         });
 
         Thread t2 = new Thread(() -> {
             for (int i = 1; i <= 10; i++) {
                 String name = "A-" + i;
-                service.ranking(name, i).onSuccess(result -> {
-                    log.info("Ranking B: {}, name: {}", result, name);
-                });
+                service.ranking(name, i, matchSuccess);
             }
         });
 

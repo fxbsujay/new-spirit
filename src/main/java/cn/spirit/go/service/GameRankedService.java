@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * 积分赛匹配池
@@ -29,14 +30,14 @@ public class GameRankedService {
      *
      * @param username  用户名
      * @param rating    积分
+     * @return 是否加入匹配队列成功
      */
-    public Boolean ranking(String username, Integer rating) {
+    public Boolean ranking(String username, Integer rating, Consumer<String> matchSuccess) {
         Player player = new Player(username, rating);
         if (isMatching(username)) {
             return false;
         }
         matchingQueue.add(player);
-
         // 开始匹配
         match(player, 200).compose(opponent -> {
             // 匹配完毕
@@ -45,11 +46,9 @@ public class GameRankedService {
                 waitingQueue.add(player);
                 return Future.succeededFuture(true);
             } else {
-                // TODO 匹配到对手，加入待接受对局池，双方都接受对局后开始游戏
                 log.info("Game Matchmaking successful, Players: [{},{}]", player.username, opponent.username);
-
-                // 删除对手的匹配
                 matchingQueue.remove(opponent);
+                matchSuccess.accept(opponent.username);
             }
             return Future.succeededFuture();
         });

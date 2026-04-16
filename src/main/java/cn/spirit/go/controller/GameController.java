@@ -16,7 +16,6 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.*;
 
 public class GameController {
@@ -32,6 +31,10 @@ public class GameController {
         router.post("/api/game/create").handler(sessionHandle::handle).handler(this::createGame);
         router.post("/api/game/cancel").handler(sessionHandle::handle).handler(this::cancelGame);
         router.post("/api/game/join/:code").handler(sessionHandle::handle).handler(this::joinGame);
+
+        router.post("/api/game/ranking").handler(sessionHandle::handle).handler(this::ranking);
+        router.post("/api/game/ranking/cancel").handler(sessionHandle::handle).handler(this::cancelRanking);
+
         router.get("/api/room/ongoing").handler(sessionHandle::handle).handler(this::ongoingRooms);
         router.get("/api/room/info/:code").handler(sessionHandle::handle).handler(this::roomInfo);
     }
@@ -220,8 +223,7 @@ public class GameController {
             info.stepDuration = game.stepDuration;
             info.startTime = System.currentTimeMillis();
 
-            boolean flag = System.currentTimeMillis() % 2 == 0;
-            if (flag) {
+            if (System.currentTimeMillis() % 2 == 0) {
                 gameManager.createRoom(info, g.username, username);
             } else {
                 gameManager.createRoom(info, username, g.username);
@@ -230,6 +232,33 @@ public class GameController {
         }).onFailure(e -> {
             log.error("{}: {}", e.getMessage(), code);
             RestContext.fail(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+        });
+    }
+
+    /**
+     * 排位比赛
+     */
+    public void ranking(RoutingContext ctx) {
+        String username = SessionStore.username(ctx);
+        userDao.findOne(JsonObject.of("username", username), "rating")
+                .compose(user -> gameManager.startRanking(username, user.getInteger("rating")))
+                .onSuccess(isSuccess -> {
+                    RestContext.success(ctx, isSuccess);
+                }).onFailure(e -> {
+                    log.error(e.getMessage(), e);
+                    RestContext.fail(ctx);
+                });
+    }
+
+    /**
+     * 取消排位
+     */
+    public void cancelRanking(RoutingContext ctx) {
+        gameManager.cancelRanking(SessionStore.username(ctx)).onSuccess(ranking -> {
+            RestContext.success(ctx);
+        }).onFailure(e -> {
+            log.error(e.getMessage(), e);
+            RestContext.fail(ctx);
         });
     }
 }
