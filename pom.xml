@@ -65,12 +65,6 @@
       <artifactId>vertx-mail-client</artifactId>
     </dependency>
 
-    <!-- 测试 -->
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-junit5</artifactId>
-    </dependency>
-
     <!-- JSON -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -96,6 +90,7 @@
       <version>${logback.version}</version>
     </dependency>
 
+    <!-- 测试 -->
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-junit5</artifactId>

@@ -58,7 +58,6 @@ public class GameRoomService implements Handler<RoutingContext> {
         return info.code;
     }
 
-
     /**
      * 玩家落子
      * 0412-1760178234 横坐标纵坐标(x,y)-落子时间戳
@@ -116,7 +115,6 @@ public class GameRoomService implements Handler<RoutingContext> {
                     time += room.whiteRemainder;
                     room.whiteRemainder = time;
                     log.info("W time={}", room.whiteRemainder);
-
                 } else {
                     time += room.blackRemainder;
                     room.blackRemainder = time;
