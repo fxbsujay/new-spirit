@@ -15,7 +15,7 @@ const ModeConstant = [
 const { waitGame, closeWaitGame } = useUserStore()
 
 watch(waitGame, value => {
-  if (value.code) {
+  if (value.status) {
     startWait(value)
   } else {
     isStart.value = false

@@ -18,15 +18,13 @@ export const useUserStore = defineStore('user', () => {
   })
 
   const waitGame = reactive({
+    status: false,
     code: '',
     boardSize: 0,
     type: 'SHORT',
     mode: 'CASUAL',
     duration: 0,
     stepDuration: 0,
-    username: '',
-    nickname: '',
-    score: 0,
     timestamp: 0,
   })
 
@@ -69,9 +67,18 @@ export const useUserStore = defineStore('user', () => {
     Cookie.set('userIsVisitor', value, { expires: 999 })
   }
 
+  const startWaitGame = (info) => {
+    Object.assign(waitGame, {
+      code: info.mode === 'CASUAL' ? info.code : '',
+      status: true,
+      timestamp: dayjs().unix(),
+    })
+  }
+
   const closeWaitGame = () => {
     Object.assign(waitGame, {
       code: '',
+      status: false,
       boardSize: 0,
       type: 'SHORT',
       mode: 'CASUAL',
@@ -81,5 +88,5 @@ export const useUserStore = defineStore('user', () => {
     })
   }
 
-  return { user, waitGame, refreshInfo, login, logout, closeWaitGame }
+  return { user, waitGame, refreshInfo, login, logout, startWaitGame, closeWaitGame }
 })

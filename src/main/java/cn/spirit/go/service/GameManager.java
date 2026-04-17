@@ -178,11 +178,7 @@ public class GameManager {
                 info.duration = 60 * 60 * 1000;
                 info.stepDuration = 60 * 1000;
                 info.startTime = System.currentTimeMillis();
-                if (System.currentTimeMillis() % 2 == 0) {
-                    createRoom(info, username, opponent);
-                } else {
-                    createRoom(info, opponent, username);
-                }
+                createRoom(info, username, opponent);
             }));
         });
     }
@@ -230,9 +226,14 @@ public class GameManager {
         return roomService.get(code);
     }
 
-    public void createRoom(RoomInfo info, String white, String black) {
-        String code = roomService.createRoom(info, white, black);
-        clientManger.sendToUser(SocketPackage.build(PackageType.GAME_START, info.code), white, black);
+    public void createRoom(RoomInfo info, String p1, String p2) {
+        String code;
+        if (System.currentTimeMillis() % 2 == 0) {
+            code = roomService.createRoom(info, p1, p2);
+        } else {
+            code = roomService.createRoom(info, p2, p1);
+        }
+        clientManger.sendToUser(SocketPackage.build(PackageType.GAME_START, info.code), p1, p2);
         log.info("Room creation successful, with code: {}", code);
     }
 

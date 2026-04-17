@@ -5,9 +5,8 @@ import { TypeConstant } from '@/constant'
 import { debounce } from '@/utils/index'
 import http from '@/utils/http'
 import { useUserStore } from '@/stores/user'
-import dayjs from 'dayjs'
 
-const { waitGame } = useUserStore()
+const { startWaitGame } = useUserStore()
 
 const props = defineProps({
   modelValue: Boolean
@@ -53,12 +52,12 @@ const createHandle = debounce(() => {
     return
   }
   loading.value = true
-  http.post("/game/create", formState).then(() => {
+  http.post("/game/create", formState).then(code => {
     loading.value = false
-    Object.assign(waitGame, {
-      code: '111',
-      timestamp: dayjs().unix(),
-      ...formState
+    startWaitGame({
+      ...formState,
+      code,
+      mode: 'CASUAL'
     })
     closeDrawer()
   }).catch(() => {

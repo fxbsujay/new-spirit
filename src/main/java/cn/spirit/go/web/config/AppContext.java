@@ -92,8 +92,6 @@ public class AppContext {
         Router router = Router.router(vertx);
         addBean(new GameManager(router));
 
-//        KataGoUtils utils = new KataGoUtils();
-
         SessionStore sessionHandle = new SessionStore();
         router.get("/api/ping").handler(RestContext::success);
 
@@ -105,18 +103,6 @@ public class AppContext {
             log.error("500", ctx.failure());
             RestContext.fail(ctx);
         });
-
-//        router.post("/api/kata").handler(ctx -> {
-//            JsonObject json = ctx.body().asJsonObject();
-//            utils.analysis(json).onSuccess(resp -> {
-//                log.info("Kata analysis success: {}", resp);
-//                ctx.response()
-//                        .putHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.APPLICATION_JSON + ";charset=utf-8")
-//                        .end(resp);
-//            }).onFailure(resp -> {
-//                log.info(resp.getMessage(), resp.getCause());
-//            });
-//        });
 
         new AuthController(router);
         new GameController(router, sessionHandle);

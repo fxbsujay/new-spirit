@@ -170,7 +170,7 @@ public class GameController {
             dto.nickname = user.getString("nickname");
             gameManager.createCasualGame(dto).onSuccess(flag -> {
                 if (flag) {
-                    RestContext.success(ctx);
+                    RestContext.success(ctx, dto.code);
                 } else {
                     RestContext.fail(ctx, RestStatus.GAME_CREATED);
                 }
@@ -226,12 +226,7 @@ public class GameController {
             info.duration = game.duration;
             info.stepDuration = game.stepDuration;
             info.startTime = System.currentTimeMillis();
-
-            if (System.currentTimeMillis() % 2 == 0) {
-                gameManager.createRoom(info, g.username, username);
-            } else {
-                gameManager.createRoom(info, username, g.username);
-            }
+            gameManager.createRoom(info, username, g.username);
             RestContext.success(ctx, code);
         }).onFailure(e -> {
             log.error("{}: {}", e.getMessage(), code);
