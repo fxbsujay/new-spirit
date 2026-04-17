@@ -20,7 +20,6 @@ public class WebSocketHandler implements Handler<RoutingContext> {
 
     private final GameManager gameManager = AppContext.getBean(GameManager.class);
 
-
     public WebSocketHandler(Router router) {
         router.route("/api/ws").handler(this);
     }

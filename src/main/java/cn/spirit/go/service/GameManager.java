@@ -157,7 +157,7 @@ public class GameManager {
             lobbyService.removeGame(username);
             rankedService.cancel(username);
             return Future.succeededFuture();
-        });
+       });
     }
 
     /**

@@ -31,12 +31,22 @@ public class Room {
     /**
      * 白-每一步剩余时间的累计
      */
-    public Long whiteRemainder = 0L;
+    public long whiteRemainder = 0L;
 
     /**
      * 黑-每一步剩余时间的累计
      */
-    public Long blackRemainder = 0L;
+    public long blackRemainder = 0L;
+
+    /**
+     * 白棋提子数量
+     */
+    public int whiteCaptured = 0;
+
+    /**
+     * 黑棋提子数量
+     */
+    public int blackCaptured = 0;
 
     /**
      * 棋盘棋子
@@ -96,34 +106,37 @@ public class Room {
         if (x < 0 || x >= size || y < 0 || y >= size || board[x][y] != EMPTY) {
             return false;
         }
-
         char opp = color == BLACK ? WHITE : BLACK;
-
-        // 1. 先下
         board[x][y] = color;
+        if (steps.size() < 4) {
+            return true;
+        }
 
-        // 2. 提掉对方没有气的块
-        boolean captured = removeDeadGroups(board, opp);
-
-        // 3. 检查自己是否有气
-        boolean hasLib = groupHasLiberty(board, x, y, new boolean[size][size]);
-
-        // 4. 没有气 + 没提子 = 禁入点，撤销
-        if (!hasLib && !captured) {
-            board[x][y] = EMPTY;
-            return false;
+        int captured = removeDeadGroups(board, opp);
+        if (captured > 0) {
+            if (color == BLACK) {
+                blackCaptured += captured;
+            } else {
+                whiteCaptured += captured;
+            }
+        } else {
+            // 没有气 + 没提子 = 禁入点，撤销
+            if (!groupHasLiberty(board, x, y, new boolean[size][size])) {
+                board[x][y] = EMPTY;
+                return false;
+            }
         }
 
         return true;
     }
 
     /**
-     * 移除所有没有气的棋子，返回是否提过子
+     * 移除所有没有气的棋子，返回提子数量
      */
-    private boolean removeDeadGroups(char[][] board, char color) {
+    private int removeDeadGroups(char[][] board, char color) {
         int size = board.length;
         boolean[][] visited = new boolean[size][size];
-        boolean captured = false;
+        int captured = 0;
 
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
@@ -131,7 +144,7 @@ public class Room {
                     List<int[]> group = getGroup(board, i, j, visited);
                     if (!groupHasLiberty(board, group)) {
                         for (int[] p : group) board[p[0]][p[1]] = EMPTY;
-                        captured = true;
+                        captured++;
                     }
                 }
             }

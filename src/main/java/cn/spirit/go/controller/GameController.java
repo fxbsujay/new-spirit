@@ -110,9 +110,13 @@ public class GameController {
                         "steps", room.steps);
                 for (JsonObject user : users) {
                    if (room.white.equals(user.getString("username"))) {
-                       res.put("white", user.put("remainder", room.whiteRemainder));
+                       user.put("remainder", room.whiteRemainder);
+                       user.put("captured", room.whiteCaptured);
+                       res.put("white", user);
                    } else {
-                       res.put("black", user.put("remainder", room.blackRemainder));
+                       user.put("remainder", room.blackRemainder);
+                       user.put("captured", room.blackCaptured);
+                       res.put("black", user);
                    }
                 }
                 RestContext.success(ctx, res);

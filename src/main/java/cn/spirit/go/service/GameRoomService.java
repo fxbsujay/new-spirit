@@ -34,7 +34,6 @@ public class GameRoomService implements Handler<RoutingContext> {
      */
     private final Map<String, Set<String>> userRooms = new HashMap<>();
 
-
     public GameRoomService(Router router) {
         router.route("/api/ws/:code").handler(this);
     }
@@ -48,6 +47,7 @@ public class GameRoomService implements Handler<RoutingContext> {
      */
     public String createRoom(RoomInfo info, String white, String black) {
         Room room = new Room(info.boardSize);
+        room.info = info;
         room.whiteRemainder = info.duration.longValue();
         room.blackRemainder = info.duration.longValue();
         room.white = white;
@@ -83,6 +83,7 @@ public class GameRoomService implements Handler<RoutingContext> {
             if (!room.black.equals(username)) {
                 return;
             }
+            room.board[x][y] = Room.BLACK;
         } else {
             int size = room.steps.size();
             GameWinner winner;
@@ -90,19 +91,17 @@ public class GameRoomService implements Handler<RoutingContext> {
             if (room.isWhiteNow()) {
                 if (!room.white.equals(username)) {
                     return;
-                } else {
-                    winner = GameWinner.BLACK;
                 }
+                winner = GameWinner.BLACK;
             } else {
                 if (!room.black.equals(username)) {
                     return;
-                } else {
-                    winner = GameWinner.WHITE;
                 }
+                winner = GameWinner.WHITE;
             }
 
             // 提子判气
-            if (!room.place(x, y, winner == GameWinner.WHITE ? Room.WHITE : Room.BLACK)) {
+            if (!room.place(x, y, winner == GameWinner.WHITE ? Room.BLACK : Room.WHITE)) {
                 return;
             }
 
@@ -131,7 +130,7 @@ public class GameRoomService implements Handler<RoutingContext> {
         }
 
         room.steps.add(step);
-
+        room.outPrintBoard();
         log.info("[{}] - add a step to the game {}, username={}, x={}, y={}, ", room.white.equals(username) ? 'W' : 'B', code, username, x, y);
         send(code, SocketPackage.build(PackageType.GAME_STEP, username,  JsonObject.of("whiteRemainder", room.whiteRemainder, "blackRemainder", room.blackRemainder, "step", step)));
     }
@@ -153,7 +152,6 @@ public class GameRoomService implements Handler<RoutingContext> {
     public Room get(String code) {
         return rooms.get(code);
     }
-
 
     private void addUserRoom(String code, String usernames) {
         Set<String> codes = userRooms.get(usernames);
@@ -212,17 +210,11 @@ public class GameRoomService implements Handler<RoutingContext> {
                     default:
                         log.error("Illegal websocket message packet type, from: {}, sessionId: {}", session.username, session.sessionId);
                         ws.close();
-                        return;
                 }
             });
-            ws.closeHandler(e -> {
-                disconnection(code, socket);
-            });
-        }).onFailure(e -> {
-            ws.close();
-        }));
+            ws.closeHandler(e -> disconnection(code, socket));
+        }).onFailure(e -> ws.close()));
     }
-
 
     /**
      * 游戏网络连接

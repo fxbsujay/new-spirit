@@ -14,7 +14,7 @@ export class GameSocket {
     refresh() {
         this.loading.value = true
         this.success.value = false
-        http.get('/game/info/' + this.code).then(res => {
+        http.get('/room/info/' + this.code).then(res => {
             Object.assign(this.game, res)
             this.loading.value = false
             this.success.value = true
