@@ -4,8 +4,10 @@ import cn.spirit.go.common.enums.GameReason;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.GameWinner;
 import cn.spirit.go.common.util.RegexUtils;
+import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.model.*;
 import cn.spirit.go.web.SessionStore;
+import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.web.socket.PackageType;
 import cn.spirit.go.web.socket.SocketPackage;
 import io.vertx.core.Future;
@@ -22,6 +24,9 @@ import java.util.*;
 public class GameRoomService implements Handler<RoutingContext> {
 
     private final Logger log = LoggerFactory.getLogger(GameRoomService.class);
+
+
+    private GameDao gameDao = AppContext.getBean(GameDao.class);
 
     /**
      * 房间信息
@@ -121,10 +126,16 @@ public class GameRoomService implements Handler<RoutingContext> {
                 }
 
                 if (time <= 0) {
-                    end(code, winner, GameReason.TIMEOUT);
                     return;
                 } else {
-
+                    if (null != room.timerId) {
+                        AppContext.vertx.cancelTimer(room.timerId);
+                    }
+                    AppContext.vertx.setTimer(time, id -> {
+                        room.timerId = id;
+                        // 超时结束
+                        end(code, winner, GameReason.TIMEOUT);
+                    });
                 }
             }
         }
@@ -142,8 +153,27 @@ public class GameRoomService implements Handler<RoutingContext> {
      * @param winner 胜利方
      * @param reason 胜利原因
      */
-    public Future<Void> end(String code, GameWinner winner, GameReason reason) {
-        return null;
+    public void end(String code, GameWinner winner, GameReason reason) {
+        JsonObject game =  new JsonObject();
+        Room room = rooms.get(code);
+        if (null == room) {
+            return;
+        }
+        game.put("code", code);
+        game.put("boardSize", room.info.boardSize);
+        game.put("type", room.info.type);
+        game.put("mode", room.info.mode);
+        game.put("duration", room.info.duration);
+        game.put("stepDuration", room.info.stepDuration);
+        game.put("startTime", room.info.startTime);
+        game.put("endTime", System.currentTimeMillis());
+        game.put("winner", winner);
+        game.put("reason", reason);
+        game.put("steps", room.steps);
+        gameDao.insert(game).onSuccess(res -> {
+            log.info("Game over, code = {}, winner = {}, reason = {}", code, winner, reason);
+            send(code, SocketPackage.build(PackageType.GAME_STEP, JsonObject.of("winner", winner, "reason", reason)));
+        });
     }
 
     /**

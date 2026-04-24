@@ -54,6 +54,11 @@ public class Room {
     public char[][] board;
 
     /**
+     * 定时器ID
+     */
+    public Long timerId;
+
+    /**
      * 步骤
      */
     public List<GameStep> steps = new ArrayList<>();

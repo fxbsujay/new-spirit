@@ -9,5 +9,13 @@ public enum GameReason {
      * 投降
      */
     SURRENDER,
+    /**
+     * 击败
+     */
+    BEAT,
+    /**
+     * 求和
+     */
+    PEACE
 
 }
