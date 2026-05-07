@@ -154,8 +154,8 @@ public class GameRoomService implements Handler<RoutingContext> {
      * @param reason 胜利原因
      */
     public void end(String code, GameWinner winner, GameReason reason) {
-        JsonObject game =  new JsonObject();
-        Room room = rooms.get(code);
+        JsonObject game = new JsonObject();
+        Room room = rooms.remove(code);
         if (null == room) {
             return;
         }
