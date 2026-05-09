@@ -79,8 +79,8 @@ const passwordInputHandler = (event) => {
               <input
                   class="input"
                   required
-                  pattern="[a-zA-Z0-9]{2,20}"
-                  title="2-20位字母或数字"
+                  pattern="[A-Za-z][a-zA-Z0-9]{1,19}"
+                  title="以英文字母开头，2-20位字母或数字"
                   v-model="formState.username"
                   :disabled="loading"
               />

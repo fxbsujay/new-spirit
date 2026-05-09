@@ -1,7 +1,6 @@
 
 <script setup>
 import Responsive from '@/components/responsive/index.vue'
-import snackbar from '@/components/snackbar/index.js'
 import { ref, watch, reactive } from 'vue'
 import Icon from '@/components/icon/Icon.vue'
 import http from '@/utils/http'
@@ -47,14 +46,12 @@ const tableRowClickHandle = throttle(game => {
   })
 })
 
-watch(waitGame, () => {
-  searchHandle()
-})
+watch(waitGame, searchHandle)
 
 </script>
 
 <template>
-  <div class="lobby-wrap">
+  <div class="lobby-wrap container">
     <div class="lobby-side">
       <div class="">
       </div>

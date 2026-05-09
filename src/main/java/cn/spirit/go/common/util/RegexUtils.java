@@ -25,7 +25,7 @@ public class RegexUtils {
     /**
      * 邮箱地址
      */
-    public static final String EMAIL = "\\w[-\\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\\.)+[A-Za-z]{2,14}";
+    public static final String EMAIL = "^\\w[-\\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\\.)+[A-Za-z]{2,14}$";
 
     /**
      * 网址
@@ -38,9 +38,9 @@ public class RegexUtils {
     public static final String PHONE_NUMBER = "0?(13|14|15|17|18)[0-9]{9}";
 
     /**
-     * 账户号 英文字母、数字
+     * 账户号 英文字母、数字，以英文字母开头
      */
-    public static final String USERNAME = "[a-zA-Z0-9]{2,20}";
+    public static final String USERNAME = "^[A-Za-z][a-zA-Z0-9]{1,19}$";
 
     /**
      * 账户密码 英文字符、数字、!$^.*_%
@@ -50,7 +50,7 @@ public class RegexUtils {
     /**
      * 验证码
      */
-    public static final String CODE = "[A-Z0-9]{5}";
+    public static final String CODE = "^[A-Z0-9]{5}$";
 
     public static boolean matches(String line, String pattern) {
         if (line == null || line.trim().isBlank()) {

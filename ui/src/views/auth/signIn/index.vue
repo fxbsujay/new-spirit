@@ -36,8 +36,8 @@ const submitHandle = () => {
             <input
                 class="input"
                 required
-                pattern="[a-zA-Z0-9@.]{2,20}"
-                title="2-20位字母或数字"
+                pattern="^[a-zA-Z0-9@!._-+]{2,20}$"
+                title="请输入2-20位字母开头的字母数字，或有效的邮箱地址"
                 v-model="formState.username"
             />
           </div>
@@ -51,7 +51,7 @@ const submitHandle = () => {
               <input
                   class="input"
                   required
-                  pattern="[a-zA-Z0-9@!$^.*_%]{6,30}"
+                  pattern="^[a-zA-Z0-9@!$^.*_%]{6,30}$"
                   title="6-30位字，数字或以下@!$^.*_%合法符号"
                   v-model="formState.password"
                   :type="passwordReveal ? 'input' : 'password'"
