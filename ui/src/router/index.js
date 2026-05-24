@@ -30,6 +30,11 @@ const router = createRouter({
           component: () => import('@/views/auth/signUpSuccess/index.vue'),
         },
         {
+          path: '/:username(@[A-Za-z][a-zA-Z0-9]{1,19})',
+          name: 'Profile',
+          component: () => import('@/views/profile/index.vue'),
+        },
+        {
           path: '/:code([A-Z0-9]{4,8})',
           name: 'Game',
           component: () => import('@/views/game/index.vue'),

@@ -37,7 +37,7 @@
             <div class="dropdown">
               <div class="dropdown-content">
                 <div class="links">
-                  <RouterLink to="/sign-in"><Icon name="person" size="14px" /><span>个人中心</span></RouterLink>
+                  <RouterLink :to="`/@${user.username}`"><Icon name="person" size="14px" /><span>个人中心</span></RouterLink>
                   <RouterLink @click="logout" class="logout" to="/"><Icon name="logout" size="14px" /><span>退出登录</span></RouterLink>
                 </div>
               </div>
