@@ -228,6 +228,17 @@ public class Room {
         return Objects.hash(info.code);
     }
 
+    public List<String> boardToArray() {
+        List<String> arr = new ArrayList<>();
+        for (int i = 0; i < this.board.length; i++) {
+            for (int j = 0; j < this.board[0].length; j++) {
+                arr.add(String.format("%2d", i) + String.format("%2d", j) + board[i][j]);
+            }
+        }
+
+        return arr;
+    }
+
     public void outPrintBoard() {
         int size = board.length;
 

@@ -199,7 +199,7 @@ public class GameManager {
         return lobbyService.getByUsername(username) != null || rankedService.isMatching(username);
     }
 
-    private synchronized <T> Future<T> lock(String username, Supplier<Future<T>> block) {
+    private <T> Future<T> lock(String username, Supplier<Future<T>> block) {
         return AppContext.withLock(LockConstant.GAME_LOCK + username, block);
     }
 

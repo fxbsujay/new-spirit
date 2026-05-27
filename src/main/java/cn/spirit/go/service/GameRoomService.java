@@ -1,5 +1,6 @@
 package cn.spirit.go.service;
 
+import cn.spirit.go.common.LockConstant;
 import cn.spirit.go.common.enums.GameReason;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.GameWinner;
@@ -11,7 +12,6 @@ import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.web.socket.PackageType;
 import cn.spirit.go.web.socket.SocketPackage;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -20,13 +20,13 @@ import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;
+import java.util.function.Supplier;
 
-public class GameRoomService implements Handler<RoutingContext> {
+public class GameRoomService {
 
     private final Logger log = LoggerFactory.getLogger(GameRoomService.class);
 
-
-    private GameDao gameDao = AppContext.getBean(GameDao.class);
+    private final GameDao gameDao = AppContext.getBean(GameDao.class);
 
     /**
      * 房间信息
@@ -40,7 +40,7 @@ public class GameRoomService implements Handler<RoutingContext> {
     private final Map<String, Set<String>> userRooms = new HashMap<>();
 
     public GameRoomService(Router router) {
-        router.route("/api/ws/:code").handler(this);
+        router.route("/api/ws/:code").handler(this::handle);
     }
 
     /**
@@ -73,77 +73,81 @@ public class GameRoomService implements Handler<RoutingContext> {
      * @param y         纵坐标
      */
     private void move(String username, String code, Integer x, Integer y) {
-        Room room = get(code);
-        if (null == room) {
-            return;
-        }
-        // 判断参数合法性
-        if ((!room.black.equals(username) && !room.white.equals(username)) || x < 0 || y < 0 || x >= room.info.boardSize || y >= room.info.boardSize) {
-            return;
-        }
-
         GameStep step = new GameStep(x, y);
-        if (room.steps.isEmpty()) {
-            // 黑棋先手，是否是黑方
-            if (!room.black.equals(username)) {
-                return;
+        lock(code, () -> {
+            Room room = get(code);
+            if (null == room) {
+                return Future.failedFuture("move failed");
             }
-            room.board[x][y] = Room.BLACK;
-        } else {
-            int size = room.steps.size();
-            GameWinner winner;
-            // 判断当前应该是是哪一方落子
-            if (room.isWhiteNow()) {
-                if (!room.white.equals(username)) {
-                    return;
-                }
-                winner = GameWinner.BLACK;
-            } else {
+            // 判断参数合法性
+            if ((!room.black.equals(username) && !room.white.equals(username)) || x < 0 || y < 0 || x >= room.info.boardSize || y >= room.info.boardSize) {
+                return Future.failedFuture("room not found");
+            }
+            if (room.steps.isEmpty()) {
+                // 黑棋先手，是否是黑方
                 if (!room.black.equals(username)) {
-                    return;
+                    return Future.failedFuture("move failed");
                 }
-                winner = GameWinner.WHITE;
-            }
-
-            // 提子判气
-            if (!room.place(x, y, winner == GameWinner.WHITE ? Room.BLACK : Room.WHITE)) {
-                return;
-            }
-
-            // 时间有限制并且前两手已经下完
-            if (room.info.type != GameType.NONE && size > 1) {
-                // 落子是否超时或违规
-                long time = room.remainingTime(step.timestamp);
-                log.info("time={}",time);
-                if (winner == GameWinner.BLACK) {
-                    time += room.whiteRemainder;
-                    room.whiteRemainder = time;
-                    log.info("W time={}", room.whiteRemainder);
-                } else {
-                    time += room.blackRemainder;
-                    room.blackRemainder = time;
-                    log.info("B time={}",room.blackRemainder);
-                }
-
-                if (time <= 0) {
-                    return;
-                } else {
-                    if (null != room.timerId) {
-                        AppContext.vertx.cancelTimer(room.timerId);
+                room.board[x][y] = Room.BLACK;
+            } else {
+                int size = room.steps.size();
+                GameWinner winner;
+                // 判断当前应该是是哪一方落子
+                if (room.isWhiteNow()) {
+                    if (!room.white.equals(username)) {
+                        return Future.failedFuture("move failed");
                     }
-                    AppContext.vertx.setTimer(time, id -> {
-                        room.timerId = id;
-                        // 超时结束
-                        end(code, winner, GameReason.TIMEOUT);
-                    });
+                    winner = GameWinner.BLACK;
+                } else {
+                    if (!room.black.equals(username)) {
+                        return Future.failedFuture("move failed");
+                    }
+                    winner = GameWinner.WHITE;
+                }
+
+                // 提子判气
+                if (!room.place(x, y, winner == GameWinner.WHITE ? Room.BLACK : Room.WHITE)) {
+                    return Future.failedFuture("move failed");
+                }
+
+                // 时间有限制并且前两手已经下完
+                if (room.info.type != GameType.NONE && size > 1) {
+                    // 落子是否超时或违规
+                    long time = room.remainingTime(step.timestamp);
+                    log.info("time={}", time);
+                    if (winner == GameWinner.BLACK) {
+                        time += room.whiteRemainder;
+                        room.whiteRemainder = time;
+                        log.info("W time={}", room.whiteRemainder);
+                    } else {
+                        time += room.blackRemainder;
+                        room.blackRemainder = time;
+                        log.info("B time={}", room.blackRemainder);
+                    }
+
+                    if (time <= 0) {
+                        return Future.failedFuture("move failed");
+                    } else {
+                        if (null != room.timerId) {
+                            AppContext.vertx.cancelTimer(room.timerId);
+                        }
+                        AppContext.vertx.setTimer(time, id -> {
+                            room.timerId = id;
+                            // 超时结束
+                            end(code, winner, GameReason.TIMEOUT);
+                        });
+                    }
                 }
             }
-        }
 
-        room.steps.add(step);
-        room.outPrintBoard();
-        log.info("[{}] - add a step to the game {}, username={}, x={}, y={}, ", room.white.equals(username) ? 'W' : 'B', code, username, x, y);
-        send(code, SocketPackage.build(PackageType.GAME_STEP, username,  JsonObject.of("whiteRemainder", room.whiteRemainder, "blackRemainder", room.blackRemainder, "step", step)));
+            room.steps.add(step);
+            room.outPrintBoard();
+            log.info("[{}] - add a step to the game {}, username={}, x={}, y={}, ", room.white.equals(username) ? 'W' : 'B', code, username, x, y);
+            return Future.succeededFuture(room);
+        }).onSuccess(room -> {
+            send(code, SocketPackage.build(PackageType.GAME_STEP, username,  JsonObject.of("whiteRemainder", room.whiteRemainder, "blackRemainder", room.blackRemainder, "step", step)));
+        });
+
     }
 
     /**
@@ -153,24 +157,39 @@ public class GameRoomService implements Handler<RoutingContext> {
      * @param winner 胜利方
      * @param reason 胜利原因
      */
-    public void end(String code, GameWinner winner, GameReason reason) {
-        JsonObject game = new JsonObject();
-        Room room = rooms.remove(code);
-        if (null == room) {
-            return;
-        }
-        game.put("code", code);
-        game.put("boardSize", room.info.boardSize);
-        game.put("type", room.info.type);
-        game.put("mode", room.info.mode);
-        game.put("duration", room.info.duration);
-        game.put("stepDuration", room.info.stepDuration);
-        game.put("startTime", room.info.startTime);
-        game.put("endTime", System.currentTimeMillis());
-        game.put("winner", winner);
-        game.put("reason", reason);
-        game.put("steps", room.steps);
-        gameDao.insert(game).onSuccess(res -> {
+    private void end(String code, GameWinner winner, GameReason reason) {
+        lock(code, () -> {
+            JsonObject game = new JsonObject();
+            Room room = rooms.remove(code);
+            if (null == room) {
+                return Future.failedFuture("room not found");
+            }
+            Set<String> wCodes = userRooms.get(room.white);
+            wCodes.remove(code);
+            if (wCodes.isEmpty()) {
+                userRooms.remove(room.white);
+            }
+            Set<String> bCodes = userRooms.get(room.black);
+            bCodes.remove(code);
+            if (bCodes.isEmpty()) {
+                userRooms.remove(room.black);
+            }
+
+            game.put("code", code);
+            game.put("boardSize", room.info.boardSize);
+            game.put("type", room.info.type);
+            game.put("mode", room.info.mode);
+            game.put("duration", room.info.duration);
+            game.put("stepDuration", room.info.stepDuration);
+            game.put("startTime", room.info.startTime);
+            game.put("endTime", System.currentTimeMillis());
+            game.put("winner", winner);
+            game.put("reason", reason);
+            game.put("steps", room.steps);
+            game.put("board", room.boardToArray());
+            // 保存历史记录，获胜方加分
+            return gameDao.insert(game);
+        }).onSuccess(res -> {
             log.info("Game over, code = {}, winner = {}, reason = {}", code, winner, reason);
             send(code, SocketPackage.build(PackageType.GAME_STEP, JsonObject.of("winner", winner, "reason", reason)));
         });
@@ -198,8 +217,7 @@ public class GameRoomService implements Handler<RoutingContext> {
         return userRooms.get(username);
     }
 
-    @Override
-    public void handle(RoutingContext ctx) {
+    private void handle(RoutingContext ctx) {
         ctx.request().toWebSocket().onSuccess(ws -> SessionStore.validate(ctx).onSuccess(session -> {
             String code = ctx.pathParam("code");
             if (RegexUtils.mismatchGameCode(code)) {
@@ -230,10 +248,15 @@ public class GameRoomService implements Handler<RoutingContext> {
                         Integer y = (Integer) obj.get("y");
                         if (RegexUtils.mismatchGameCode(code) || x == null || y == null) {
                             ws.close();
-                            return;
                         }
                         move(pck.sender, code, x, y);
                         break;
+                    case GAME_END:
+                        Room room = get(code);
+                        if (room != null) {
+                            GameWinner winner = room.white.equals(session.username) ? GameWinner.BLACK : GameWinner.WHITE;
+                            end(code, winner, GameReason.SURRENDER);
+                        }
                     case GAME_CHAT:
                         send(code, pck);
                         break;
@@ -294,5 +317,10 @@ public class GameRoomService implements Handler<RoutingContext> {
             socket.send(msg);
         }
     }
+
+    private <T> Future<T> lock(String code, Supplier<Future<T>> block) {
+        return AppContext.withLock(LockConstant.ROOM_LOCK + code, block);
+    }
+
 
 }

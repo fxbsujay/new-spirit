@@ -12,5 +12,5 @@ public enum PackageType {
     // 游戏走棋
     GAME_STEP,
     // 游戏聊天
-    GAME_CHAT,
+    GAME_CHAT
 }

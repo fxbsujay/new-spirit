@@ -34,6 +34,14 @@ const { user } = useUserStore()
       </div>
       <button class="button border">编辑个人资料</button>
     </div>
+    <div class="history">
+      <div class="title">历史对局</div>
+      <div class="list">
+        <div class="item">AAA</div>
+        <div class="item">AAA</div>
+        <div class="item">AAA</div>
+      </div>
+    </div>
   </div>
 </template>
 

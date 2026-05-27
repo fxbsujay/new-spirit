@@ -26,6 +26,7 @@ public class UserController {
 
     public UserController(Router router, SessionStore sessionHandle) {
         router.post("/api/user/info").handler(sessionHandle::handle).handler(this::info);
+        router.post("/api/user/info/:username").handler(sessionHandle::handle).handler(this::info);
     }
 
     /**
@@ -35,6 +36,24 @@ public class UserController {
         UserSession session = SessionStore.sessionUser(ctx);
         userDao.findOne(JsonObject.of("username", session.username), "nickname", "avatar", "status", "rating").onSuccess(user -> {
             user.put("username", session.username);
+            RestContext.success(ctx, user);
+        }).onFailure(e -> {
+            log.error(e.getMessage(), e.getCause());
+            RestContext.fail(ctx);
+        });
+    }
+
+    /**
+     * 个人资料
+     */
+    public void profile(RoutingContext ctx) {
+        String username = ctx.pathParam("username");
+        if (RegexUtils.matches(username, RegexUtils.USERNAME)) {
+            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+            return;
+        }
+        userDao.findOne(JsonObject.of("username", username), "nickname", "avatar", "status", "rating").onSuccess(user -> {
+            user.put("username", username);
             RestContext.success(ctx, user);
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
