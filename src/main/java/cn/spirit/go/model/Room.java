@@ -11,6 +11,8 @@ public class Room {
 
     public static final char WHITE = 'W';
 
+    public static final char[] LOCATION = new char[]{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'};
+
     private static final int[][] DIRS = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
     /**
@@ -226,17 +228,6 @@ public class Room {
     @Override
     public int hashCode() {
         return Objects.hash(info.code);
-    }
-
-    public List<String> boardToArray() {
-        List<String> arr = new ArrayList<>();
-        for (int i = 0; i < this.board.length; i++) {
-            for (int j = 0; j < this.board[0].length; j++) {
-                arr.add(String.format("%2d", i) + String.format("%2d", j) + board[i][j]);
-            }
-        }
-
-        return arr;
     }
 
     public void outPrintBoard() {

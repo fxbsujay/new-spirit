@@ -47,6 +47,7 @@ public class UserController {
      * 个人资料
      */
     public void profile(RoutingContext ctx) {
+        // TODO 个人资料
         String username = ctx.pathParam("username");
         if (RegexUtils.matches(username, RegexUtils.USERNAME)) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
@@ -64,7 +65,15 @@ public class UserController {
     /**
      * 修改个人信息 昵称、头像、
      */
+    public void history(RoutingContext ctx) {
+        // TODO 修改个人信息 昵称、头像、
+    }
+
+    /**
+     * 修改个人信息 昵称、头像、
+     */
     public void updateInfo(RoutingContext ctx) {
+        // TODO 修改个人信息 昵称、头像、
     }
 
     /**

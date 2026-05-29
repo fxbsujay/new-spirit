@@ -66,9 +66,7 @@ public class AppContext {
     public static Router init(Vertx vertx) {
         AppContext.vertx = vertx;
 
-        MONGO = MongoClient.createShared(vertx, new JsonObject()
-                .put("connection_string", "mongodb://localhost:27017")
-                .put("db_name", "spirit"));
+        MONGO = MongoClient.createShared(vertx, JsonObject.of("connection_string", "mongodb://localhost:27017", "db_name", "spirit"));
 
         Redis client = Redis.createClient(vertx, new RedisOptions().addConnectionString("redis://localhost:6379"));
         REDIS = RedisAPI.api(client);

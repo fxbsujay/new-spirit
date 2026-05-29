@@ -127,7 +127,7 @@ public class AuthController {
                                 "nickname", username,
                                 "rating", 800,
                                 "status", UserStatus.NORMAL);
-                        userDao.insert(obj).onSuccess(_id -> {
+                        userDao.save(obj).onSuccess(_id -> {
                             RestContext.success(ctx, username);
                             AppContext.REDIS.del(List.of(key));
                         }).onFailure(e -> {

@@ -6,6 +6,7 @@ import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.GameWinner;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.dao.GameDao;
+import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.*;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.config.AppContext;
@@ -14,6 +15,7 @@ import cn.spirit.go.web.socket.SocketPackage;
 import io.vertx.core.Future;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -27,6 +29,9 @@ public class GameRoomService {
     private final Logger log = LoggerFactory.getLogger(GameRoomService.class);
 
     private final GameDao gameDao = AppContext.getBean(GameDao.class);
+
+    private final UserDao userDao = AppContext.getBean(UserDao.class);
+
 
     /**
      * 房间信息
@@ -77,16 +82,16 @@ public class GameRoomService {
         lock(code, () -> {
             Room room = get(code);
             if (null == room) {
-                return Future.failedFuture("move failed");
+                return Future.failedFuture("Room not found");
             }
             // 判断参数合法性
             if ((!room.black.equals(username) && !room.white.equals(username)) || x < 0 || y < 0 || x >= room.info.boardSize || y >= room.info.boardSize) {
-                return Future.failedFuture("room not found");
+                return Future.failedFuture("Illegal argument");
             }
             if (room.steps.isEmpty()) {
                 // 黑棋先手，是否是黑方
                 if (!room.black.equals(username)) {
-                    return Future.failedFuture("move failed");
+                    return Future.failedFuture("Illegal argument");
                 }
                 room.board[x][y] = Room.BLACK;
             } else {
@@ -95,19 +100,19 @@ public class GameRoomService {
                 // 判断当前应该是是哪一方落子
                 if (room.isWhiteNow()) {
                     if (!room.white.equals(username)) {
-                        return Future.failedFuture("move failed");
+                        return Future.failedFuture("Illegal argument");
                     }
                     winner = GameWinner.BLACK;
                 } else {
                     if (!room.black.equals(username)) {
-                        return Future.failedFuture("move failed");
+                        return Future.failedFuture("Illegal argument");
                     }
                     winner = GameWinner.WHITE;
                 }
 
                 // 提子判气
                 if (!room.place(x, y, winner == GameWinner.WHITE ? Room.BLACK : Room.WHITE)) {
-                    return Future.failedFuture("move failed");
+                    return Future.failedFuture("No moves allowed");
                 }
 
                 // 时间有限制并且前两手已经下完
@@ -126,7 +131,7 @@ public class GameRoomService {
                     }
 
                     if (time <= 0) {
-                        return Future.failedFuture("move failed");
+                        return Future.failedFuture("Movement timeout, game over");
                     } else {
                         if (null != room.timerId) {
                             AppContext.vertx.cancelTimer(room.timerId);
@@ -139,14 +144,13 @@ public class GameRoomService {
                     }
                 }
             }
-
             room.steps.add(step);
-            room.outPrintBoard();
-            log.info("[{}] - add a step to the game {}, username={}, x={}, y={}, ", room.white.equals(username) ? 'W' : 'B', code, username, x, y);
             return Future.succeededFuture(room);
         }).onSuccess(room -> {
+            room.outPrintBoard();
+            log.info("[{}] - Add a step to the game {}, username={}, x = {}, y = {}", room.white.equals(username) ? 'W' : 'B', code, username, x, y);
             send(code, SocketPackage.build(PackageType.GAME_STEP, username,  JsonObject.of("whiteRemainder", room.whiteRemainder, "blackRemainder", room.blackRemainder, "step", step)));
-        });
+        }).onFailure(e -> log.info("Adding step failed, code = {}, x = {}, y = {}, failure message = {},", code, x, y, e.getMessage()));
 
     }
 
@@ -159,11 +163,23 @@ public class GameRoomService {
      */
     private void end(String code, GameWinner winner, GameReason reason) {
         lock(code, () -> {
-            JsonObject game = new JsonObject();
             Room room = rooms.remove(code);
             if (null == room) {
-                return Future.failedFuture("room not found");
+                return Future.failedFuture("Room not found");
             }
+
+            if (reason == GameReason.SURRENDER) {
+                if (room.steps.size() <= 1) {
+                    // 棋局未开始不允许投降，可取消
+                    return Future.failedFuture("The game has not started");
+                }
+            } else if (reason == GameReason.CANCEL) {
+                if (room.steps.size() > 1) {
+                    // 棋局已经开始不允许取消
+                    return Future.failedFuture("The game has begun");
+                }
+            }
+
             Set<String> wCodes = userRooms.get(room.white);
             wCodes.remove(code);
             if (wCodes.isEmpty()) {
@@ -174,7 +190,12 @@ public class GameRoomService {
             if (bCodes.isEmpty()) {
                 userRooms.remove(room.black);
             }
+            return Future.succeededFuture(room);
+        }).onSuccess(room -> {
+            log.info("Game over, code = {}, winner = {}, reason = {}", code, winner, reason);
+            send(code, SocketPackage.build(PackageType.GAME_END, JsonObject.of("winner", winner, "reason", reason)));
 
+            JsonObject game = new JsonObject();
             game.put("code", code);
             game.put("boardSize", room.info.boardSize);
             game.put("type", room.info.type);
@@ -182,17 +203,29 @@ public class GameRoomService {
             game.put("duration", room.info.duration);
             game.put("stepDuration", room.info.stepDuration);
             game.put("startTime", room.info.startTime);
-            game.put("endTime", System.currentTimeMillis());
+            game.put("white", room.white);
+            game.put("black", room.black);
             game.put("winner", winner);
             game.put("reason", reason);
-            game.put("steps", room.steps);
-            game.put("board", room.boardToArray());
-            // 保存历史记录，获胜方加分
-            return gameDao.insert(game);
-        }).onSuccess(res -> {
-            log.info("Game over, code = {}, winner = {}, reason = {}", code, winner, reason);
-            send(code, SocketPackage.build(PackageType.GAME_STEP, JsonObject.of("winner", winner, "reason", reason)));
-        });
+            JsonArray board = new JsonArray();
+            for (int i = 0; i < room.board.length; i++) {
+                for (int j = 0; j < room.board.length; j++) {
+                    if (room.board[i][j] != Room.EMPTY) {
+                        board.add(String.valueOf(Room.LOCATION[i]) + j + room.board[i][j]);
+                    }
+                }
+            }
+            game.put("board", board);
+            JsonArray steps = new JsonArray();
+            for (GameStep step : room.steps) {
+                steps.add(String.valueOf(Room.LOCATION[step.x]) + step.y + "-" + step.timestamp);
+            }
+            game.put("steps", steps);
+            int whiteAddRating = winner == GameWinner.WHITE ? 20 : -20;
+            gameDao.save(game).compose(res -> userDao.updateRating(room.white, whiteAddRating, room.black, -whiteAddRating))
+                    .onSuccess(res -> log.info("Save game success, code = {}", code))
+                    .onFailure(e -> log.info("Save game failed, code = {}", code));
+        }).onFailure(e -> log.info("Game ended in failure, code = {}, reason = {}. failure message = {}", code, reason, e.getMessage()));
     }
 
     /**
@@ -254,8 +287,12 @@ public class GameRoomService {
                     case GAME_END:
                         Room room = get(code);
                         if (room != null) {
-                            GameWinner winner = room.white.equals(session.username) ? GameWinner.BLACK : GameWinner.WHITE;
-                            end(code, winner, GameReason.SURRENDER);
+                            GameReason reason = GameReason.valueOf((String) pck.data);
+                            if (reason == GameReason.SURRENDER || reason == GameReason.CANCEL) {
+                                // 允许投降或者取消
+                                GameWinner winner = room.white.equals(session.username) ? GameWinner.BLACK : GameWinner.WHITE;
+                                end(code, winner, reason);
+                            }
                         }
                     case GAME_CHAT:
                         send(code, pck);

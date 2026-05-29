@@ -114,4 +114,13 @@ export class GameSocket {
             }))
         }
     }
+
+    /**
+     * 游戏结束 投降认输
+     */
+    end() {
+        this.socket.send(JSON.stringify({
+            type: 'GAME_END'
+        }))
+    }
 }

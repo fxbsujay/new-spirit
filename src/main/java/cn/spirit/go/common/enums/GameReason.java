@@ -16,6 +16,10 @@ public enum GameReason {
     /**
      * 求和
      */
-    PEACE
+    PEACE,
+    /**
+     * 取消
+     */
+    CANCEL
 
 }

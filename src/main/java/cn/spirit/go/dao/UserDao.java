@@ -3,17 +3,15 @@ package cn.spirit.go.dao;
 import cn.spirit.go.common.util.SqlUtils;
 import cn.spirit.go.web.config.AppContext;
 import io.vertx.core.Future;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.BulkOperation;
 import io.vertx.ext.mongo.BulkOperationType;
-
 import java.util.Arrays;
 import java.util.List;
 
 public class UserDao {
 
-    public Future<String> insert(JsonObject obj) {
+    public Future<String> save(JsonObject obj) {
         obj.put("createdAt", System.currentTimeMillis());
         return AppContext.MONGO.save("user", obj);
     }
@@ -50,6 +48,6 @@ public class UserDao {
                 "filter", JsonObject.of("username", user2),
                 "document", JsonObject.of("$inc", JsonObject.of("rating", rating2))));
 
-        return AppContext.MONGO.bulkWrite("game", Arrays.asList(opt1, opt2)).compose(res -> Future.succeededFuture(res.getUpserts()));
+        return AppContext.MONGO.bulkWrite("user", Arrays.asList(opt1, opt2)).compose(res -> Future.succeededFuture(res.getUpserts()));
     }
 }
