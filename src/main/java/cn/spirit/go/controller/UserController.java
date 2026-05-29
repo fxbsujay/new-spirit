@@ -63,10 +63,10 @@ public class UserController {
     }
 
     /**
-     * 修改个人信息 昵称、头像、
+     * 查询用户的历史对局
      */
     public void history(RoutingContext ctx) {
-        // TODO 修改个人信息 昵称、头像、
+        // TODO 查询用户的历史对局
     }
 
     /**

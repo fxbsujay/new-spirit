@@ -67,7 +67,7 @@ public class SqlTest {
                 log.info("Game over");
                 testContext.completeNow();
             }).onFailure(e -> {
-                log.info("Game save failed");
+                log.error("Game save failed");
             });;
         }));
     }

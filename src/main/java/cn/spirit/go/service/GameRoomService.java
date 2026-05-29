@@ -150,7 +150,7 @@ public class GameRoomService {
             room.outPrintBoard();
             log.info("[{}] - Add a step to the game {}, username={}, x = {}, y = {}", room.white.equals(username) ? 'W' : 'B', code, username, x, y);
             send(code, SocketPackage.build(PackageType.GAME_STEP, username,  JsonObject.of("whiteRemainder", room.whiteRemainder, "blackRemainder", room.blackRemainder, "step", step)));
-        }).onFailure(e -> log.info("Adding step failed, code = {}, x = {}, y = {}, failure message = {},", code, x, y, e.getMessage()));
+        }).onFailure(e -> log.error("Adding step failed, code = {}, x = {}, y = {}, failure message = {},", code, x, y, e.getMessage()));
 
     }
 
@@ -224,8 +224,8 @@ public class GameRoomService {
             int whiteAddRating = winner == GameWinner.WHITE ? 20 : -20;
             gameDao.save(game).compose(res -> userDao.updateRating(room.white, whiteAddRating, room.black, -whiteAddRating))
                     .onSuccess(res -> log.info("Save game success, code = {}", code))
-                    .onFailure(e -> log.info("Save game failed, code = {}", code));
-        }).onFailure(e -> log.info("Game ended in failure, code = {}, reason = {}. failure message = {}", code, reason, e.getMessage()));
+                    .onFailure(e -> log.error("Save game failed, code = {}", code));
+        }).onFailure(e -> log.error("Game ended in failure, code = {}, reason = {}. failure message = {}", code, reason, e.getMessage()));
     }
 
     /**
