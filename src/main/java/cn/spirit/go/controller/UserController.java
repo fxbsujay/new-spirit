@@ -6,12 +6,16 @@ import cn.spirit.go.common.enums.RestStatus;
 import cn.spirit.go.common.util.RandomUtils;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.common.util.SecurityUtils;
+import cn.spirit.go.common.util.SqlUtils;
+import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.mongo.FindOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
@@ -23,6 +27,8 @@ public class UserController {
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
     private final UserDao userDao = AppContext.getBean(UserDao.class);
+
+    private final GameDao gameDao = AppContext.getBean(GameDao.class);
 
     public UserController(Router router, SessionStore sessionHandle) {
         router.post("/api/user/info").handler(sessionHandle::handle).handler(this::info);
@@ -66,7 +72,28 @@ public class UserController {
      * 查询用户的历史对局
      */
     public void history(RoutingContext ctx) {
+        JsonObject body = ctx.body().asJsonObject();
+        String username = body.getString("username");
+        Integer page = body.getInteger("page");
+        if (RegexUtils.matches(username, RegexUtils.USERNAME)) {
+            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+            return;
+        }
+
+        if (null == page || page < 1) {
+            page = 0;
+        }
+
         // TODO 查询用户的历史对局
+        JsonObject query = JsonObject.of("$or", new JsonArray()
+                .add(JsonObject.of("white", username))
+                .add(JsonObject.of("black", username)));
+
+        FindOptions opts = SqlUtils.findOpts("code", "boardSize", "type", "mode", "duration", "stepDuration", "startTime", "white", "black", "winner", "reason", "createdAt");
+
+        opts.setSort(JsonObject.of());
+        AppContext.MONGO.findWithOptions("game", query, opts);
+
     }
 
     /**
