@@ -4,6 +4,7 @@ import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameReason;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.GameWinner;
+import cn.spirit.go.common.util.SqlUtils;
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.web.config.AppContext;
@@ -12,6 +13,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.mongo.FindOptions;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.DisplayName;
@@ -68,7 +70,32 @@ public class SqlTest {
                 testContext.completeNow();
             }).onFailure(e -> {
                 log.error("Game save failed");
-            });;
+            });
+        }));
+    }
+
+    @Test
+    @DisplayName("query game")
+    void queryGame(Vertx vertx, VertxTestContext testContext) {
+        vertx.deployVerticle(new Application()).onComplete(testContext.succeeding(id -> {
+            int page = 1;
+            int limit = 10;
+            String username = "admin1";
+            GameDao dao = AppContext.getBean(GameDao.class);
+            JsonObject query = JsonObject.of("$or", new JsonArray()
+                    .add(JsonObject.of("white", username))
+                    .add(JsonObject.of("black", username)));
+
+            FindOptions opts = SqlUtils.findOpts(0,"board", "steps");
+
+            opts.setSort(JsonObject.of("startTime", -1));
+            opts.setSkip((page - 1) * limit);
+            opts.setLimit(limit);
+            log.info("Game query");
+            dao.find(query, opts).onSuccess(res -> {
+                log.info("Game query successful {}", Json.encode(res));
+                testContext.completeNow();
+            });
         }));
     }
 }

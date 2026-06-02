@@ -32,7 +32,8 @@ public class UserController {
 
     public UserController(Router router, SessionStore sessionHandle) {
         router.post("/api/user/info").handler(sessionHandle::handle).handler(this::info);
-        router.post("/api/user/info/:username").handler(sessionHandle::handle).handler(this::info);
+        router.post("/api/user/profile/:username").handler(sessionHandle::handle).handler(this::profile);
+        router.post("/api/user/history/:username").handler(sessionHandle::handle).handler(this::history);
     }
 
     /**
@@ -53,7 +54,6 @@ public class UserController {
      * 个人资料
      */
     public void profile(RoutingContext ctx) {
-        // TODO 个人资料
         String username = ctx.pathParam("username");
         if (RegexUtils.matches(username, RegexUtils.USERNAME)) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
@@ -61,6 +61,12 @@ public class UserController {
         }
         userDao.findOne(JsonObject.of("username", username), "nickname", "avatar", "status", "rating").onSuccess(user -> {
             user.put("username", username);
+            // 场次
+            user.put("count", 20);
+            // 胜率
+            user.put("rate", 50.1);
+            // 游戏时长 20小时
+            user.put("time", 20);
             RestContext.success(ctx, user);
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
@@ -81,18 +87,28 @@ public class UserController {
         }
 
         if (null == page || page < 1) {
-            page = 0;
+            page = 1;
         }
+
+        int limit = 10;
 
         // TODO 查询用户的历史对局
         JsonObject query = JsonObject.of("$or", new JsonArray()
                 .add(JsonObject.of("white", username))
                 .add(JsonObject.of("black", username)));
 
-        FindOptions opts = SqlUtils.findOpts("code", "boardSize", "type", "mode", "duration", "stepDuration", "startTime", "white", "black", "winner", "reason", "createdAt");
+        FindOptions opts = SqlUtils.findOpts(0,"board", "steps");
 
-        opts.setSort(JsonObject.of());
-        AppContext.MONGO.findWithOptions("game", query, opts);
+        opts.setSort(JsonObject.of("startTime", -1));
+        opts.setSkip((page - 1) * limit);
+        opts.setLimit(limit);
+
+        gameDao.find(query, opts).onSuccess( games -> {
+            RestContext.success(ctx, games);
+        }).onFailure(e -> {
+            log.error(e.getMessage(), e.getCause());
+            RestContext.fail(ctx);
+        });
 
     }
 
