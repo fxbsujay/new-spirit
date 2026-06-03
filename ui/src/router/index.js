@@ -30,7 +30,7 @@ const router = createRouter({
           component: () => import('@/views/auth/signUpSuccess/index.vue'),
         },
         {
-          path: '/:username(@[A-Za-z][a-zA-Z0-9]{1,19})',
+          path: '/@:username([A-Za-z][a-zA-Z0-9]{1,19})',
           name: 'Profile',
           component: () => import('@/views/profile/index.vue'),
         },

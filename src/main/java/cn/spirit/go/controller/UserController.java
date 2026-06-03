@@ -33,7 +33,7 @@ public class UserController {
     public UserController(Router router, SessionStore sessionHandle) {
         router.post("/api/user/info").handler(sessionHandle::handle).handler(this::info);
         router.post("/api/user/profile/:username").handler(sessionHandle::handle).handler(this::profile);
-        router.post("/api/user/history/:username").handler(sessionHandle::handle).handler(this::history);
+        router.post("/api/user/history").handler(sessionHandle::handle).handler(this::history);
     }
 
     /**
@@ -55,11 +55,15 @@ public class UserController {
      */
     public void profile(RoutingContext ctx) {
         String username = ctx.pathParam("username");
-        if (RegexUtils.matches(username, RegexUtils.USERNAME)) {
+        if (!RegexUtils.matches(username, RegexUtils.USERNAME)) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
         userDao.findOne(JsonObject.of("username", username), "nickname", "avatar", "status", "rating").onSuccess(user -> {
+            if (null == user) {
+                RestContext.fail(ctx, HttpResponseStatus.NOT_FOUND);
+                return;
+            }
             user.put("username", username);
             // 场次
             user.put("count", 20);
@@ -81,7 +85,7 @@ public class UserController {
         JsonObject body = ctx.body().asJsonObject();
         String username = body.getString("username");
         Integer page = body.getInteger("page");
-        if (RegexUtils.matches(username, RegexUtils.USERNAME)) {
+        if (!RegexUtils.matches(username, RegexUtils.USERNAME)) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
@@ -104,6 +108,7 @@ public class UserController {
         opts.setLimit(limit);
 
         gameDao.find(query, opts).onSuccess( games -> {
+            // 查询对局中用户的用户头像昵称
             RestContext.success(ctx, games);
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
