@@ -2,6 +2,8 @@
 import { reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import http from '@/utils/http'
+import Icon from '@/components/icon/Icon.vue'
+import dayjs from 'dayjs'
 
 const user = reactive({
   avatar: "",
@@ -20,9 +22,29 @@ const username = router.params.username
 http.post('/user/profile/' + username).then(res => {
   Object.assign(user, res)
 })
-http.post('/user/history/', { page: 1, username }).then(res => {
+http.post('/user/history', { page: 1, username }).then(res => {
   history.value = res
 })
+
+const gameResult = (item) => {
+  if (item.winner === 'TIE') {
+    return {
+      value: 'tie',
+      label: '平'
+    }
+  } else if (item[item.winner.toLowerCase()] === username) {
+    return {
+      value: 'victory',
+      label: '胜'
+    }
+  } else {
+    return {
+      value: 'defeat',
+      label: '败'
+    }
+  }
+
+}
 </script>
 
 <template>
@@ -58,11 +80,37 @@ http.post('/user/history/', { page: 1, username }).then(res => {
     <div class="history">
       <div class="title">历史对局</div>
       <div class="list">
-        <div class="item" v-for="item in history" :key="item.code">
-          <span>{{ item.white }} VS {{ item.black }}</span>
+        <div class="item" v-for="item in history" :key="item.code" :class="gameResult(item).value">
+          <div class="info">
+            <div class="base">
+              <span class="base-tag">{{ item.mode === 'CASUAL' ? '休闲赛' :  item.mode === 'RANK' ? '积分赛' : '人机对战' }}</span>
+              <span class="base-tag">{{ item.type === 'SHORT' ? '实时棋局' :  item.type === 'LONG' ? '通讯棋' : '无限制' }}</span>
+              <span class="base-tag">{{ `${item.boardSize}x${item.boardSize}` }}</span>
+            </div>
+            <div class="time">
+              41:22
+            </div>
+            <div class="links">
+              <Icon name="star" size="1rem" color="#F0B01A"/>
+            </div>
+          </div>
+          <div class="versus">
+            <div class="player">
+              <div class="player-name">{{ item.white.nickname }}<span class="white-tag" /></div>
+              <div class="player-rating">{{ item.white.username }} ({{ item.white.rating }})</div>
+            </div>
+            <div class="vs">{{ gameResult(item).label }}</div>
+            <div class="player">
+              <div class="player-name"><span class="black-tag" />{{ item.black.nickname }}</div>
+              <div class="player-rating">{{ item.black.username }} ({{ item.black.rating }})</div>
+            </div>
+          </div>
+          <div class="secondary">
+            <span>A</span>
+            <span class="start-time">{{ dayjs(item.startTime * 1000).format('YYYY-MM-DD HH:mm') }}</span>
+
+          </div>
         </div>
-        <div class="item">AAA</div>
-        <div class="item">AAA</div>
       </div>
     </div>
   </div>

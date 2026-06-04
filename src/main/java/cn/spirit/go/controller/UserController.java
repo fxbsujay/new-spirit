@@ -13,6 +13,7 @@ import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.FindOptions;
@@ -20,7 +21,8 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.List;
+
+import java.util.*;
 
 public class UserController {
 
@@ -107,8 +109,31 @@ public class UserController {
         opts.setSkip((page - 1) * limit);
         opts.setLimit(limit);
 
-        gameDao.find(query, opts).onSuccess( games -> {
+        gameDao.find(query, opts).compose(games -> {
             // 查询对局中用户的用户头像昵称
+            JsonArray usernames = new JsonArray();
+            for (JsonObject game : games) {
+                String white = game.getString("white");
+                if (!usernames.contains(white)) {
+                    usernames.add(white);
+                }
+                String black = game.getString("black");
+                if (!usernames.contains(black)) {
+                    usernames.add(black);
+                }
+            }
+            return userDao.findAll(JsonObject.of("username", JsonObject.of("$in", usernames)), "username", "nickname", "rating").compose(users -> {
+                Map<String, JsonObject> userMap = new HashMap<>();
+                for (JsonObject user : users) {
+                    userMap.put(user.getString("username"), user);
+                }
+                for (JsonObject game : games) {
+                    game.put("white", userMap.get(game.getString("white")));
+                    game.put("black", userMap.get(game.getString("black")));
+                }
+                return Future.succeededFuture(games);
+            });
+        }).onSuccess( games -> {
             RestContext.success(ctx, games);
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());

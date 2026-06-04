@@ -32,7 +32,6 @@ public class GameRoomService {
 
     private final UserDao userDao = AppContext.getBean(UserDao.class);
 
-
     /**
      * 房间信息
      */
@@ -151,7 +150,6 @@ public class GameRoomService {
             log.info("[{}] - Add a step to the game {}, username={}, x = {}, y = {}", room.white.equals(username) ? 'W' : 'B', code, username, x, y);
             send(code, SocketPackage.build(PackageType.GAME_STEP, username,  JsonObject.of("whiteRemainder", room.whiteRemainder, "blackRemainder", room.blackRemainder, "step", step)));
         }).onFailure(e -> log.error("Adding step failed, code = {}, x = {}, y = {}, failure message = {},", code, x, y, e.getMessage()));
-
     }
 
     /**
@@ -358,6 +356,5 @@ public class GameRoomService {
     private <T> Future<T> lock(String code, Supplier<Future<T>> block) {
         return AppContext.withLock(LockConstant.ROOM_LOCK + code, block);
     }
-
 
 }
