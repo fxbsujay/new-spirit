@@ -200,7 +200,8 @@ public class GameRoomService {
             game.put("mode", room.info.mode);
             game.put("duration", room.info.duration);
             game.put("stepDuration", room.info.stepDuration);
-            game.put("startTime", room.info.startTime);
+            game.put("startTime", room.info.startTime / 1000);
+            game.put("endTime", System.currentTimeMillis() / 1000);
             game.put("white", room.white);
             game.put("black", room.black);
             game.put("winner", winner);

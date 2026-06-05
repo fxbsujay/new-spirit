@@ -23,7 +23,6 @@ public class GameDao {
     }
 
     public Future<String> save(JsonObject obj) {
-        obj.put("endTime", System.currentTimeMillis());
         return AppContext.MONGO.save("game", obj);
     }
 
