@@ -67,32 +67,6 @@ export const passwordStrength = password => {
     return strength
 }
 
-/**
- * 格式化毫秒数
- * @param ms 毫秒数
- */
-export const formatTime = ms => {
-    const totalSeconds = Math.floor(ms / 1000)
-    const totalMinutes = Math.floor(totalSeconds / 60)
-    const totalHours = Math.floor(totalMinutes / 60)
-    const totalDays = Math.floor(totalHours / 24)
-
-    const timeParts = [totalDays, totalHours % 24, totalMinutes % 60, totalSeconds % 60, ms % 1000 ]
-
-    if (timeParts[0] >= 1) {
-        if (timeParts[1] >= 1) {
-            return padStartTwo(timeParts[0]) + '天' + padStartTwo(timeParts[1]) + '小时'
-        } else {
-            return padStartTwo(timeParts[0]) + '天'
-        }
-    } else if (timeParts[1] >= 1) {
-        return padStartTwo(timeParts[1]) + ':' + padStartTwo(timeParts[2]) + ':' + padStartTwo(timeParts[3])
-    } else if (timeParts[2] >= 1) {
-        return padStartTwo(timeParts[2]) + ':' + padStartTwo(timeParts[3])
-    } else {
-        return padStartTwo(timeParts[2]) + ':' + padStartTwo(timeParts[3]) + '.' + padStartTwo(timeParts[4])
-    }
-}
 
 export const formatDuration = (type, duration, stepDuration) => {
 
@@ -101,3 +75,5 @@ export const formatDuration = (type, duration, stepDuration) => {
 export const padStartTwo = num => {
     return num.toFixed(0).padStart(2, '0')
 }
+
+

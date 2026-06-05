@@ -8,7 +8,7 @@ import { useRoute } from 'vue-router'
 import { GameSocket } from './index'
 import { useUserStore } from '@/stores/user.js'
 import { PRETTY_COORDINATE_SEQUENCE } from '@/components/go/goban.js'
-import { formatTime } from '@/utils'
+import { formatTimeDiff } from '@/utils/time.js'
 
 const value = ref(false)
 const router = useRoute()
@@ -92,7 +92,7 @@ const onBoardClick = (x, y) => {
     <div class="side controller-side">
       <div class="game-time">
         <div class="time">
-          <time>{{ formatTime(userStore.user.username === game.info.white ? game.black.remainder : game.white.remainder) }}</time>
+          <time>{{ formatTimeDiff(userStore.user.username === game.info.white ? game.black.remainder : game.white.remainder) }}</time>
         </div>
         <Icon name="signal" size="20px" color="#F0B01A"/>
         <div class="icon-box">
@@ -134,7 +134,7 @@ const onBoardClick = (x, y) => {
       <div class="time-progress"></div>
       <div class="game-time">
         <div class="time">
-          <time>{{ formatTime(userStore.user.username === game.info.white ? game.white.remainder : game.black.remainder) }}</time>
+          <time>{{ formatTimeDiff(userStore.user.username === game.info.white ? game.white.remainder : game.black.remainder) }}</time>
         </div>
       </div>
     </div>

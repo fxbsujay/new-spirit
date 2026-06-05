@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import http from '@/utils/http'
 import Icon from '@/components/icon/Icon.vue'
 import dayjs from 'dayjs'
+import { formatTimeDiff } from '@/utils/time.js'
 
 const user = reactive({
   avatar: "",
@@ -84,11 +85,11 @@ const gameResult = (item) => {
           <div class="info">
             <div class="base">
               <span class="base-tag">{{ item.mode === 'CASUAL' ? '休闲赛' :  item.mode === 'RANK' ? '积分赛' : '人机对战' }}</span>
-              <span class="base-tag">{{ item.type === 'SHORT' ? '实时棋局' :  item.type === 'LONG' ? '通讯棋' : '无限制' }}</span>
+              <span class="base-tag">{{ item.type === 'SHORT' ? `实时棋局 • ${item.duration / 1000 / 60}+${item.stepDuration / 1000}` :  item.type === 'LONG' ? '通讯棋 • ' : '无限制' }}</span>
               <span class="base-tag">{{ `${item.boardSize}x${item.boardSize}` }}</span>
             </div>
             <div class="time">
-              41:22
+             {{ formatTimeDiff(item.endTime - item.startTime * 1000) }}
             </div>
             <div class="links">
               <Icon name="star" size="1rem" color="#F0B01A"/>
@@ -106,7 +107,10 @@ const gameResult = (item) => {
             </div>
           </div>
           <div class="secondary">
-            <span>A</span>
+            <div class="summer">
+              <span>回合•12</span>
+              <span>提子•4</span>
+            </div>
             <span class="start-time">{{ dayjs(item.startTime * 1000).format('YYYY-MM-DD HH:mm') }}</span>
 
           </div>

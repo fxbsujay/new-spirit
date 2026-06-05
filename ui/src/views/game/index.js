@@ -1,5 +1,6 @@
 import { reactive, ref } from 'vue'
 import http from '@/utils/http.js'
+import { padStartTwo } from '@/utils/index.js'
 
 export class GameSocket {
 
@@ -124,3 +125,4 @@ export class GameSocket {
         }))
     }
 }
+
