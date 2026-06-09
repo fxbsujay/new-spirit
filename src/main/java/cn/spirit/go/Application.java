@@ -21,13 +21,17 @@ public class Application extends VerticleBase {
 
     @Override
     public Future<?> start() {
-        DatabindCodec.mapper().registerModule(new JavaTimeModule());
-        Router router = AppContext.init(vertx);
-        return vertx.createHttpServer()
-                .requestHandler(router)
-                .listen(8899)
-                .onSuccess(http -> {
-            log.info("HTTP server started on port {}",  http.actualPort());
+        return vertx.fileSystem().readFile("config.json").compose(buffer -> {
+            log.info("read config.json {}", buffer.toJsonObject());
+            DatabindCodec.mapper().registerModule(new JavaTimeModule());
+            Router router = AppContext.init(vertx);
+            return vertx.createHttpServer()
+                    .requestHandler(router)
+                    .listen(8899)
+                    .onSuccess(http -> {
+                        log.info("HTTP server started on port {}",  http.actualPort());
+                    });
         });
+
     }
 }

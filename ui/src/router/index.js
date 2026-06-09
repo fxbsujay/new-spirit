@@ -32,7 +32,12 @@ const router = createRouter({
         {
           path: '/@:username([A-Za-z][a-zA-Z0-9]{1,19})',
           name: 'Profile',
-          component: () => import('@/views/profile/index.vue'),
+          component: () => import('@/views/account/profile/index.vue'),
+        },
+        {
+          path: '/account',
+          name: 'AccountHome',
+          component: () => import('@/views/account/home/index.vue'),
         },
         {
           path: '/:code([A-Z0-9]{4,8})',

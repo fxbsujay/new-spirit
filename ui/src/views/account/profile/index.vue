@@ -1,7 +1,7 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import http from '@/utils/http'
+import http from '@/utils/http.js'
 import Icon from '@/components/icon/Icon.vue'
 import dayjs from 'dayjs'
 import { formatTimeDiff } from '@/utils/time.js'
@@ -76,7 +76,9 @@ const gameResult = (item) => {
           <div class="name">游戏时长</div>
         </div>
       </div>
-      <button class="button border">编辑个人资料</button>
+      <router-link to="/account">
+        <button class="button border">编辑个人资料</button>
+      </router-link>
     </div>
     <div class="history">
       <div class="title">历史对局</div>

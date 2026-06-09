@@ -106,8 +106,6 @@ public class AppContext {
         new GameController(router, sessionHandle);
         new UserController(router, sessionHandle);
 
-        log.info("AppContext init success");
-
         return router;
     }
 
