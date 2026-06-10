@@ -17,6 +17,7 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.FindOptions;
+import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
@@ -36,6 +37,8 @@ public class UserController {
         router.post("/api/user/info").handler(sessionHandle::handle).handler(this::info);
         router.post("/api/user/profile/:username").handler(sessionHandle::handle).handler(this::profile);
         router.post("/api/user/history").handler(sessionHandle::handle).handler(this::history);
+
+        router.post("/api/account/edit").handler(sessionHandle::handle).handler(this::updateInfo);
     }
 
     /**
@@ -147,6 +150,15 @@ public class UserController {
      */
     public void updateInfo(RoutingContext ctx) {
         // TODO 修改个人信息 昵称、头像、
+        JsonObject body = ctx.body().asJsonObject();
+
+        for (FileUpload f : ctx.fileUploads()) {
+            ctx.response().write("Filename: " + f.fileName());
+            ctx.response().write("\n");
+            ctx.response().write("Size: " + f.size());
+            ctx.response().write("\n");
+        }
+
     }
 
     /**

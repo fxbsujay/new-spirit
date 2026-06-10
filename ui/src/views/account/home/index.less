@@ -5,4 +5,42 @@
 }
 
 .menu {
+  color: #5b5b5b;
+  text-align: center;
+  .menu-nav {
+    margin-bottom: 6px;
+    border-right: 3px solid transparent;
+    background-color: #f1f1f1;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    letter-spacing: 1px;
+
+    &:hover, &.active {
+      border-color: @c-primary;
+      background-color: #fff;
+      color: #000;
+    }
+
+    &.sep {
+      margin-bottom: 2em;
+    }
+
+    &:last-child {
+      &:hover, &.active {
+        background-color: #ff3333;
+        border-color: @c-negative;
+        color: #fff;
+      }
+    }
+  }
+}
+
+.content {
+  flex: 1;
+  border-radius: 3px;
+  padding: 1.5rem;
+  margin-left: 1rem;
+  background-color: #fff;
+  height: fit-content;
 }

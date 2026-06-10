@@ -1,15 +1,30 @@
 <script setup lang="ts">
+import { ref, h } from 'vue'
+import EditUser from './components/EditUser.vue'
 
+const tabs = [
+  { name: '编辑资料', component: EditUser, sep: true },
+  { name: '更改密码', component: h('div', 'aaa'), sep: false },
+  { name: '更改邮箱', component: EditUser, sep: true },
+  { name: '注 销', component: EditUser, sep: false },
+]
+
+const selectedMenu = ref(tabs[0].name)
 </script>
 
 <template>
   <div class="container">
     <aside class="menu">
-      <nav class="menu-nav">A</nav>
-      <nav class="menu-nav">B</nav>
+      <nav class="menu-nav"
+           v-for="tab in tabs"
+           :class="[tab.sep ? 'sep' : '', selectedMenu === tab.name ? 'active' : '']"
+           @click="() => selectedMenu = tab.name"
+      >
+        {{ tab.name }}
+      </nav>
     </aside>
     <div class="content">
-      AA
+      <component :is="tabs.find(tab => tab.name === selectedMenu).component"/>
     </div>
   </div>
 </template>
