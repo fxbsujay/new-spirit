@@ -1,6 +1,7 @@
 package cn.spirit.go.dao;
 
 import cn.spirit.go.common.util.SqlUtils;
+import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.web.config.AppContext;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
@@ -35,6 +36,22 @@ public class UserDao {
 
     public Future<String> updateEmail(String username, String email) {
         return AppContext.MONGO.updateCollection("user", JsonObject.of("username", username), JsonObject.of("$set", JsonObject.of("email", email)))
+                .compose(res -> Future.succeededFuture(username));
+    }
+
+    public Future<String> updateProfile(String username, String avatar, String nickname) {
+        JsonObject entries = new JsonObject();
+        if (StringUtils.isNotBlank(avatar)) {
+            entries.put("avatar", avatar);
+        }
+        if (StringUtils.isNotBlank(nickname)) {
+            entries.put("nickname", nickname);
+        }
+        if (entries.isEmpty()) {
+            return Future.failedFuture("nothing to update");
+        }
+
+        return AppContext.MONGO.updateCollection("user", JsonObject.of("username", username), JsonObject.of("$set", entries))
                 .compose(res -> Future.succeededFuture(username));
     }
 

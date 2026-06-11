@@ -3,10 +3,7 @@ package cn.spirit.go.controller;
 import cn.spirit.go.common.RedisConstant;
 import cn.spirit.go.common.RestContext;
 import cn.spirit.go.common.enums.RestStatus;
-import cn.spirit.go.common.util.RandomUtils;
-import cn.spirit.go.common.util.RegexUtils;
-import cn.spirit.go.common.util.SecurityUtils;
-import cn.spirit.go.common.util.SqlUtils;
+import cn.spirit.go.common.util.*;
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.web.SessionStore;
@@ -14,6 +11,7 @@ import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
+import io.vertx.core.file.CopyOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.FindOptions;
@@ -22,7 +20,6 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.*;
 
 public class UserController {
@@ -149,15 +146,38 @@ public class UserController {
      * 修改个人信息 昵称、头像、
      */
     public void updateInfo(RoutingContext ctx) {
-        // TODO 修改个人信息 昵称、头像、
-        JsonObject body = ctx.body().asJsonObject();
-
-        for (FileUpload f : ctx.fileUploads()) {
-            ctx.response().write("Filename: " + f.fileName());
-            ctx.response().write("\n");
-            ctx.response().write("Size: " + f.size());
-            ctx.response().write("\n");
+        String nickname = ctx.request().getParam("nickname");
+        if (StringUtils.isBlank(nickname) || nickname.contains(" ")) {
+            // 不能有空格
+            RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+            return;
         }
+
+        if (!ctx.fileUploads().isEmpty()) {
+            FileUpload file = ctx.fileUploads().get(0);
+            String filename = file.uploadedFileName().substring(14) + file.fileName().substring(file.fileName().length() - 4);
+            ctx.vertx().fileSystem().move(file.uploadedFileName(), "./static/avatar/" + filename, new CopyOptions())
+                    .compose(res -> userDao.updateProfile(SessionStore.username(ctx), filename, nickname))
+                    .onSuccess(res -> {
+                        RestContext.success(ctx);
+                    })
+                    .onFailure(e -> {
+                        log.error(e.getMessage(), e.getCause());
+                        RestContext.fail(ctx);
+                    });
+        } else {
+            // 只修改昵称
+            userDao.updateProfile(SessionStore.username(ctx), null, nickname)
+                    .onSuccess(res -> {
+                        RestContext.success(ctx);
+                    })
+                    .onFailure(e -> {
+                        log.error(e.getMessage(), e.getCause());
+                        RestContext.fail(ctx);
+                    });
+
+        }
+
 
     }
 

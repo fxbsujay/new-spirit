@@ -120,10 +120,11 @@ public class AuthController {
                     RestContext.fail(ctx, RestStatus.CODE_INVALID);
                 } else {
                     if (code.equals(v.toString())) {
-                        JsonObject obj = JsonObject.of("username", username,
+                        JsonObject obj = JsonObject.of(
+                                "username", username,
                                 "email", email,
                                 "password", SecurityUtils.bCrypt(password),
-                                "avatar", "https://fxbsujay.github.io/favicon.ico",
+                                "avatar", "",
                                 "nickname", username,
                                 "rating", 800,
                                 "status", UserStatus.NORMAL);

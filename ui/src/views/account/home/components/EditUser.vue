@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, toRaw, useTemplateRef } from 'vue'
 import { useUserStore } from '@/stores/user'
+import http, { Method } from '@/utils/http.js'
 
 const store = useUserStore()
 const formState = reactive({
@@ -9,15 +10,22 @@ const formState = reactive({
   username: ''
 })
 Object.assign(formState, toRaw(store.user))
-
 const uploadRef = useTemplateRef('upload-input')
 
 const submitHandle = () => {
-  console.log(store.user)
+  const formData = new FormData()
+  formData.append('file', uploadRef.value.files[0]);
+  formData.append('nickname', formState.nickname);
+  http.api('/account/edit', {
+    method: Method.POST,
+    body: formData
+  }).then(res => {
+    console.log(res)
+  })
 }
 
 const uploadChangeHandle = e => {
-  console.log(e.target.files[0])
+  formState.avatar = URL.createObjectURL(e.target.files[0])
 }
 
 </script>
@@ -27,7 +35,7 @@ const uploadChangeHandle = e => {
     <div class="row" style="align-items: end">
       <div class="avatar-editor" @click="() => uploadRef.click()">
         <div class="avatar-img">
-          <img width="100%" height="100%" :src="formState.avatar" alt="头像上传">
+          <img width="100%" height="100%" :src="formState.avatar ? '/api/static/avatar/' + formState.avatar : '/avatar-error.jpg'" alt="头像上传">
         </div>
         <div class="upload-wrapper">
           <input @change="uploadChangeHandle" type="file" accept="image/png,image/jpeg" class="upload-input" ref="upload-input" />

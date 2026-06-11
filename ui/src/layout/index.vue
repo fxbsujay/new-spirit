@@ -33,7 +33,7 @@
             登录
           </RouterLink>
           <div class="user flex" v-else>
-            <img :src="user.avatar" :alt="user.nickname" class="avatar">
+            <img :src="user.avatar ? '/api/static/avatar/' + user.avatar : '/avatar-error.jpg'" :alt="user.nickname" class="avatar">
             <div class="dropdown">
               <div class="dropdown-content">
                 <div class="links">

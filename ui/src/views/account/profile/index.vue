@@ -52,7 +52,7 @@ const gameResult = (item) => {
   <div class="us_profile container">
     <div class="people">
       <div class="avatar">
-        <img alt="头像" :src="user.avatar"/>
+        <img alt="头像" :src="user.avatar ? '/api/static/avatar/' + user.avatar : '/avatar-error.jpg'"/>
       </div>
       <div class="names">
         <div class="nickname">{{ user.nickname }}</div>

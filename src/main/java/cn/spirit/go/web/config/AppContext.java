@@ -17,6 +17,7 @@ import io.vertx.ext.mail.*;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.redis.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,7 +97,9 @@ public class AppContext {
 
         new WebSocketHandler(router);
 
-        router.route().handler(BodyHandler.create());
+        router.route().handler(BodyHandler.create("./upload_temp").setBodyLimit(10 * 1024 * 1024).setDeleteUploadedFilesOnEnd(true));
+        router.route("/api/static/*").handler(StaticHandler.create("./static"));
+
         router.errorHandler(500, ctx -> {
             log.error("500", ctx.failure());
             RestContext.fail(ctx);
