@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, toRaw, useTemplateRef } from 'vue'
+import { reactive, ref, toRaw, useTemplateRef } from 'vue'
 import { useUserStore } from '@/stores/user'
 import http, { Method } from '@/utils/http.js'
 
@@ -10,17 +10,23 @@ const formState = reactive({
   username: ''
 })
 Object.assign(formState, toRaw(store.user))
+const success = ref(false)
 const uploadRef = useTemplateRef('upload-input')
 
 const submitHandle = () => {
+  if (success.value) {
+    success.value = false
+    return
+  }
   const formData = new FormData()
+  success.value = false
   formData.append('file', uploadRef.value.files[0]);
   formData.append('nickname', formState.nickname);
   http.api('/account/edit', {
     method: Method.POST,
     body: formData
-  }).then(res => {
-    console.log(res)
+  }).then(() => {
+    success.value = true
   })
 }
 
@@ -32,14 +38,18 @@ const uploadChangeHandle = e => {
 
 <template>
   <form class="form" @submit.prevent="submitHandle">
+    <div class="success-tip" v-if="success">
+      <Icon name="check-bold" color="#fff" size="2rem" />
+      <span>操作成功</span>
+    </div>
     <div class="row" style="align-items: end">
       <div class="avatar-editor" @click="() => uploadRef.click()">
         <div class="avatar-img">
           <img width="100%" height="100%" :src="formState.avatar ? '/api/static/avatar/' + formState.avatar : '/avatar-error.jpg'" alt="头像上传">
         </div>
         <div class="upload-wrapper">
-          <input @change="uploadChangeHandle" type="file" accept="image/png,image/jpeg" class="upload-input" ref="upload-input" />
-          <button class="upload-btn">上传头像</button>
+          <input :disabled="success" @change="uploadChangeHandle" type="file" accept="image/png,image/jpeg" class="upload-input" ref="upload-input" />
+          <button class="upload-btn" :disabled="success">上传头像</button>
         </div>
       </div>
       <div class="form-group col">
@@ -49,6 +59,7 @@ const uploadChangeHandle = e => {
           </label>
           <input
               class="input"
+              :disabled="success"
               required
               pattern="^[a-zA-Z0-9@!._-+]{2,20}$"
               title="请输入2-20位字母开头的字母数字，或有效的邮箱地址"
@@ -57,7 +68,9 @@ const uploadChangeHandle = e => {
         </div>
       </div>
     </div>
-    <button type="submit" class="button black">保存</button>
+
+
+    <button type="submit" class="submit-button button " :class="success ? 'border' : 'black'">{{ success ? '再次编辑' : '保存' }}</button>
   </form>
 </template>
 
@@ -73,14 +86,19 @@ const uploadChangeHandle = e => {
     font-weight: bolder;
   }
 
-  .button {
-    background-color: #312d2a;
+  .submit-button {
+
     margin-top: 2rem;
     height: 36px;
     font-size: 14px;
     max-width: 100%;
     width: 150px;
     float: right;
+
+    &.black {
+      background-color: #312d2a;
+    }
+
   }
 }
 
@@ -117,6 +135,22 @@ const uploadChangeHandle = e => {
         background-color: #d3d3d3;
       }
     }
+  }
+}
+
+.success-tip {
+  display: flex;
+  align-items: center;
+  justify-content: left;
+  color: white;
+  background-color: @c-positive;
+  border-radius: 3px;
+  padding: 8px 2rem;
+  font-size: 14px;
+  margin-bottom: 1rem;
+
+  .icon {
+    margin-right: 1rem;
   }
 }
 </style>
