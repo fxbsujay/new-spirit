@@ -68,9 +68,7 @@ const uploadChangeHandle = e => {
         </div>
       </div>
     </div>
-
-
-    <button type="submit" class="submit-button button " :class="success ? 'border' : 'black'">{{ success ? '再次编辑' : '保存' }}</button>
+    <button type="submit" class="submit-button button " :disabled="success" :class="success ? 'border' : 'black'">{{ success ? '再次编辑' : '保存' }}</button>
   </form>
 </template>
 

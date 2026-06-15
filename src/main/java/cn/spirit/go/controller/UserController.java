@@ -266,12 +266,12 @@ public class UserController {
         JsonObject body = ctx.body().asJsonObject();
         String oldPassword = body.getString("oldPassword");
         String newPassword = body.getString("newPassword");
-        String confirmPassword = body.getString("confirmPassword");
+        String confirmPassword = body.getString("confirmPassword`");
 
         if (!RegexUtils.matches(oldPassword, RegexUtils.PASSWORD) ||
                 !RegexUtils.matches(newPassword, RegexUtils.PASSWORD) ||
                 !RegexUtils.matches(confirmPassword, RegexUtils.PASSWORD) ||
-                !confirmPassword.equals(newPassword)) {
+                !confirmPassword.equals(newPassword) || newPassword.equals(oldPassword)) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
