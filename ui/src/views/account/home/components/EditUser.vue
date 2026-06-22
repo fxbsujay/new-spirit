@@ -11,29 +11,40 @@ const formState = reactive({
 })
 Object.assign(formState, toRaw(store.user))
 const success = ref(false)
+const loading = ref(false)
+const file = ref(null)
 const uploadRef = useTemplateRef('upload-input')
 
 const submitHandle = () => {
+  if (loading.value) {
+    return
+  }
   if (success.value) {
+    file.value = null
     success.value = false
     return
   }
   const formData = new FormData()
-  success.value = false
-  formData.append('file', uploadRef.value.files[0]);
+  loading.value = true
+  if (file.value) {
+    formData.append('file', file.value);
+  }
+
   formData.append('nickname', formState.nickname);
   http.api('/account/edit', {
     method: Method.POST,
     body: formData
   }).then(() => {
+    loading.value = false
     success.value = true
-  })
+  }).catch(() => loading.value = false)
 }
 
 const uploadChangeHandle = e => {
   formState.avatar = URL.createObjectURL(e.target.files[0])
+  file.value = e.target.files[0]
+  return false
 }
-
 </script>
 
 <template>
@@ -45,11 +56,11 @@ const uploadChangeHandle = e => {
     <div class="row" style="align-items: end">
       <div class="avatar-editor" @click="() => uploadRef.click()">
         <div class="avatar-img">
-          <img width="100%" height="100%" :src="formState.avatar ? '/api/static/avatar/' + formState.avatar : '/avatar-error.jpg'" alt="头像上传">
+          <img width="100%" height="100%" :src="formState.avatar ? formState.avatar.startsWith('blob') ? formState.avatar : '/api/static/avatar/' + formState.avatar : '/avatar-error.jpg'" alt="头像上传">
         </div>
         <div class="upload-wrapper">
-          <input :disabled="success" @change="uploadChangeHandle" type="file" accept="image/png,image/jpeg" class="upload-input" ref="upload-input" />
-          <button class="upload-btn" :disabled="success">上传头像</button>
+          <input :disabled="success || loading" @change="uploadChangeHandle" type="file" accept="image/png,image/jpeg" class="upload-input" ref="upload-input" />
+          <div class="upload-btn" >上传头像</div>
         </div>
       </div>
       <div class="form-group col">
@@ -59,7 +70,7 @@ const uploadChangeHandle = e => {
           </label>
           <input
               class="input"
-              :disabled="success"
+              :disabled="success || loading"
               required
               pattern="^[a-zA-Z0-9@!._-+]{2,20}$"
               title="请输入2-20位字母开头的字母数字，或有效的邮箱地址"
@@ -68,36 +79,16 @@ const uploadChangeHandle = e => {
         </div>
       </div>
     </div>
-    <button type="submit" class="submit-button button " :disabled="success" :class="success ? 'border' : 'black'">{{ success ? '再次编辑' : '保存' }}</button>
+    <button type="submit" class="submit-button button " :disabled="loading" :class="success ? 'border' : 'black'">{{ success ? '再次修改' : '保存' }}</button>
   </form>
 </template>
 
 <style scoped lang="less">
 @import "@/assets/css/variable.less";
+@import "./index.less";
 
 .row {
   gap: 1rem;
-}
-
-.form {
-  .label {
-    font-weight: bolder;
-  }
-
-  .submit-button {
-
-    margin-top: 2rem;
-    height: 36px;
-    font-size: 14px;
-    max-width: 100%;
-    width: 150px;
-    float: right;
-
-    &.black {
-      background-color: #312d2a;
-    }
-
-  }
 }
 
 .avatar-editor {
@@ -136,19 +127,4 @@ const uploadChangeHandle = e => {
   }
 }
 
-.success-tip {
-  display: flex;
-  align-items: center;
-  justify-content: left;
-  color: white;
-  background-color: @c-positive;
-  border-radius: 3px;
-  padding: 8px 2rem;
-  font-size: 14px;
-  margin-bottom: 1rem;
-
-  .icon {
-    margin-right: 1rem;
-  }
-}
 </style>

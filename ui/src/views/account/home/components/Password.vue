@@ -2,7 +2,7 @@
 import { reactive, ref } from 'vue'
 import http from '@/utils/http.js'
 import snackbar from '@/components/snackbar/index.js'
-import { debounce, passwordStrength } from '@/utils/index.js'
+import { passwordStrength } from '@/utils/index.js'
 
 const formState = reactive({
   oldPassword: '',
@@ -14,8 +14,34 @@ const oldPasswordReveal = ref(false)
 const newPasswordReveal = ref(false)
 const confirmPasswordReveal = ref(false)
 const loading = ref(false)
+const success = ref(false)
 const submitHandle = () => {
-  snackbar.warning("A")
+  if (loading.value) {
+    return
+  }
+  if (success.value) {
+    Object.assign(formState, {
+      oldPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    })
+    success.value = false
+    return
+  }
+  if (formState.newPassword === formState.oldPassword) {
+    snackbar.warning('新密码不能与旧密码相同')
+    return
+  }
+
+  if (formState.newPassword !== formState.confirmPassword) {
+    snackbar.warning('两次输入的新密码不同')
+    return
+  }
+  loading.value = true
+  http.post('/account/password', formState).then(() => {
+    loading.value = false
+    success.value = true
+  }).catch(() => loading.value = false)
 }
 
 const passwordInputHandler = (event) => {
@@ -26,9 +52,13 @@ const passwordInputHandler = (event) => {
 
 <template>
   <form class="form" @submit.prevent="submitHandle">
+    <div class="success-tip" v-if="success">
+      <Icon name="check-bold" color="#fff" size="2rem"/>
+      <span>操作成功</span>
+    </div>
     <div class="form-group">
       <div class="border-input-wrap">
-        <label class="label" >密码</label>
+        <label class="label">密码</label>
         <div class="password-reveal">
           <input
               class="input"
@@ -36,7 +66,7 @@ const passwordInputHandler = (event) => {
               pattern="[a-zA-Z0-9@!$^.*_%]{6,30}"
               title="6-30位字母，数字或以下@!$^.*_%合法符号"
               v-model="formState.oldPassword"
-              :disabled="loading"
+              :disabled="loading || success"
               :type="oldPasswordReveal ? 'input' : 'password'"
           />
           <Icon
@@ -50,7 +80,7 @@ const passwordInputHandler = (event) => {
     </div>
     <div class="form-group">
       <div class="border-input-wrap">
-        <label class="label" >新密码</label>
+        <label class="label">新密码</label>
         <div class="password-reveal">
           <input
               class="input"
@@ -58,7 +88,7 @@ const passwordInputHandler = (event) => {
               pattern="[a-zA-Z0-9@!$^.*_%]{6,30}"
               title="6-30位字母，数字或以下@!$^.*_%合法符号"
               v-model="formState.newPassword"
-              :disabled="loading"
+              :disabled="loading || success"
               :type="newPasswordReveal ? 'input' : 'password'"
               @input="passwordInputHandler"
           />
@@ -82,7 +112,7 @@ const passwordInputHandler = (event) => {
     </div>
     <div class="form-group">
       <div class="border-input-wrap">
-        <label class="label" >新密码（再次输入）</label>
+        <label class="label">新密码（再次输入）</label>
         <div class="password-reveal">
           <input
               class="input"
@@ -90,7 +120,7 @@ const passwordInputHandler = (event) => {
               pattern="[a-zA-Z0-9@!$^.*_%]{6,30}"
               title="6-30位字母，数字或以下@!$^.*_%合法符号"
               v-model="formState.confirmPassword"
-              :disabled="loading"
+              :disabled="loading || success"
               :type="confirmPasswordReveal ? 'input' : 'password'"
           />
           <Icon
@@ -102,24 +132,28 @@ const passwordInputHandler = (event) => {
         </div>
       </div>
     </div>
-    <button type="submit" class="submit-button button black">确认</button>
+    <button type="submit" class="submit-button button " :disabled="loading" :class="success ? 'border' : 'black'">
+      {{ success ? '再次修改' : '保存' }}
+    </button>
   </form>
 </template>
 
 <style scoped lang="less">
 @import "@/assets/css/variable.less";
+@import "./index.less";
 
 .form-group {
   margin-bottom: 2rem;
-
-  .label {
-    font-weight: bolder;
-  }
 }
 
 .password-complexity {
   margin-top: -1rem;
-  margin-bottom: 2rem ;
+  margin-bottom: 2rem;
+
+  .form-help {
+    font-size: 12px;
+    color: @c-grey;
+  }
 }
 
 .password-complexity-meter {
@@ -131,25 +165,11 @@ const passwordInputHandler = (event) => {
   & > span {
     background-color: #a4a4a4;
     width: 25%;
+
     &.action {
       background-color: @c-positive;
     }
   }
-}
-
-.submit-button {
-
-  margin-top: 2rem;
-  height: 36px;
-  font-size: 14px;
-  max-width: 100%;
-  width: 150px;
-  float: right;
-
-  &.black {
-    background-color: #312d2a;
-  }
-
 }
 
 </style>

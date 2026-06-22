@@ -36,6 +36,9 @@ public class UserController {
         router.post("/api/user/history").handler(sessionHandle::handle).handler(this::history);
 
         router.post("/api/account/edit").handler(sessionHandle::handle).handler(this::updateInfo);
+        router.post("/api/account/password").handler(sessionHandle::handle).handler(this::updatePassword);
+        router.post("/api/account/send/code").handler(sessionHandle::handle).handler(this::sendUpdateEmailCode);
+        router.post("/api/account/email").handler(sessionHandle::handle).handler(this::updateEmail);
     }
 
     /**
@@ -43,7 +46,7 @@ public class UserController {
      */
     public void info(RoutingContext ctx) {
         UserSession session = SessionStore.sessionUser(ctx);
-        userDao.findOne(JsonObject.of("username", session.username), "nickname", "avatar", "status", "rating").onSuccess(user -> {
+        userDao.findOne(JsonObject.of("username", session.username), "nickname", "avatar", "email", "status", "rating").onSuccess(user -> {
             user.put("username", session.username);
             RestContext.success(ctx, user);
         }).onFailure(e -> {
@@ -139,7 +142,6 @@ public class UserController {
             log.error(e.getMessage(), e.getCause());
             RestContext.fail(ctx);
         });
-
     }
 
     /**
@@ -177,7 +179,6 @@ public class UserController {
                     });
 
         }
-
 
     }
 
@@ -246,7 +247,7 @@ public class UserController {
                 String code = RandomUtils.getRandom(5, true);
                 AppContext.REDIS.setex(RedisConstant.AUTH_CODE_EMAIL + email, RedisConstant.CODE_EXPIRE, code).onSuccess(v -> {
                     RestContext.success(ctx);
-                    AppContext.sendMail("修改邮箱验证", email, code, false);
+                    AppContext.sendMail("修改邮箱验证码", email, code, false);
                 }).onFailure(e -> {
                     log.error(e.getMessage(), e.getCause());
                     RestContext.fail(ctx);
@@ -266,7 +267,7 @@ public class UserController {
         JsonObject body = ctx.body().asJsonObject();
         String oldPassword = body.getString("oldPassword");
         String newPassword = body.getString("newPassword");
-        String confirmPassword = body.getString("confirmPassword`");
+        String confirmPassword = body.getString("confirmPassword");
 
         if (!RegexUtils.matches(oldPassword, RegexUtils.PASSWORD) ||
                 !RegexUtils.matches(newPassword, RegexUtils.PASSWORD) ||
@@ -275,13 +276,12 @@ public class UserController {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
-
         UserSession session = SessionStore.sessionUser(ctx);
         userDao.findOne(JsonObject.of("username", session.username),  "password").onSuccess(user -> {
             if (!SecurityUtils.matchesBCrypt(oldPassword, user.getString("password"))) {
                 RestContext.fail(ctx, RestStatus.EMAIL_CODE_IS_INVALID);
             } else {
-                userDao.updatePassword(session.username, newPassword).onSuccess(username -> {
+                userDao.updatePassword(session.username, SecurityUtils.bCrypt(newPassword)).onSuccess(username -> {
                     RestContext.success(ctx);
                 }).onFailure(e -> {
                     log.error(e.getMessage(), e.getCause());
