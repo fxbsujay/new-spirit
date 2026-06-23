@@ -121,7 +121,8 @@ export class GameSocket {
      */
     end() {
         this.socket.send(JSON.stringify({
-            type: 'GAME_END'
+            type: 'GAME_END',
+            data: 'SURRENDER'
         }))
     }
 }

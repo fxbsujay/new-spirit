@@ -69,6 +69,7 @@ export const useUserStore = defineStore('user', () => {
 
   const startWaitGame = (info) => {
     Object.assign(waitGame, {
+      ...info,
       code: info.mode === 'CASUAL' ? info.code : '',
       status: true,
       timestamp: dayjs().unix(),

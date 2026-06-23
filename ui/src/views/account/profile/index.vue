@@ -33,7 +33,7 @@ const gameResult = (item) => {
       value: 'tie',
       label: '平'
     }
-  } else if (item[item.winner.toLowerCase()] === username) {
+  } else if (item[item.winner.toLowerCase()].username === username) {
     return {
       value: 'victory',
       label: '胜'

@@ -138,7 +138,7 @@ public class GameController {
             return;
         }
 
-        if (null == dto.duration || dto.duration <= 0 || null == dto.stepDuration || dto.stepDuration < 0) {
+        if (!dto.type.equals(GameType.NONE) && (null == dto.duration || dto.duration <= 0 || null == dto.stepDuration || dto.stepDuration < 0)) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }

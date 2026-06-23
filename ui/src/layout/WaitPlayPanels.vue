@@ -68,14 +68,14 @@ const detailedText = () => {
   }
   let text = ''
   if (waitGame.type === 'SHORT') {
-    text += waitGame.duration + 'm + ' + waitGame.stepDuration + 's'
+    text += waitGame.duration + 'm+' + waitGame.stepDuration + 's'
   } else if (waitGame.type === 'LONG') {
     text += waitGame.duration + 'd'
   } else {
     text += '∞'
   }
 
-  text +=  '•' + waitGame.boardSize + 'x' + waitGame.boardSize
+  text = waitGame.boardSize + 'x' + waitGame.boardSize +  ' • ' + text
   return text
 }
 
@@ -118,6 +118,7 @@ const detailedText = () => {
         height: auto;
       }
       .time {
+        margin: auto 0 0 0;
         font-size: 14px;
       }
     }
@@ -161,13 +162,18 @@ const detailedText = () => {
     transition: opacity 0.3s ease;
   }
 
+  .text {
+    margin-top: 4px;
+    font-size: 12px;
+  }
+
   .code {
     margin-top: auto;
     transition-delay: 0.2s;
   }
 
   .time {
-    margin-top: auto;
+    margin: auto 0;
     font-size: 16px;
     transition: font-size 0.3s ease;
   }

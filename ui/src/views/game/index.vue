@@ -21,6 +21,9 @@ const onBoardClick = (x, y) => {
   socket.addStep(x, y)
 }
 
+const endHandler = () => {
+  socket.end()
+}
 </script>
 
 <template>
@@ -114,7 +117,7 @@ const onBoardClick = (x, y) => {
           <div class="btn"><Icon name="skip-previous"/></div>
           <div class="btn"><Icon name="skip-next"/></div>
           <div class="btn"><Icon name="skip-for"/></div>
-          <div class="btn"><Icon name="menu"/></div>
+          <div class="btn" @click="endHandler"><Icon name="menu"/></div>
         </div>
         <div class="step-wrap">
           <div class="step" v-for="index in Math.ceil(game.steps.length / 2)">

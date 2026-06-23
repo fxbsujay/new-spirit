@@ -25,6 +25,26 @@ const RuleConstant = [
   { label: '中国规则', value: 1 },
   { label: '韩国', value: 2 }
 ]
+
+const shortDurations = []
+const shortStepDuration = []
+for (let i = 1; i < 35; i++) {
+  if (i <= 20) {
+    shortDurations.push(i)
+    shortStepDuration.push(i)
+  } else if (i <= 25) {
+    shortDurations.push(shortDurations[i - 2] + 5)
+    shortStepDuration.push(shortStepDuration[i - 2] + 5)
+  } else {
+    shortDurations.push(shortDurations[i - 2] + 15)
+    if (i <= 26) {
+      shortStepDuration.push(shortStepDuration[i - 2] + 15)
+    } else if (i <= 30) {
+      shortStepDuration.push(shortStepDuration[i - 2] + 30)
+    }
+  }
+}
+
 const loading = ref(false)
 const formShow = ref(false)
 const formState = reactive({
@@ -32,7 +52,7 @@ const formState = reactive({
   rule: 1,
   boardSize: 21,
   duration: 10,
-  stepDuration: 0
+  stepDuration: 10
 })
 
 const modeChangeHandle = (mode) => {
@@ -45,6 +65,16 @@ const modeChangeHandle = (mode) => {
 
 const typeChangeHandle = (type) => {
   formState.type = type
+  if (type === 'SHORT') {
+    formState.duration = 10
+    formState.stepDuration = 10
+  } else if (type === 'LONG') {
+    formState.duration = 1
+    formState.stepDuration = 0
+  } else {
+    formState.duration = 0
+    formState.stepDuration = 0
+  }
 }
 
 const createHandle = debounce(() => {
@@ -52,10 +82,13 @@ const createHandle = debounce(() => {
     return
   }
   loading.value = true
-  http.post("/game/create", formState).then(code => {
+
+  const info = formState.type === 'SHORT' ? { ...formState, duration: shortDurations[formState.duration], stepDuration: shortStepDuration[formState.stepDuration] } : formState
+
+  http.post("/game/create", info).then(code => {
     loading.value = false
     startWaitGame({
-      ...formState,
+      ...info,
       code,
       mode: 'CASUAL'
     })
@@ -151,16 +184,18 @@ const cancelCreateHandle = () => {
                 </div>
                 <div class="row gap-8" v-if="formState.type !== 'NONE'">
                   <div class="form-group col">
-                  <span class="form-label">
-                    {{ formState.type === 'SHORT' ? '各方限时（分钟）' : '每步允许天数' }}
-                  </span>
-                    <input class="range" type="range" v-model="formState.duration" min="0" max="38"/>
+                    <label class="form-label" style="width: 100%;">
+                      <span>{{ formState.type === 'SHORT' ? '各方限时（分钟）' : '每步允许天数' }}</span>
+                      <span style="float: right; font-weight: bolder">{{  formState.type === 'SHORT' ? shortDurations[formState.duration] : formState.duration }}</span>
+                    </label>
+                    <input class="range" type="range" v-model="formState.duration" min="0" :max="formState.type === 'SHORT' ? 33 : 14"/>
                   </div>
                   <div class="form-group col" v-if="formState.type === 'SHORT'">
-                  <span class="form-label" style="text-align: right; width: 100%">
-                    每步加时（秒）
-                  </span>
-                    <input class="range" type="range" v-model="formState.stepDuration" min="0" max="30"/>
+                    <label class="form-label" style="text-align: right; width: 100%">
+                      <span>每步加时（秒）</span>
+                      <span style="float: right; font-weight: bolder">{{  shortStepDuration[formState.stepDuration] }}</span>
+                    </label>
+                    <input class="range" type="range" v-model="formState.stepDuration" min="0" max="29"/>
                   </div>
                 </div>
                 <span class="form-label" v-else>请随意安排时间</span>
