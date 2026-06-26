@@ -5,6 +5,7 @@ import { TypeConstant } from '@/constant'
 import { debounce } from '@/utils/index'
 import http from '@/utils/http'
 import { useUserStore } from '@/stores/user'
+import snackbar from '@/components/snackbar/index.js'
 
 const { startWaitGame } = useUserStore()
 
@@ -59,7 +60,13 @@ const modeChangeHandle = (mode) => {
   if (mode === 'CASUAL') {
     formShow.value = true
   } else if (mode === 'RANK') {
-
+    http.post('/game/ranking').then(res => {
+      if (res) {
+        snackbar.success('--------------')
+      } else {
+        snackbar.error('--------------')
+      }
+    })
   }
 }
 
@@ -163,8 +170,8 @@ const cancelCreateHandle = () => {
                         @click="typeChangeHandle(item.value)">{{ item.label }}
                 </button>
               </div>
-              <div class="flex flex-column gap-8 flex-1">
-                <div class="row gap-8">
+              <div class="flex flex-column gap-1r flex-1">
+                <div class="row gap-1r">
                   <div class="form-group col">
                 <span class="form-label">
                   游戏规则
@@ -182,7 +189,7 @@ const cancelCreateHandle = () => {
                     </select>
                   </div>
                 </div>
-                <div class="row gap-8" v-if="formState.type !== 'NONE'">
+                <div class="row gap-1r" v-if="formState.type !== 'NONE'">
                   <div class="form-group col">
                     <label class="form-label" style="width: 100%;">
                       <span>{{ formState.type === 'SHORT' ? '各方限时（分钟）' : '每步允许天数' }}</span>
@@ -191,7 +198,7 @@ const cancelCreateHandle = () => {
                     <input class="range" type="range" v-model="formState.duration" min="0" :max="formState.type === 'SHORT' ? 33 : 14"/>
                   </div>
                   <div class="form-group col" v-if="formState.type === 'SHORT'">
-                    <label class="form-label" style="text-align: right; width: 100%">
+                    <label class="form-label" style="width: 100%">
                       <span>每步加时（秒）</span>
                       <span style="float: right; font-weight: bolder">{{  shortStepDuration[formState.stepDuration] }}</span>
                     </label>

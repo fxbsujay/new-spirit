@@ -102,12 +102,12 @@ const gameResult = (item) => {
             </div>
           </div>
           <div class="versus">
-            <div class="player">
+            <div class="player left">
               <div class="player-name">{{ item.white.nickname }}<span class="white-tag"/></div>
               <div class="player-rating">{{ item.white.username }} ({{ item.white.rating }})</div>
             </div>
             <div class="vs">{{ gameResult(item).label }}</div>
-            <div class="player">
+            <div class="player right">
               <div class="player-name"><span class="black-tag"/>{{ item.black.nickname }}</div>
               <div class="player-rating">{{ item.black.username }} ({{ item.black.rating }})</div>
             </div>
