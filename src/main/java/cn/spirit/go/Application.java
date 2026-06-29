@@ -1,9 +1,11 @@
 package cn.spirit.go;
 
 import cn.spirit.go.web.config.AppContext;
+import cn.spirit.go.web.config.Config;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.vertx.core.Future;
 import io.vertx.core.VerticleBase;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.ext.web.Router;
 import io.vertx.launcher.application.VertxApplication;
@@ -22,9 +24,8 @@ public class Application extends VerticleBase {
     @Override
     public Future<?> start() {
         return vertx.fileSystem().readFile("config.json").compose(buffer -> {
-            log.info("read config.json {}", buffer.toJsonObject());
             DatabindCodec.mapper().registerModule(new JavaTimeModule());
-            Router router = AppContext.init(vertx);
+            Router router = AppContext.init(vertx, Json.decodeValue(buffer, Config.class));
             return vertx.createHttpServer()
                     .requestHandler(router)
                     .listen(8899)

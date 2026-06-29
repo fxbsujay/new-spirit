@@ -3,6 +3,7 @@ package cn.spirit.go.controller;
 import cn.spirit.go.common.RedisConstant;
 import cn.spirit.go.common.RestContext;
 import cn.spirit.go.common.enums.RestStatus;
+import cn.spirit.go.common.enums.UploadBucket;
 import cn.spirit.go.common.util.*;
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
@@ -157,12 +158,8 @@ public class UserController {
 
         if (!ctx.fileUploads().isEmpty()) {
             FileUpload file = ctx.fileUploads().get(0);
-            String filename = file.uploadedFileName().substring(14) + file.fileName().substring(file.fileName().length() - 4);
-            ctx.vertx().fileSystem().move(file.uploadedFileName(), "./static/avatar/" + filename, new CopyOptions())
-                    .compose(res -> userDao.updateProfile(SessionStore.username(ctx), filename, nickname))
-                    .onSuccess(res -> {
-                        RestContext.success(ctx);
-                    })
+            AppContext.upload(UploadBucket.avatar, file).compose(filename -> userDao.updateProfile(SessionStore.username(ctx), filename, nickname))
+                    .onSuccess(res -> RestContext.success(ctx))
                     .onFailure(e -> {
                         log.error(e.getMessage(), e.getCause());
                         RestContext.fail(ctx);

@@ -1,6 +1,7 @@
 package cn.spirit.go.web.config;
 
 import cn.spirit.go.common.RestContext;
+import cn.spirit.go.common.enums.UploadBucket;
 import cn.spirit.go.controller.AuthController;
 import cn.spirit.go.controller.GameController;
 import cn.spirit.go.controller.UserController;
@@ -12,9 +13,11 @@ import cn.spirit.go.web.socket.ClientManger;
 import cn.spirit.go.web.socket.WebSocketHandler;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.file.CopyOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mail.*;
 import io.vertx.ext.mongo.MongoClient;
+import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.StaticHandler;
@@ -30,6 +33,9 @@ public class AppContext {
     private static final Logger log = LoggerFactory.getLogger(AppContext.class);
 
     public static Vertx vertx;
+
+
+    public static Config CONFIG;
 
     /**
      * 机器编码
@@ -51,6 +57,7 @@ public class AppContext {
      */
     public static MailClient MAIL;
 
+
     /**
      * 单例对象
      */
@@ -64,21 +71,22 @@ public class AppContext {
         return (T) beans.get(clazz);
     }
 
-    public static Router init(Vertx vertx) {
+    public static Router init(Vertx vertx, Config config) {
         AppContext.vertx = vertx;
+        AppContext.CONFIG = config;
 
-        MONGO = MongoClient.createShared(vertx, JsonObject.of("connection_string", "mongodb://localhost:27017", "db_name", "spirit"));
+        MONGO = MongoClient.createShared(vertx, JsonObject.of("connection_string", "mongodb://" + config.mongodb.url, "db_name", config.mongodb.db));
 
-        Redis client = Redis.createClient(vertx, new RedisOptions().addConnectionString("redis://localhost:6379"));
+        Redis client = Redis.createClient(vertx, new RedisOptions().addConnectionString("redis://" + config.redis.url).setPassword(config.redis.password));
         REDIS = RedisAPI.api(client);
 
         MailConfig mailConfig = new MailConfig()
-                .setHostname("smtp.163.com")
-                .setPort(465)
+                .setHostname(config.mail.host)
+                .setPort(config.mail.port)
                 .setSsl(true)
                 .setStarttls(StartTLSOptions.REQUIRED)
-                .setUsername("fsusured@163.com")
-                .setPassword("JDUXN3hwa4GDLywg");
+                .setUsername(config.mail.username)
+                .setPassword(config.mail.password);
 
         MAIL = MailClient.createShared(vertx, mailConfig);
 
@@ -94,11 +102,10 @@ public class AppContext {
         SessionStore sessionHandle = new SessionStore();
         router.get("/api/ping").handler(RestContext::success);
 
-
         new WebSocketHandler(router);
 
         router.route().handler(BodyHandler.create("./upload_temp").setBodyLimit(10 * 1024 * 1024).setDeleteUploadedFilesOnEnd(true));
-        router.route("/api/static/*").handler(StaticHandler.create("./static"));
+        router.route("/api/static/*").handler(StaticHandler.create(config.server.storageFilePath));
 
         router.errorHandler(500, ctx -> {
             log.error("500", ctx.failure());
@@ -112,9 +119,9 @@ public class AppContext {
         return router;
     }
 
-    public static Future<MailResult> sendMail(String subject, String to, String content, boolean html) {
+    public static void sendMail(String subject, String to, String content, boolean html) {
         MailMessage message = new MailMessage()
-                .setFrom("fsusured@163.com (Spirit Go)")
+                .setFrom(CONFIG.mail.username + " (Spirit Go)")
                 .setTo(to)
                 .setSubject(subject);
         if (html) {
@@ -123,7 +130,12 @@ public class AppContext {
             message.setText(content);
         }
         log.info("Send email subject: {}, to: {}, content: {}", subject, to, content);
-        return MAIL.sendMail(message);
+        MAIL.sendMail(message);
+    }
+
+    public static Future<String> upload(UploadBucket bucket, FileUpload file) {
+        String filename = file.uploadedFileName().substring(14) + file.fileName().substring(file.fileName().length() - 4);
+        return vertx.fileSystem().move(file.uploadedFileName(), "./static/" + bucket.name() + "/" + filename, new CopyOptions()).compose(res -> Future.succeededFuture(filename));
     }
 
     public static <T> Future<T> withLock(String name, Supplier<Future<T>> block) {

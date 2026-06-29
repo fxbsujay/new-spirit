@@ -1,3 +1,20 @@
 {
-  "name": "A"
+  "server": {
+    "port": 8899,
+    "storageFilePath": "./static"
+  },
+  "mongodb": {
+    "url": "localhost:27017",
+    "db": "spirit"
+  },
+  "redis": {
+    "url": "localhost:6379",
+    "password": "MyRedis123"
+  },
+  "mail": {
+    "host": "mtp.163.com",
+    "port": 465,
+    "username": "fsusured@163.com",
+    "password": "JDUXN3hwa4GDLywg"
+  }
 }
