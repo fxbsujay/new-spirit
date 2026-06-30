@@ -34,7 +34,6 @@ public class AppContext {
 
     public static Vertx vertx;
 
-
     public static Config CONFIG;
 
     /**
@@ -135,7 +134,7 @@ public class AppContext {
 
     public static Future<String> upload(UploadBucket bucket, FileUpload file) {
         String filename = file.uploadedFileName().substring(14) + file.fileName().substring(file.fileName().length() - 4);
-        return vertx.fileSystem().move(file.uploadedFileName(), "./static/" + bucket.name() + "/" + filename, new CopyOptions()).compose(res -> Future.succeededFuture(filename));
+        return vertx.fileSystem().move(file.uploadedFileName(), CONFIG.server.storageFilePath + "/" + bucket.name() + "/" + filename, new CopyOptions()).compose(res -> Future.succeededFuture(filename));
     }
 
     public static <T> Future<T> withLock(String name, Supplier<Future<T>> block) {

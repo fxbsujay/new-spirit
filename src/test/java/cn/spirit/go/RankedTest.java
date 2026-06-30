@@ -2,6 +2,7 @@ package cn.spirit.go;
 
 import cn.spirit.go.service.GameRankedService;
 import cn.spirit.go.web.config.AppContext;
+import cn.spirit.go.web.config.Config;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -21,7 +22,7 @@ public class RankedTest {
     @Test
     @DisplayName("Ranking")
     void useRanking(Vertx vertx, VertxTestContext testContext) {
-        AppContext.init(vertx);
+        AppContext.init(vertx, new Config());
 
         GameRankedService service = new GameRankedService();
 

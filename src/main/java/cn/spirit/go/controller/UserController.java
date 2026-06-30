@@ -102,7 +102,6 @@ public class UserController {
 
         int limit = 10;
 
-        // TODO 查询用户的历史对局
         JsonObject query = JsonObject.of("$or", new JsonArray()
                 .add(JsonObject.of("white", username))
                 .add(JsonObject.of("black", username)));

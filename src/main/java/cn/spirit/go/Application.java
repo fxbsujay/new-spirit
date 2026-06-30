@@ -7,7 +7,6 @@ import io.vertx.core.Future;
 import io.vertx.core.VerticleBase;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.jackson.DatabindCodec;
-import io.vertx.ext.web.Router;
 import io.vertx.launcher.application.VertxApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,10 +24,10 @@ public class Application extends VerticleBase {
     public Future<?> start() {
         return vertx.fileSystem().readFile("config.json").compose(buffer -> {
             DatabindCodec.mapper().registerModule(new JavaTimeModule());
-            Router router = AppContext.init(vertx, Json.decodeValue(buffer, Config.class));
+            Config config = Json.decodeValue(buffer, Config.class);
             return vertx.createHttpServer()
-                    .requestHandler(router)
-                    .listen(8899)
+                    .requestHandler(AppContext.init(vertx, config))
+                    .listen(config.server.port)
                     .onSuccess(http -> {
                         log.info("HTTP server started on port {}",  http.actualPort());
                     });
