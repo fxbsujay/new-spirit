@@ -1,7 +1,6 @@
 {
   "server": {
-    "port": 8899,
-    "storageFilePath": "./static"
+    "port": 8899
   },
   "mongodb": {
     "url": "localhost:27017",

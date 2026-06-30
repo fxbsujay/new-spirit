@@ -14,9 +14,11 @@ public class Config {
 
     public static class Server {
 
-        public Integer port;
+        public Integer port = 8899;
 
-        public String storageFilePath;
+        public Long bodyLimit = 10 * 1024 * 1024L;
+
+        public String storageFilePath = "./static";
     }
 
     public static class Mongodb {

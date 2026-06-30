@@ -103,7 +103,7 @@ public class AppContext {
 
         new WebSocketHandler(router);
 
-        router.route().handler(BodyHandler.create("./upload_temp").setBodyLimit(10 * 1024 * 1024).setDeleteUploadedFilesOnEnd(true));
+        router.route().handler(BodyHandler.create("./upload_temp").setBodyLimit(config.server.bodyLimit).setDeleteUploadedFilesOnEnd(true));
         router.route("/api/static/*").handler(StaticHandler.create(config.server.storageFilePath));
 
         router.errorHandler(500, ctx -> {
@@ -136,6 +136,14 @@ public class AppContext {
         String filename = file.uploadedFileName().substring(14) + file.fileName().substring(file.fileName().length() - 4);
         return vertx.fileSystem().move(file.uploadedFileName(), CONFIG.server.storageFilePath + "/" + bucket.name() + "/" + filename, new CopyOptions()).compose(res -> Future.succeededFuture(filename));
     }
+
+    public static void deleteFile(UploadBucket bucket, String filename) {
+        String file = CONFIG.server.storageFilePath + "/" + bucket.name() + "/" + filename;
+        vertx.fileSystem().delete(file)
+                .onSuccess(res -> log.info("Delete file {} successfully", file))
+                .onFailure(res -> log.error("Delete file {} failed", file));
+    }
+
 
     public static <T> Future<T> withLock(String name, Supplier<Future<T>> block) {
         return withLock(name, 1000, block);

@@ -21,6 +21,11 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 public class UserController {
@@ -156,9 +161,47 @@ public class UserController {
         }
 
         if (!ctx.fileUploads().isEmpty()) {
-            FileUpload file = ctx.fileUploads().get(0);
-            AppContext.upload(UploadBucket.avatar, file).compose(filename -> userDao.updateProfile(SessionStore.username(ctx), filename, nickname))
-                    .onSuccess(res -> RestContext.success(ctx))
+            FileUpload file = ctx.fileUploads().iterator().next();
+            String contentType = file.contentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                // 不是图片类型
+                RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+                return;
+            }
+            if (file.size() > 1024 * 200) {
+                // 大于200KB
+                RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+                return;
+            }
+            BufferedImage image = null;
+            try {
+                image = ImageIO.read(new File(file.uploadedFileName()));
+            } catch (IOException e) {
+                RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+                return;
+            }
+            if (image == null) {
+                RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+                return;
+            }
+            if (image.getWidth() != image.getHeight()) {
+                // 不是正方形图片
+                RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
+                return;
+            }
+            String username = SessionStore.username(ctx);
+            AppContext.upload(UploadBucket.avatar, file)
+                    .compose(filename -> userDao.updateProfile(username, filename, nickname))
+                    .onSuccess(res -> {
+                        RestContext.success(ctx);
+                        // 需要删除原头像文件
+                        userDao.findOne(JsonObject.of("username", username), "avatar").onSuccess(u -> {
+                            String avatar = u.getString("avatar");
+                            if (StringUtils.isNotBlank(avatar)) {
+                                AppContext.deleteFile(UploadBucket.avatar, avatar);
+                            }
+                        });
+                    })
                     .onFailure(e -> {
                         log.error(e.getMessage(), e.getCause());
                         RestContext.fail(ctx);
