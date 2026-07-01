@@ -39,18 +39,18 @@ public class GameRankedService {
         }
         matchingQueue.add(player);
         // 开始匹配
-        match(player, 200).compose(opponent -> {
+        match(player, 200).onSuccess(opponent -> {
             // 匹配完毕
             if (null == opponent) {
-                // 未匹配到玩家加入待匹配队列
+                // 未匹配到玩家加入待匹配队列 删除匹配队列
                 waitingQueue.add(player);
-                return Future.succeededFuture(true);
+                matchingQueue.remove(player);
             } else {
                 log.info("Game Matchmaking successful, Players: [{},{}]", player.username, opponent.username);
-                matchingQueue.remove(opponent);
                 matchSuccess.accept(opponent.username);
+                matchingQueue.remove(opponent);
+                matchingQueue.remove(player);
             }
-            return Future.succeededFuture();
         });
         return true;
     }

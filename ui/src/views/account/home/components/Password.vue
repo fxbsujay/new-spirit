@@ -68,6 +68,7 @@ const passwordInputHandler = (event) => {
               v-model="formState.oldPassword"
               :disabled="loading || success"
               :type="oldPasswordReveal ? 'input' : 'password'"
+              autocomplete="off"
           />
           <Icon
               class="reveal-icon"
@@ -91,6 +92,7 @@ const passwordInputHandler = (event) => {
               :disabled="loading || success"
               :type="newPasswordReveal ? 'input' : 'password'"
               @input="passwordInputHandler"
+              autocomplete="off"
           />
           <Icon
               class="reveal-icon"
@@ -122,6 +124,7 @@ const passwordInputHandler = (event) => {
               v-model="formState.confirmPassword"
               :disabled="loading || success"
               :type="confirmPasswordReveal ? 'input' : 'password'"
+              autocomplete="off"
           />
           <Icon
               class="reveal-icon"

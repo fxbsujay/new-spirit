@@ -8,8 +8,7 @@ import { throttle } from '@/utils/index.js'
 
 const ModeConstant = [
   { label: '休闲赛', value: 'CASUAL' },
-  { label: '好友赛', value: 'RANK' },
-  { label: '积分赛', value: 'RANK' },
+  { label: '积分赛', value: 'RANK' }
 ]
 
 const { waitGame, closeWaitGame } = useUserStore()
@@ -55,7 +54,7 @@ const endWait = throttle(() => {
   isStart.value = false
   loading.value = true
 
-  http.post('/game/cancel').then(() => {
+  http.post(`/game/${waitGame.mode === 'RANK' ? 'ranking/cancel' : 'cancel'}`).then(() => {
     clearTimer()
     loading.value = false
     closeWaitGame()
@@ -90,7 +89,8 @@ const detailedText = () => {
           <span class="type">{{ isStart ? ModeConstant.find(item => item.value === waitGame.mode).label : ''}}</span>
           <span class="text">{{ detailedText() }}</span>
         </div>
-        <span class="code">#{{ waitGame.code }}</span>
+        <span class="code" v-if="waitGame.code">#{{ waitGame.code }}</span>
+        <span class="code" v-else>453人匹配中...</span>
       </div>
       <div class="time">
         {{ timeText }}
@@ -156,7 +156,7 @@ const detailedText = () => {
 
   .text, .code {
     display: block;
-    font-size: 14px;
+    font-size: 12px;
     opacity: 0;
     height: 0;
     transition: opacity 0.3s ease;
@@ -164,7 +164,6 @@ const detailedText = () => {
 
   .text {
     margin-top: 4px;
-    font-size: 12px;
   }
 
   .code {
@@ -174,6 +173,7 @@ const detailedText = () => {
 
   .time {
     margin: auto 0;
+    padding-bottom: 2px;
     font-size: 16px;
     transition: font-size 0.3s ease;
   }

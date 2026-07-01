@@ -190,18 +190,18 @@ public class UserController {
                 return;
             }
             String username = SessionStore.username(ctx);
+
             AppContext.upload(UploadBucket.avatar, file)
+                    .compose(filename -> userDao.findOne(JsonObject.of("username", username), "avatar").compose(u -> {
+                        String avatar = u.getString("avatar");
+                        if (StringUtils.isNotBlank(avatar)) {
+                            log.info("upload avatar {} -> {}", avatar, filename);
+                            AppContext.deleteFile(UploadBucket.avatar, avatar);
+                        }
+                        return Future.succeededFuture(filename);
+                    }))
                     .compose(filename -> userDao.updateProfile(username, filename, nickname))
-                    .onSuccess(res -> {
-                        RestContext.success(ctx);
-                        // 需要删除原头像文件
-                        userDao.findOne(JsonObject.of("username", username), "avatar").onSuccess(u -> {
-                            String avatar = u.getString("avatar");
-                            if (StringUtils.isNotBlank(avatar)) {
-                                AppContext.deleteFile(UploadBucket.avatar, avatar);
-                            }
-                        });
-                    })
+                    .onSuccess(res -> RestContext.success(ctx))
                     .onFailure(e -> {
                         log.error(e.getMessage(), e.getCause());
                         RestContext.fail(ctx);

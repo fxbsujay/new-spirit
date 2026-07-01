@@ -25,7 +25,7 @@
             </section>
           </nav>
         </div>
-        <button v-if="!waitGame.code" type="button" class="button playing-btn" :class="drawerVisible ? 'cancel' : ''" @click="drawerVisible = !drawerVisible">
+        <button v-if="!waitGame.code && !user.visitor" type="button" class="button playing-btn" :class="drawerVisible ? 'cancel' : ''" @click="drawerVisible = !drawerVisible">
           {{ drawerVisible ? '关闭' : '开始游戏' }}
         </button>
         <div class="tools flex-1">

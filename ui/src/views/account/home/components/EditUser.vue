@@ -9,11 +9,23 @@ const formState = reactive({
   nickname: '',
   username: ''
 })
-Object.assign(formState, toRaw(store.user))
 const success = ref(false)
 const loading = ref(false)
 const file = ref(null)
 const uploadRef = useTemplateRef('upload-input')
+
+const getUserInfo = () => {
+  http.post("/user/info").then(res => {
+    Object.assign(formState, res)
+  }).catch(() => {
+    Object.assign(formState, {
+      avatar: '',
+      nickname: '',
+      username: ''
+    })
+  })
+}
+getUserInfo()
 
 const submitHandle = () => {
   if (loading.value) {
@@ -22,6 +34,7 @@ const submitHandle = () => {
   if (success.value) {
     file.value = null
     success.value = false
+    getUserInfo()
     return
   }
   const formData = new FormData()
@@ -37,12 +50,14 @@ const submitHandle = () => {
   }).then(() => {
     loading.value = false
     success.value = true
+    store.refreshInfo()
   }).catch(() => loading.value = false)
 }
 
 const uploadChangeHandle = e => {
   formState.avatar = URL.createObjectURL(e.target.files[0])
   file.value = e.target.files[0]
+  console.log(file.value)
   return false
 }
 </script>

@@ -67,7 +67,7 @@ const sendCode = () => {
 </script>
 
 <template>
-  <form class="form" @submit.prevent="submitHandle">
+  <form class="form" @submit.prevent="submitHandle" autocomplete="off">
     <div class="success-tip" v-if="success">
       <Icon name="check-bold" color="#fff" size="2rem" />
       <span>操作成功</span>
@@ -84,6 +84,7 @@ const sendCode = () => {
               v-model="formState.password"
               :disabled="loading || success"
               :type="passwordReveal ? 'input' : 'password'"
+              autocomplete="off"
           />
           <Icon
               class="reveal-icon"

@@ -62,9 +62,17 @@ const modeChangeHandle = (mode) => {
   } else if (mode === 'RANK') {
     http.post('/game/ranking').then(res => {
       if (res) {
-        snackbar.success('--------------')
+        startWaitGame({
+          boardSize: 19,
+          type: 'SHORT',
+          mode: 'RANK',
+          duration: 60 ,
+          stepDuration: 60,
+          timestamp: 0
+        })
+        closeDrawer()
       } else {
-        snackbar.error('--------------')
+        snackbar.warning('您已在匹配队列中')
       }
     })
   }

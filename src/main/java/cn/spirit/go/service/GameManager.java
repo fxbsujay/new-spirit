@@ -172,7 +172,7 @@ public class GameManager {
                 RoomInfo info = new RoomInfo();
                 info.code = generateCode();
                 info.mode = GameMode.RANK;
-                info.type = GameType.NONE;
+                info.type = GameType.SHORT;
                 info.boardSize = 19;
                 // 60分钟 60秒
                 info.duration = 60 * 60 * 1000;

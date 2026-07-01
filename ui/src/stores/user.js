@@ -13,8 +13,7 @@ export const useUserStore = defineStore('user', () => {
     email: null,
     visitor: true,
     nickname: null,
-    username: null,
-    timestamp: 0
+    username: null
   })
 
   const waitGame = reactive({
@@ -33,10 +32,9 @@ export const useUserStore = defineStore('user', () => {
   const refreshInfo = () => {
     const userIsVisitor = Cookie.get('userIsVisitor')
     user.visitor = userIsVisitor !== 'false'
-    if (!user.visitor && !user.timestamp) {
+    if (!user.visitor) {
       http.post("/user/info").then(res => {
         Object.assign(user, res)
-        user.timestamp = dayjs().valueOf()
         setIsVisitorCookie(false)
         socketStore.reconnect()
       })
