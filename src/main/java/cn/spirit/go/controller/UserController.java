@@ -7,12 +7,13 @@ import cn.spirit.go.common.enums.UploadBucket;
 import cn.spirit.go.common.util.*;
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
+import cn.spirit.go.service.sys.FileStorageSystem;
+import cn.spirit.go.service.sys.MailSystem;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
-import io.vertx.core.file.CopyOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.FindOptions;
@@ -36,6 +37,10 @@ public class UserController {
 
     private final GameDao gameDao = AppContext.getBean(GameDao.class);
 
+    private final FileStorageSystem fileSystem = AppContext.getBean(FileStorageSystem.class);
+
+    private final MailSystem mailSystem = AppContext.getBean(MailSystem.class);
+
     public UserController(Router router, SessionStore sessionHandle) {
         router.post("/api/user/info").handler(sessionHandle::handle).handler(this::info);
         router.post("/api/user/profile/:username").handler(sessionHandle::handle).handler(this::profile);
@@ -48,7 +53,7 @@ public class UserController {
     }
 
     /**
-     * 认证先
+     * 自己的用户资料
      */
     public void info(RoutingContext ctx) {
         UserSession session = SessionStore.sessionUser(ctx);
@@ -62,7 +67,7 @@ public class UserController {
     }
 
     /**
-     * 个人资料
+     * 个人资料统计数据
      */
     public void profile(RoutingContext ctx) {
         String username = ctx.pathParam("username");
@@ -173,7 +178,7 @@ public class UserController {
                 RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
                 return;
             }
-            BufferedImage image = null;
+            BufferedImage image;
             try {
                 image = ImageIO.read(new File(file.uploadedFileName()));
             } catch (IOException e) {
@@ -191,12 +196,11 @@ public class UserController {
             }
             String username = SessionStore.username(ctx);
 
-            AppContext.upload(UploadBucket.avatar, file)
+            fileSystem.upload(UploadBucket.avatar, file)
                     .compose(filename -> userDao.findOne(JsonObject.of("username", username), "avatar").compose(u -> {
                         String avatar = u.getString("avatar");
                         if (StringUtils.isNotBlank(avatar)) {
-                            log.info("upload avatar {} -> {}", avatar, filename);
-                            AppContext.deleteFile(UploadBucket.avatar, avatar);
+                            fileSystem.delete(UploadBucket.avatar, avatar);
                         }
                         return Future.succeededFuture(filename);
                     }))
@@ -284,9 +288,9 @@ public class UserController {
                 RestContext.fail(ctx, RestStatus.EMAIL_IS_EXIST);
             } else {
                 String code = RandomUtils.getRandom(5, true);
-                AppContext.REDIS.setex(RedisConstant.AUTH_CODE_EMAIL + email, RedisConstant.CODE_EXPIRE, code).onSuccess(v -> {
+                AppContext.REDIS.set(Arrays.asList(RedisConstant.AUTH_CODE_EMAIL + email, code, "EX", RedisConstant.CODE_EXPIRE)).onSuccess(v -> {
                     RestContext.success(ctx);
-                    AppContext.sendMail("修改邮箱验证码", email, code, false);
+                    mailSystem.send("修改邮箱验证码", email, code, false);
                 }).onFailure(e -> {
                     log.error(e.getMessage(), e.getCause());
                     RestContext.fail(ctx);

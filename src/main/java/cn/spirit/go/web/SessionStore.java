@@ -9,6 +9,7 @@ import io.vertx.core.http.Cookie;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.Arrays;
 import java.util.List;
 
 public class SessionStore {
@@ -93,7 +94,7 @@ public class SessionStore {
     public static Future<Void> logged(RoutingContext ctx, String username) {
         String sessionId = setSessionCookie(ctx);
         String value = username + ";" + ctx.request().remoteAddress().hostAddress() ;
-        return AppContext.REDIS.setex(AUTH_SESSION + sessionId, String.valueOf(AUTH_SESSION_EXPIRE), value).map(r -> null);
+        return AppContext.REDIS.set(Arrays.asList(AUTH_SESSION + sessionId, value, "EX", String.valueOf(AUTH_SESSION_EXPIRE))).map(r -> null);
     }
 
     /**

@@ -7,6 +7,7 @@ import cn.spirit.go.common.enums.UserStatus;
 import cn.spirit.go.common.util.RandomUtils;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.common.util.SecurityUtils;
+import cn.spirit.go.service.sys.MailSystem;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.dao.UserDao;
@@ -17,6 +18,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.Arrays;
 import java.util.List;
 
 public class AuthController {
@@ -24,6 +26,8 @@ public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final UserDao userDao = AppContext.getBean(UserDao.class);
+
+    private final MailSystem mailSystem = AppContext.getBean(MailSystem.class);
 
     public AuthController(Router router) {
         router.post("/api/auth/signin").handler(this::signIn);
@@ -185,9 +189,9 @@ public class AuthController {
             }
 
             String code = RandomUtils.getRandom(5, true);
-            AppContext.REDIS.setex(RedisConstant.AUTH_CODE_SIGNUP + email, RedisConstant.CODE_EXPIRE, code).onSuccess(v -> {
+            AppContext.REDIS.set(Arrays.asList(RedisConstant.AUTH_CODE_SIGNUP + email, code, "EX", RedisConstant.CODE_EXPIRE)).onSuccess(v -> {
                 RestContext.success(ctx);
-                AppContext.sendMail("注册验证码", email, code, false);
+                mailSystem.send("注册验证码", email, code, false);
             }).onFailure(e -> {
                 log.error(e.getMessage(), e.getCause());
                 RestContext.fail(ctx);
@@ -217,9 +221,9 @@ public class AuthController {
             }
 
             String code = RandomUtils.getRandom(5, true);
-            AppContext.REDIS.setex(RedisConstant.AUTH_CODE_PASSWORD + email, RedisConstant.CODE_EXPIRE, code).onSuccess(v -> {
+            AppContext.REDIS.set(Arrays.asList(RedisConstant.AUTH_CODE_PASSWORD + email, code, "EX", RedisConstant.CODE_EXPIRE)).onSuccess(v -> {
                 RestContext.success(ctx);
-                AppContext.sendMail("忘记密码", email, code, false);
+                mailSystem.send("忘记密码", email, code, false);
             }).onFailure(e -> {
                 log.error(e.getMessage(), e.getCause());
                 RestContext.fail(ctx);

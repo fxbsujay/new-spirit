@@ -2,40 +2,46 @@ package cn.spirit.go.dao;
 
 import cn.spirit.go.common.util.SqlUtils;
 import cn.spirit.go.common.util.StringUtils;
-import cn.spirit.go.web.config.AppContext;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.BulkOperation;
 import io.vertx.ext.mongo.BulkOperationType;
+import io.vertx.ext.mongo.MongoClient;
 import java.util.Arrays;
 import java.util.List;
 
 public class UserDao {
 
+    private final MongoClient client;
+
+    public UserDao(MongoClient client) {
+        this.client = client;
+    }
+
     public Future<String> save(JsonObject obj) {
         obj.put("createdAt", System.currentTimeMillis());
-        return AppContext.MONGO.save("user", obj);
+        return client.save("user", obj);
     }
 
     public Future<JsonObject> findOne(JsonObject query, String ...fields) {
-        return AppContext.MONGO.findOne("user", query, SqlUtils.fields(fields));
+        return client.findOne("user", query, SqlUtils.fields(fields));
     }
 
     public Future<Long> findCount(JsonObject query) {
-        return AppContext.MONGO.count("user", query);
+        return client.count("user", query);
     }
 
     public Future<List<JsonObject>> findAll(JsonObject query, String ...fields) {
-        return AppContext.MONGO.findWithOptions("user", query, SqlUtils.findOpts(fields));
+        return client.findWithOptions("user", query, SqlUtils.findOpts(fields));
     }
 
     public Future<String> updatePassword(String username, String password) {
-        return AppContext.MONGO.updateCollection("user", JsonObject.of("username", username), JsonObject.of("$set", JsonObject.of("password", password)))
+        return client.updateCollection("user", JsonObject.of("username", username), JsonObject.of("$set", JsonObject.of("password", password)))
                 .compose(res -> Future.succeededFuture(username));
     }
 
     public Future<String> updateEmail(String username, String email) {
-        return AppContext.MONGO.updateCollection("user", JsonObject.of("username", username), JsonObject.of("$set", JsonObject.of("email", email)))
+        return client.updateCollection("user", JsonObject.of("username", username), JsonObject.of("$set", JsonObject.of("email", email)))
                 .compose(res -> Future.succeededFuture(username));
     }
 
@@ -51,7 +57,7 @@ public class UserDao {
             return Future.failedFuture("nothing to update");
         }
 
-        return AppContext.MONGO.updateCollection("user", JsonObject.of("username", username), JsonObject.of("$set", entries))
+        return client.updateCollection("user", JsonObject.of("username", username), JsonObject.of("$set", entries))
                 .compose(res -> Future.succeededFuture(username));
     }
 
@@ -65,6 +71,6 @@ public class UserDao {
                 "filter", JsonObject.of("username", user2),
                 "document", JsonObject.of("$inc", JsonObject.of("rating", rating2))));
 
-        return AppContext.MONGO.bulkWrite("user", Arrays.asList(opt1, opt2)).compose(res -> Future.succeededFuture(res.getUpserts()));
+        return client.bulkWrite("user", Arrays.asList(opt1, opt2)).compose(res -> Future.succeededFuture(res.getUpserts()));
     }
 }

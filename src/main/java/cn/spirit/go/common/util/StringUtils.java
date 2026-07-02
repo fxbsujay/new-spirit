@@ -175,7 +175,7 @@ public class StringUtils {
      * <p>获取UUID</p>
      */
     public static String uuid() {
-        return UUID.randomUUID().toString().replaceAll("-","").toUpperCase();
+        return UUID.randomUUID().toString().replace("-","");
     }
 
     /**
