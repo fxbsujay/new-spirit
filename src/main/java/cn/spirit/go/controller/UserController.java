@@ -213,9 +213,7 @@ public class UserController {
         } else {
             // 只修改昵称
             userDao.updateProfile(SessionStore.username(ctx), null, nickname)
-                    .onSuccess(res -> {
-                        RestContext.success(ctx);
-                    })
+                    .onSuccess(res -> RestContext.success(ctx))
                     .onFailure(e -> {
                         log.error(e.getMessage(), e.getCause());
                         RestContext.fail(ctx);
