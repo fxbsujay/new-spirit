@@ -2,7 +2,15 @@ package cn.spirit.go.web;
 
 public class UserSession {
 
-    public String sessionId;
+    /**
+     * 会话ID
+     */
+    public String sId;
+
+    /**
+     * 用户id
+     */
+    public String uid;
 
     /**
      * 用户
@@ -19,10 +27,12 @@ public class UserSession {
      */
     public Boolean visitor = false;
 
+
     @Override
     public String toString() {
         return "UserSession{" +
-                "sessionId='" + sessionId + '\'' +
+                "sId='" + sId + '\'' +
+                ", uid='" + uid + '\'' +
                 ", username='" + username + '\'' +
                 ", ip='" + ip + '\'' +
                 '}';

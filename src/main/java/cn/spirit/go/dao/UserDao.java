@@ -23,6 +23,10 @@ public class UserDao {
         return client.save("user", obj);
     }
 
+    public Future<JsonObject> findOneById(String uid, String ...fields) {
+        return client.findOne("user", JsonObject.of("_id", uid), SqlUtils.fields(fields));
+    }
+
     public Future<JsonObject> findOne(JsonObject query, String ...fields) {
         return client.findOne("user", query, SqlUtils.fields(fields));
     }

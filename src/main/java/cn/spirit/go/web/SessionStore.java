@@ -54,10 +54,10 @@ public class SessionStore {
                 }
             } else {
                 // 重置Session的失效时间
-                refreshSession(u.sessionId);
+                refreshSession(u.sId);
             }
             // 重置Cookie的失效时间
-            setSessionCookie(ctx, u.sessionId);
+            setSessionCookie(ctx, u.sId);
             ctx.put(SESSION_USER, u);
             ctx.next();
         }).onFailure(cause -> RestContext.fail(ctx, HttpResponseStatus.UNAUTHORIZED));
@@ -69,7 +69,7 @@ public class SessionStore {
             UserSession session = new UserSession();
             session.visitor = true;
             String newSid = setSessionCookie(ctx);
-            session.sessionId = newSid;
+            session.sId = newSid;
             session.username = newSid;
             return Future.succeededFuture(session);
         }
@@ -77,7 +77,7 @@ public class SessionStore {
             if (null == u) {
                 UserSession session = new UserSession();
                 session.visitor = true;
-                session.sessionId = sid;
+                session.sId = sid;
                 session.username = sid;
                 return Future.succeededFuture(session);
             } else {
@@ -91,9 +91,9 @@ public class SessionStore {
      * @param username  用户名
      * @return Void
      */
-    public static Future<Void> logged(RoutingContext ctx, String username) {
+    public static Future<Void> logged(RoutingContext ctx, String uid, String username) {
         String sessionId = setSessionCookie(ctx);
-        String value = username + ";" + ctx.request().remoteAddress().hostAddress() ;
+        String value = uid + ":" + username + ";" + ctx.request().remoteAddress().hostAddress() ;
         return AppContext.REDIS.set(Arrays.asList(AUTH_SESSION + sessionId, value, "EX", String.valueOf(AUTH_SESSION_EXPIRE))).map(r -> null);
     }
 
@@ -125,6 +125,10 @@ public class SessionStore {
         return sessionUser(ctx).username;
     }
 
+    public static String uid(RoutingContext ctx) {
+        return sessionUser(ctx).uid;
+    }
+
     public static void setSessionCookie(RoutingContext ctx, String sid) {
         Cookie cookie = Cookie.cookie(SESSION_COOKIE_NAME, sid);
         cookie.setPath("/api");
@@ -153,9 +157,10 @@ public class SessionStore {
             if (null != r) {
                 UserSession userSession = new UserSession();
                 String[] value = r.toString().split(";");
-                userSession.sessionId = sessionId;
-                userSession.username = value[0];
-                userSession.ip = value[1];
+                userSession.sId = sessionId;
+                userSession.uid = value[0];
+                userSession.username = value[1];
+                userSession.ip = value[2];
                 userSession.visitor = false;
                 return userSession;
             }

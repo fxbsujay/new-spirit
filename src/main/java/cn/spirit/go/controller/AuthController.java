@@ -62,7 +62,7 @@ public class AuthController {
             return;
         }
 
-        userDao.findOne(query, "status", "password").onSuccess(user -> {
+        userDao.findOne(query, "_id", "status", "password").onSuccess(user -> {
             if (null == user) {
                 RestContext.fail(ctx, RestStatus.ACCOUNT_NOT_EXIST);
                 return;
@@ -77,7 +77,7 @@ public class AuthController {
                 return;
             }
 
-            SessionStore.logged(ctx, username).onSuccess(v -> RestContext.success(ctx)).onFailure(e -> {
+            SessionStore.logged(ctx, user.getString("_id"), username).onSuccess(v -> RestContext.success(ctx)).onFailure(e -> {
                 log.error(e.getMessage(), e.getCause());
                 RestContext.fail(ctx);
             });
