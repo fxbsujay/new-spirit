@@ -62,8 +62,16 @@ public class AppContext {
 
         Redis client = Redis.createClient(vertx, new RedisOptions().addConnectionString("redis://" + config.redis.url).setPassword(config.redis.password));
         REDIS = RedisAPI.api(client);
-
         Router router = Router.router(vertx);
+        addBean(new ClientManger());
+
+        addBean(new UserDao(mongoClient));
+        addBean(new GameDao(mongoClient));
+
+        addBean(new FileStorageSystem(vertx.fileSystem(), config.server.storageFilePath));
+        addBean(new MailSystem(vertx, config.mail));
+        addBean(new GameManager(router));
+
         SessionStore sessionHandle = new SessionStore();
         router.get("/api/ping").handler(RestContext::success);
 
@@ -77,14 +85,7 @@ public class AppContext {
             RestContext.fail(ctx);
         });
 
-        addBean(new ClientManger());
 
-        addBean(new UserDao(mongoClient));
-        addBean(new GameDao(mongoClient));
-
-        addBean(new FileStorageSystem(vertx.fileSystem(), config.server.storageFilePath));
-        addBean(new MailSystem(vertx, config.mail));
-        addBean(new GameManager(router));
         new AuthController(router);
         new GameController(router, sessionHandle);
         new UserController(router, sessionHandle);

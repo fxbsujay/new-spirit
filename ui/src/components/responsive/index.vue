@@ -2,7 +2,7 @@
   <div class="responsive">
     <div class="responsive__sizer" :style="`padding-bottom: ${aspectRatio * 100}%`"></div>
     <div class="responsive__content">
-      <slot />
+      <slot/>
     </div>
   </div>
 </template>

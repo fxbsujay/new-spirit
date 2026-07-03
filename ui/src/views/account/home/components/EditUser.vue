@@ -1,13 +1,13 @@
 <script setup>
-import { reactive, ref, toRaw, useTemplateRef } from 'vue'
 import { useUserStore } from '@/stores/user'
 import http, { Method } from '@/utils/http.js'
+import { reactive, ref, useTemplateRef } from 'vue'
 
 const store = useUserStore()
 const formState = reactive({
-  avatar: '',
-  nickname: '',
-  username: ''
+    avatar: '',
+    nickname: '',
+    username: ''
 })
 const success = ref(false)
 const loading = ref(false)
@@ -15,67 +15,73 @@ const file = ref(null)
 const uploadRef = useTemplateRef('upload-input')
 
 const getUserInfo = () => {
-  http.post("/user/info").then(res => {
-    Object.assign(formState, res)
-  }).catch(() => {
-    Object.assign(formState, {
-      avatar: '',
-      nickname: '',
-      username: ''
+    http.post('/user/info').then(res => {
+        Object.assign(formState, res)
+    }).catch(() => {
+        Object.assign(formState, {
+            avatar: '',
+            nickname: '',
+            username: ''
+        })
     })
-  })
 }
 getUserInfo()
 
 const submitHandle = () => {
-  if (loading.value) {
-    return
-  }
-  if (success.value) {
-    file.value = null
-    success.value = false
-    getUserInfo()
-    return
-  }
-  const formData = new FormData()
-  loading.value = true
-  if (file.value) {
-    formData.append('file', file.value);
-  }
+    if (loading.value) {
+        return
+    }
+    if (success.value) {
+        file.value = null
+        success.value = false
+        getUserInfo()
+        return
+    }
+    const formData = new FormData()
+    loading.value = true
+    if (file.value) {
+        formData.append('file', file.value)
+    }
 
-  formData.append('nickname', formState.nickname);
-  http.api('/account/edit', {
-    method: Method.POST,
-    body: formData
-  }).then(() => {
-    loading.value = false
-    success.value = true
-    store.refreshInfo()
-  }).catch(() => loading.value = false)
+    formData.append('nickname', formState.nickname)
+    http.api('/account/edit', {
+        method: Method.POST,
+        body: formData
+    }).then(() => {
+        loading.value = false
+        success.value = true
+        store.refreshInfo()
+    }).catch(() => {
+        loading.value = false
+    })
 }
 
 const uploadChangeHandle = e => {
-  formState.avatar = URL.createObjectURL(e.target.files[0])
-  file.value = e.target.files[0]
-  console.log(file.value)
-  return false
+    formState.avatar = URL.createObjectURL(e.target.files[0])
+    file.value = e.target.files[0]
+    console.log(file.value)
+    return false
 }
 </script>
 
 <template>
   <form class="form" @submit.prevent="submitHandle">
     <div class="success-tip" v-if="success">
-      <Icon name="check-bold" color="#fff" size="2rem" />
+      <Icon name="check-bold" color="#fff" size="2rem"/>
       <span>操作成功</span>
     </div>
     <div class="row" style="align-items: end">
       <div class="avatar-editor" @click="() => uploadRef.click()">
         <div class="avatar-img">
-          <img width="100%" height="100%" :src="formState.avatar ? formState.avatar.startsWith('blob') ? formState.avatar : '/api/static/avatar/' + formState.avatar : '/avatar-error.jpg'" alt="头像上传">
+          <img width="100%" height="100%"
+               :src="formState.avatar ? formState.avatar.startsWith('blob') ? formState.avatar : '/api/static/avatar/' + formState.avatar : '/avatar-error.jpg'"
+               alt="头像上传">
         </div>
         <div class="upload-wrapper">
-          <input :disabled="success || loading" @change="uploadChangeHandle" type="file" accept="image/png,image/jpeg" class="upload-input" ref="upload-input" />
-          <div class="upload-btn" >上传头像</div>
+          <input :disabled="success || loading" @change="uploadChangeHandle" type="file"
+                 accept="image/png,image/jpeg"
+                 class="upload-input" ref="upload-input"/>
+          <div class="upload-btn">上传头像</div>
         </div>
       </div>
       <div class="form-group col">
@@ -94,7 +100,9 @@ const uploadChangeHandle = e => {
         </div>
       </div>
     </div>
-    <button type="submit" class="submit-button button " :disabled="loading" :class="success ? 'border' : 'black'">{{ success ? '再次修改' : '保存' }}</button>
+    <button type="submit" class="submit-button button " :disabled="loading" :class="success ? 'border' : 'black'">
+      {{ success ? '再次修改' : '保存' }}
+    </button>
   </form>
 </template>
 
@@ -110,13 +118,16 @@ const uploadChangeHandle = e => {
   position: relative;
   vertical-align: top;
   cursor: pointer;
+
   .avatar-img {
     width: 100px;
     height: 100px;
+
     img {
       border-radius: @borderRadius;
     }
   }
+
   .upload-wrapper {
     .upload-input {
       color: inherit;

@@ -4,10 +4,10 @@ const value = defineModel()
 </script>
 
 <template>
-  <div class="switch-wrap" :class="value ? 'active' : ''" >
+  <div class="switch-wrap" :class="value ? 'active' : ''">
     <div class="switch-track" @click="value = !value"></div>
     <div class="switch-input">
-      <input type="checkbox" v-model="value" />
+      <input type="checkbox" v-model="value"/>
       <div class="switch-thumb"></div>
     </div>
   </div>
@@ -30,6 +30,7 @@ const value = defineModel()
     .switch-track {
       background-color: #21C210;
     }
+
     .switch-input {
       transform: translateX(calc(var(--height) / 2)) scale(.9);
     }
@@ -44,12 +45,12 @@ const value = defineModel()
     padding: 0 5px;
     background-color: #e6e5e5;
     cursor: pointer;
-    transition: .15s .1s background-color cubic-bezier(0,0,.2,1);
+    transition: .15s .1s background-color cubic-bezier(0, 0, .2, 1);
   }
 
-  .switch-input  {
+  .switch-input {
     border-radius: 50%;
-    transition: .2s transform cubic-bezier(.4,0,.2,1);
+    transition: .2s transform cubic-bezier(.4, 0, .2, 1);
     position: absolute;
     width: var(--height);
     height: var(--height);
@@ -71,7 +72,7 @@ const value = defineModel()
 
     .switch-thumb {
       transform: none;
-      transition: .15s .05s transform cubic-bezier(0,0,.2,1);
+      transition: .15s .05s transform cubic-bezier(0, 0, .2, 1);
       align-items: center;
       background-color: #fff;
       color: #000;

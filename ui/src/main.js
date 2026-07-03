@@ -1,11 +1,11 @@
 import './assets/css/index.less'
-
-import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
+import { createApp } from 'vue'
+
 import App from './App.vue'
-import router from './router'
 import Icon from './components/icon/Icon.vue'
+import router from './router'
 
 import 'virtual:svg-icons-register'
 

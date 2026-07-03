@@ -1,6 +1,5 @@
-import { reactive, ref } from 'vue'
 import http from '@/utils/http.js'
-import { padStartTwo } from '@/utils/index.js'
+import { reactive, ref } from 'vue'
 
 export class GameSocket {
 
@@ -52,7 +51,7 @@ export class GameSocket {
         }
         const player = size % 2 === 0 ? 'black' : 'white'
         if (!this.lastTime) {
-            this.lastTime =  this.game.steps[size - 1].timestamp
+            this.lastTime = this.game.steps[size - 1].timestamp
         }
         const now = Date.now()
         const time = (now - this.lastTime)
@@ -70,7 +69,7 @@ export class GameSocket {
         if (this.isOpen()) {
             this.socket.close()
         }
-        const socket = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/ws/${this.code}`)
+        const socket = new WebSocket(`${ window.location.protocol === 'https:' ? 'wss:' : 'ws:' }//${ window.location.host }/api/ws/${ this.code }`)
         const that = this
         socket.onopen = function (event) {
             console.log('socket open', event)
@@ -84,7 +83,7 @@ export class GameSocket {
                 }
             }
         }
-        socket.onclose = function(event) {
+        socket.onclose = function (event) {
             console.log('socket close', event)
         }
         this.socket = socket

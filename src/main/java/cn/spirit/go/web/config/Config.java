@@ -51,4 +51,21 @@ public class Config {
     public String toString() {
         return Json.encode(this);
     }
+
+    public Config defaultConfig() {
+        Config config = new  Config();
+        config.server = new Config.Server();
+        config.mongodb = new Config.Mongodb();
+        config.mongodb.url = "localhost:27017";
+        config.mongodb.db = "spirit";
+        config.redis = new Config.Redis();
+        config.redis.url = "localhost:6379";
+        config.redis.password = "MyRedis123";
+        config.mail = new Config.Mail();
+        config.mail.host =  "mtp.163.com";
+        config.mail.port = 465;
+        config.mail.username = "fsusured@163.com";
+        config.mail.password = "JDUXN3hwa4GDLywg";
+        return config;
+    }
 }

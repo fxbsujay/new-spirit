@@ -1,49 +1,49 @@
 <script setup>
+import Icon from '@/components/icon/Icon.vue'
+import http from '@/utils/http.js'
+import { formatTimeDiff } from '@/utils/time.js'
+import dayjs from 'dayjs'
 import { reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import http from '@/utils/http.js'
-import Icon from '@/components/icon/Icon.vue'
-import dayjs from 'dayjs'
-import { formatTimeDiff } from '@/utils/time.js'
 
 const user = reactive({
-  avatar: '',
-  count: 0,
-  nickname: '',
-  rate: 0,
-  rating: 0,
-  status: 'NORMAL',
-  time: 0,
-  username: ''
+    avatar: '',
+    count: 0,
+    nickname: '',
+    rate: 0,
+    rating: 0,
+    status: 'NORMAL',
+    time: 0,
+    username: ''
 })
 const history = ref([])
 const router = useRoute()
 const username = router.params.username
 
 http.post('/user/profile/' + username).then(res => {
-  Object.assign(user, res)
+    Object.assign(user, res)
 })
 http.post('/user/history', { page: 1, username }).then(res => {
-  history.value = res
+    history.value = res
 })
 
 const gameResult = (item) => {
-  if (item.winner === 'TIE') {
-    return {
-      value: 'tie',
-      label: '平'
+    if (item.winner === 'TIE') {
+        return {
+            value: 'tie',
+            label: '平'
+        }
+    } else if (item[item.winner.toLowerCase()].username === username) {
+        return {
+            value: 'victory',
+            label: '胜'
+        }
+    } else {
+        return {
+            value: 'defeat',
+            label: '败'
+        }
     }
-  } else if (item[item.winner.toLowerCase()].username === username) {
-    return {
-      value: 'victory',
-      label: '胜'
-    }
-  } else {
-    return {
-      value: 'defeat',
-      label: '败'
-    }
-  }
 
 }
 </script>

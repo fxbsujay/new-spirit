@@ -5,9 +5,9 @@ import snackbar from '@/components/snackbar/index.js'
 import { passwordStrength } from '@/utils/index.js'
 
 const formState = reactive({
-  oldPassword: '',
-  newPassword: '',
-  confirmPassword: ''
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
 })
 const strength = ref(0)
 const oldPasswordReveal = ref(false)
@@ -16,36 +16,36 @@ const confirmPasswordReveal = ref(false)
 const loading = ref(false)
 const success = ref(false)
 const submitHandle = () => {
-  if (loading.value) {
-    return
-  }
-  if (success.value) {
-    Object.assign(formState, {
-      oldPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    })
-    success.value = false
-    return
-  }
-  if (formState.newPassword === formState.oldPassword) {
-    snackbar.warning('新密码不能与旧密码相同')
-    return
-  }
+    if (loading.value) {
+        return
+    }
+    if (success.value) {
+        Object.assign(formState, {
+            oldPassword: '',
+            newPassword: '',
+            confirmPassword: ''
+        })
+        success.value = false
+        return
+    }
+    if (formState.newPassword === formState.oldPassword) {
+        snackbar.warning('新密码不能与旧密码相同')
+        return
+    }
 
-  if (formState.newPassword !== formState.confirmPassword) {
-    snackbar.warning('两次输入的新密码不同')
-    return
-  }
-  loading.value = true
-  http.post('/account/password', formState).then(() => {
-    loading.value = false
-    success.value = true
-  }).catch(() => loading.value = false)
+    if (formState.newPassword !== formState.confirmPassword) {
+        snackbar.warning('两次输入的新密码不同')
+        return
+    }
+    loading.value = true
+    http.post('/account/password', formState).then(() => {
+        loading.value = false
+        success.value = true
+    }).catch(() => loading.value = false)
 }
 
 const passwordInputHandler = (event) => {
-  strength.value = passwordStrength(event.target.value)
+    strength.value = passwordStrength(event.target.value)
 }
 
 </script>

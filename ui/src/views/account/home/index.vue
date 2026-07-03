@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { ref, h } from 'vue'
+import { h, ref } from 'vue'
 import EditUser from './components/EditUser.vue'
 import Password from './components/Password.vue'
 import Email from './components/Email.vue'
 
 const tabs = [
-  { name: '编辑资料', component: EditUser, sep: true },
-  { name: '更改密码', component: Password, sep: false },
-  { name: '更改邮箱', component: Email, sep: true },
-  { name: '注 销', component: h('div', '注销'), sep: false },
+    { name: '编辑资料', component: EditUser, sep: true },
+    { name: '更改密码', component: Password, sep: false },
+    { name: '更改邮箱', component: Email, sep: true },
+    { name: '注 销', component: h('div', '注销'), sep: false }
 ]
 
 const selectedMenu = ref(tabs[0].name)

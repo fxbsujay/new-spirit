@@ -1,91 +1,91 @@
-import { reactive, ref } from 'vue'
-import { defineStore } from 'pinia'
+import router from '@/router/index.js'
+import { useSocketStore } from '@/stores/socket.js'
 import http from '@/utils/http.js'
 import dayjs from 'dayjs'
 import Cookie from 'js-cookie'
-import router from '@/router/index.js'
-import { useSocketStore } from '@/stores/socket.js'
+import { defineStore } from 'pinia'
+import { reactive } from 'vue'
 
 export const useUserStore = defineStore('user', () => {
 
-  const user = reactive({
-    avatar: null,
-    email: null,
-    visitor: true,
-    nickname: null,
-    username: null
-  })
+    const user = reactive({
+        avatar: null,
+        email: null,
+        visitor: true,
+        nickname: null,
+        username: null
+    })
 
-  const waitGame = reactive({
-    status: false,
-    code: '',
-    boardSize: 0,
-    type: 'SHORT',
-    mode: 'CASUAL',
-    duration: 0,
-    stepDuration: 0,
-    timestamp: 0,
-  })
+    const waitGame = reactive({
+        status: false,
+        code: '',
+        boardSize: 0,
+        type: 'SHORT',
+        mode: 'CASUAL',
+        duration: 0,
+        stepDuration: 0,
+        timestamp: 0
+    })
 
-  const socketStore = useSocketStore()
+    const socketStore = useSocketStore()
 
-  const refreshInfo = () => {
-    const userIsVisitor = Cookie.get('userIsVisitor')
-    user.visitor = userIsVisitor !== 'false'
-    if (!user.visitor) {
-      http.post("/user/info").then(res => {
-        Object.assign(user, res)
-        setIsVisitorCookie(false)
-        socketStore.reconnect()
-      })
-    } else {
-      socketStore.reconnect()
+    const refreshInfo = () => {
+        const userIsVisitor = Cookie.get('userIsVisitor')
+        user.visitor = userIsVisitor !== 'false'
+        if (!user.visitor) {
+            http.post('/user/info').then(res => {
+                Object.assign(user, res)
+                setIsVisitorCookie(false)
+                socketStore.reconnect()
+            })
+        } else {
+            socketStore.reconnect()
+        }
     }
-  }
 
-  const login = () => {
-    user.visitor = false
-    setIsVisitorCookie(false)
-    refreshInfo()
-    router.push('/')
-  }
-
-  const logout = () => {
-    setIsVisitorCookie(true)
-    user.visitor = true
-    http.post('/auth/signout').then(() => {
-      refreshInfo()
-      if (router.currentRoute.value.path !== '/') {
+    const login = () => {
+        user.visitor = false
+        setIsVisitorCookie(false)
+        refreshInfo()
         router.push('/')
-      }
-    })
-  }
+    }
 
-  const setIsVisitorCookie = value => {
-    Cookie.set('userIsVisitor', value, { expires: 999 })
-  }
+    const logout = () => {
+        setIsVisitorCookie(true)
+        user.visitor = true
+        http.post('/auth/signout').then(() => {
+            refreshInfo()
+            if (router.currentRoute.value.path !== '/') {
+                router.push('/')
+            }
+        })
+    }
 
-  const startWaitGame = (info) => {
-    Object.assign(waitGame, {
-      ...info,
-      code: info.mode === 'CASUAL' ? info.code : '',
-      status: true,
-      timestamp: dayjs().unix(),
-    })
-  }
+    const setIsVisitorCookie = value => {
+        Cookie.set('userIsVisitor', value, { expires: 999 })
+    }
 
-  const closeWaitGame = () => {
-    Object.assign(waitGame, {
-      code: '',
-      status: false,
-      boardSize: 0,
-      type: 'SHORT',
-      mode: 'CASUAL',
-      duration: 0,
-      stepDuration: 0,
-      timestamp: 0,
-    })
-  }
+    const startWaitGame = (info) => {
+        Object.assign(waitGame, {
+            ...info,
+            code: info.mode === 'CASUAL' ? info.code : '',
+            status: true,
+            timestamp: dayjs().unix()
+        })
+    }
 
-  return { user, waitGame, refreshInfo, login, logout, startWaitGame, closeWaitGame }
+    const closeWaitGame = () => {
+        Object.assign(waitGame, {
+            code: '',
+            status: false,
+            boardSize: 0,
+            type: 'SHORT',
+            mode: 'CASUAL',
+            duration: 0,
+            stepDuration: 0,
+            timestamp: 0
+        })
+    }
+
+    return { user, waitGame, refreshInfo, login, logout, startWaitGame, closeWaitGame }
 })

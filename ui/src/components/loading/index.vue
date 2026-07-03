@@ -1,20 +1,20 @@
 <script setup lang="ts">
 
 const { color, size } = defineProps({
-  color: {
-    type: String,
-    default: '#000'
-  },
-  size: {
-    type: String,
-    default: '32px'
-  }
+    color: {
+        type: String,
+        default: '#000'
+    },
+    size: {
+        type: String,
+        default: '32px'
+    }
 })
 
 </script>
 
 <template>
-  <div class="loading"  :style="{ width: size, height: size}">
+  <div class="loading" :style="{ width: size, height: size}">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45.714285714285715 45.714285714285715"
          :style="{transform: 'rotate(calc(-90deg))', color}">
       <circle class="underlay" fill="transparent" cx="50%" cy="50%" r="20"

@@ -1,14 +1,14 @@
 <script setup>
-import { reactive, ref } from 'vue'
 import http from '@/utils/http.js'
 import { debounce, passwordStrength } from '@/utils/index.js'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const formState = reactive({
-  username: '',
-  password: '',
-  email: '',
-  code: ''
+    username: '',
+    password: '',
+    email: '',
+    code: ''
 })
 
 const stage = ref(true)
@@ -20,48 +20,48 @@ const router = useRouter()
 const passwordReveal = ref(false)
 
 const submitHandle = debounce(() => {
-  if (loading.value) {
-    return
-  }
-  if (stage.value) {
-    sendCodeHandler()
-  } else {
-    loading.value = true
-    http.post("/auth/signup", formState).then(() => {
-      router.push({ path: '/sign-up/success', params: { username: formState.username } })
-    }).catch(() => loading.value = false)
-  }
+    if (loading.value) {
+        return
+    }
+    if (stage.value) {
+        sendCodeHandler()
+    } else {
+        loading.value = true
+        http.post('/auth/signup', formState).then(() => {
+            router.push({ path: '/sign-up/success', params: { username: formState.username } })
+        }).catch(() => loading.value = false)
+    }
 })
 
 const sendCodeHandler = () => {
-  loading.value = true
+    loading.value = true
 
-  http.post("/auth/signup/code", formState).then(() => {
-    stage.value = false
-    loading.value = false
-    outTime.value  = 60
-    interval.value = setInterval(() => {
-      outTime.value--
-      if (outTime.value <= 0) {
-        clearInterval(interval.value)
-        interval.value = null
-      }
-    }, 1000)
-  }).catch(() => {
-    outTime.value = 0
-    loading.value = false
-  })
+    http.post('/auth/signup/code', formState).then(() => {
+        stage.value = false
+        loading.value = false
+        outTime.value = 60
+        interval.value = setInterval(() => {
+            outTime.value--
+            if (outTime.value <= 0) {
+                clearInterval(interval.value)
+                interval.value = null
+            }
+        }, 1000)
+    }).catch(() => {
+        outTime.value = 0
+        loading.value = false
+    })
 }
 
 const resendCodeHandler = () => {
-  if (outTime.value || loading.value) {
-    return
-  }
-  sendCodeHandler()
+    if (outTime.value || loading.value) {
+        return
+    }
+    sendCodeHandler()
 }
 
 const passwordInputHandler = (event) => {
-  strength.value = passwordStrength(event.target.value)
+    strength.value = passwordStrength(event.target.value)
 }
 
 </script>
@@ -73,7 +73,7 @@ const passwordInputHandler = (event) => {
         <div v-if="stage">
           <div class="form-group">
             <div class="border-input-wrap">
-              <label class="label" >
+              <label class="label">
                 用户名
               </label>
               <input
@@ -84,12 +84,13 @@ const passwordInputHandler = (event) => {
                   v-model="formState.username"
                   :disabled="loading"
               />
-              <p class="form-help">请务必选择一个和谐的用户名，用户名设置后无法更改，并且不合规的用户名会导致账户被封禁！</p>
+              <p class="form-help">
+                请务必选择一个和谐的用户名，用户名设置后无法更改，并且不合规的用户名会导致账户被封禁！</p>
             </div>
           </div>
           <div class="form-group">
             <div class="border-input-wrap">
-              <label class="label" >密码</label>
+              <label class="label">密码</label>
               <div class="password-reveal">
                 <input
                     class="input"
@@ -122,19 +123,19 @@ const passwordInputHandler = (event) => {
           <div class="form-group">
             <div class="border-input-wrap">
               <label class="label">电子邮箱</label>
-              <input class="input" :disabled="loading" type="email" v-model="formState.email" required />
+              <input class="input" :disabled="loading" type="email" v-model="formState.email" required/>
               <p class="form-help">仅用于重置密码</p>
             </div>
           </div>
         </div>
         <div class="form-group" v-else>
           <div class="border-input-wrap">
-            <label class="label" >验证码</label>
-            <input class="input" :disabled="loading" v-model="formState.code" required pattern="[A-Z0-9]{5}"  title="5位字母或数字"/>
+            <label class="label">验证码</label>
+            <input class="input" :disabled="loading" v-model="formState.code" required pattern="[A-Z0-9]{5}" title="5位字母或数字"/>
             <p class="form-help">
               验证码已发送到您的邮箱
               <a style="float: right" class="form-help" :class="!outTime ? 'code-help' : ''" @click="resendCodeHandler">
-                {{ outTime ? `${outTime} 秒后可重新发送` : '重新发送' }}
+                {{ outTime ? `${ outTime } 秒后可重新发送` : '重新发送' }}
               </a>
             </p>
           </div>

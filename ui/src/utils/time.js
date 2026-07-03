@@ -15,7 +15,7 @@ export const formatTimeDiff = ms => {
     const totalHours = Math.floor(totalMinutes / 60)
     const totalDays = Math.floor(totalHours / 24)
 
-    const timeParts = [totalDays, totalHours % 24, totalMinutes % 60, totalSeconds % 60, ms % 1000 ]
+    const timeParts = [totalDays, totalHours % 24, totalMinutes % 60, totalSeconds % 60, ms % 1000]
 
     if (timeParts[0] >= 1) {
         if (timeParts[1] >= 1) {

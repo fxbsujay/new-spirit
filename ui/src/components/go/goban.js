@@ -1,4 +1,4 @@
-import {nextTick} from "vue";
+import { nextTick } from 'vue'
 
 
 /**
@@ -61,7 +61,7 @@ export const computeBoard = (svg, width, height, squareSize, showLabel) => {
             [3, 9],
             [6, 6],
             [9, 3],
-            [9, 9],
+            [9, 9]
         ]
     } else if (width === 9 && height === 9) {
         points = [
@@ -73,30 +73,30 @@ export const computeBoard = (svg, width, height, squareSize, showLabel) => {
         ]
     }
 
-    const linesLayer = document.createElementNS("http://www.w3.org/2000/svg", "g")
+    const linesLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g')
 
     if (points) {
-        const r = squareSize < 5 ? 0.5 : Math.max(2, squareSize * 0.075);
+        const r = squareSize < 5 ? 0.5 : Math.max(2, squareSize * 0.075)
         for (let i = 0; i < points.length; ++i) {
-            const [hx, hy] = points[i];
+            const [hx, hy] = points[i]
             const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
             circle.setAttribute('cx', (ox + hx * squareSize).toString())
             circle.setAttribute('cy', (oy + hy * squareSize).toString())
-            circle.setAttribute('r', `${r.toFixed(1)}px`)
+            circle.setAttribute('r', `${ r.toFixed(1) }px`)
             circle.setAttribute('fill', '#000000')
             linesLayer.appendChild(circle)
         }
     }
 
-    const linesPath = document.createElementNS("http://www.w3.org/2000/svg", "path")
+    const linesPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
 
     linesPath.setAttribute('d', pathStr)
     linesPath.setAttribute('stroke', '#000000')
 
     if (squareSize > TINY_SQUARE_SIZE) {
-        linesPath.setAttribute('stroke-width', `${lineWidth.toFixed(0)}px`)
+        linesPath.setAttribute('stroke-width', `${ lineWidth.toFixed(0) }px`)
     } else {
-        linesPath.setAttribute('stroke-width', `${lineWidth.toFixed(1)}px`)
+        linesPath.setAttribute('stroke-width', `${ lineWidth.toFixed(1) }px`)
     }
 
     linesPath.setAttribute('stroke-linecap', 'square')
@@ -106,20 +106,20 @@ export const computeBoard = (svg, width, height, squareSize, showLabel) => {
 
     let labelsLayer = null
     if (showLabel) {
-        labelsLayer = document.createElementNS("http://www.w3.org/2000/svg", "g")
+        labelsLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g')
         labelsLayer.setAttribute('class', 'coordinate-labels')
         let textSize = Math.round(squareSize * 0.4)
 
         let textOffset = textSize / 2.5
 
         function createText(str, x, y) {
-            const text = document.createElementNS("http://www.w3.org/2000/svg", "text")
-            text.setAttribute("x", x)
-            text.setAttribute("y", y)
-            text.setAttribute("font-size", `${Math.round(textSize)}px`)
-            text.setAttribute("font-size", `${Math.round(textSize)}px`)
-            text.setAttribute("font-weight", '')
-            text.setAttribute("fill", '#444444')
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+            text.setAttribute('x', x)
+            text.setAttribute('y', y)
+            text.setAttribute('font-size', `${ Math.round(textSize) }px`)
+            text.setAttribute('font-size', `${ Math.round(textSize) }px`)
+            text.setAttribute('font-weight', '')
+            text.setAttribute('fill', '#444444')
             text.textContent = str
             return text
         }

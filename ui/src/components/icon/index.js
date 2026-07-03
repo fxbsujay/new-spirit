@@ -4,23 +4,23 @@ export function createSvgIconsPlugin(opt) {
 
     let isBuild = false
     const options = {
-      svgoOptions: true,
-      symbolId: 'icon-[dir]-[name]',
-      inject: 'body-last',
-      customDomId: '__svg__icons__dom__',
-      ...opt,
+        svgoOptions: true,
+        symbolId: 'icon-[dir]-[name]',
+        inject: 'body-last',
+        customDomId: '__svg__icons__dom__',
+        ...opt
     }
 
     let { svgoOptions } = options
     const { symbolId } = options
 
     if (!symbolId.includes('[name]')) {
-      throw new Error('SymbolId must contain [name] string!')
+        throw new Error('SymbolId must contain [name] string!')
     }
 
     if (svgoOptions) {
-      svgoOptions = typeof svgoOptions === 'boolean' ? {} : svgoOptions
+        svgoOptions = typeof svgoOptions === 'boolean' ? {} : svgoOptions
     }
 
-    
+
 }

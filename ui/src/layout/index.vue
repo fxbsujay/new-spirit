@@ -37,8 +37,12 @@
             <div class="dropdown">
               <div class="dropdown-content">
                 <div class="links">
-                  <RouterLink :to="`/@${user.username}`"><Icon name="person" size="14px" /><span>个人中心</span></RouterLink>
-                  <RouterLink @click="logout" class="logout" to="/"><Icon name="logout" size="14px" /><span>退出登录</span></RouterLink>
+                  <RouterLink :to="`/@${user.username}`">
+                    <Icon name="person" size="14px"/>
+                    <span>个人中心</span></RouterLink>
+                  <RouterLink @click="logout" class="logout" to="/">
+                    <Icon name="logout" size="14px"/>
+                    <span>退出登录</span></RouterLink>
                 </div>
               </div>
             </div>
@@ -46,8 +50,8 @@
         </div>
       </div>
     </div>
-    <WaitPlayPanels />
-    <PlayDrawer v-model="drawerVisible" />
+    <WaitPlayPanels/>
+    <PlayDrawer v-model="drawerVisible"/>
   </header>
 
   <main class="layout-main">
@@ -55,10 +59,11 @@
   </main>
 </template>
 <script setup>
+import { useUserStore } from '@/stores/user.js'
 import { ref } from 'vue'
 import PlayDrawer from './PlayDrawer.vue'
 import WaitPlayPanels from './WaitPlayPanels.vue'
-import { useUserStore } from '@/stores/user.js'
+
 const { user, logout, refreshInfo, waitGame } = useUserStore()
 
 const drawerVisible = ref(false)

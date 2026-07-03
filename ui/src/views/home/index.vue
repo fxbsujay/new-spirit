@@ -1,49 +1,48 @@
-
 <script setup>
-import Responsive from '@/components/responsive/index.vue'
-import { ref, watch, reactive } from 'vue'
 import Icon from '@/components/icon/Icon.vue'
-import http from '@/utils/http'
-import router from "@/router/index.js";
-import { throttle } from '@/utils/index.js'
+import Responsive from '@/components/responsive/index.vue'
 import { TypeConstant } from '@/constant/index.js'
+import router from '@/router/index.js'
 import { useUserStore } from '@/stores/user.js'
+import http from '@/utils/http'
+import { throttle } from '@/utils/index.js'
+import { reactive, ref, watch } from 'vue'
 
 const { user, waitGame } = useUserStore()
 const games = reactive({
-  page: 1,
-  total: 0,
-  list: []
+    page: 1,
+    total: 0,
+    list: []
 })
 const tableLoading = ref(false)
 
 const searchHandle = throttle(() => {
-  if (tableLoading.value) {
-    return
-  }
-  tableLoading.value = true
-  Object.assign(games, {
-    page: 1,
-    total: 0,
-    list: []
-  })
-  http.get('/game/search', { page: games.page }).then(res => {
-    Object.assign(games, res)
-    tableLoading.value = false
-  }).catch(() => {
-    tableLoading.value = false
-  })
+    if (tableLoading.value) {
+        return
+    }
+    tableLoading.value = true
+    Object.assign(games, {
+        page: 1,
+        total: 0,
+        list: []
+    })
+    http.get('/game/search', { page: games.page }).then(res => {
+        Object.assign(games, res)
+        tableLoading.value = false
+    }).catch(() => {
+        tableLoading.value = false
+    })
 })
 
 searchHandle()
 
 const tableRowClickHandle = throttle(game => {
-  if (game.username === user.username) {
-    return
-  }
-  http.post('/game/join/' + game.code).then(() => {
-    router.push('/' + game.code)
-  })
+    if (game.username === user.username) {
+        return
+    }
+    http.post('/game/join/' + game.code).then(() => {
+        router.push('/' + game.code)
+    })
 })
 
 watch(waitGame, searchHandle)
@@ -84,7 +83,9 @@ watch(waitGame, searchHandle)
         </tr>
         </thead>
         <tbody>
-        <tr v-for="item in games.list" @click="tableRowClickHandle(item)" :class="item.username === user.username ? 'own-row' : ''" :title="item.username === user.username ? '自己的对局' : '加入对局'">
+        <tr v-for="item in games.list" @click="tableRowClickHandle(item)"
+            :class="item.username === user.username ? 'own-row' : ''"
+            :title="item.username === user.username ? '自己的对局' : '加入对局'">
           <td>{{ item.nickname }}</td>
           <td>{{ item.boardSize }}x{{ item.boardSize }}</td>
           <td>10h+6s</td>

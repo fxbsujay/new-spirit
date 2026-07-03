@@ -66,47 +66,47 @@
   </div>
 </template>
 <script setup>
-import { ref, nextTick, useTemplateRef, reactive } from 'vue'
 import { computeBoard } from '@/components/go/goban'
+import { reactive, ref, useTemplateRef } from 'vue'
 
 const { onBoardClick, points } = defineProps({
-  onBoardClick: {
-    type: Function,
-  },
-  points: {
-    default: [],
-    type: Array,
-  }
+    onBoardClick: {
+        type: Function
+    },
+    points: {
+        default: [],
+        type: Array
+    }
 })
 
 const svg = useTemplateRef('svgRef')
 const lineNumbers = ref([])
 
 const boardSetting = reactive({
-  ss: 0,
-  ox: 0,
-  oy: 0,
-  mid: 0,
-  squareSize: 0,
-  w: 0,
-  h: 0,
-  showLabel: false,
-  point: {
-    shadowSize: 0,
-    shadowRadius: 0,
-    offset: 0
-  }
+    ss: 0,
+    ox: 0,
+    oy: 0,
+    mid: 0,
+    squareSize: 0,
+    w: 0,
+    h: 0,
+    showLabel: false,
+    point: {
+        shadowSize: 0,
+        shadowRadius: 0,
+        offset: 0
+    }
 })
 
 const render = () => {
-  const setting = computeBoard(svg, 19, 19, 39, true)
-  Object.assign(boardSetting, setting)
+    const setting = computeBoard(svg, 19, 19, 39, true)
+    Object.assign(boardSetting, setting)
 }
 
 const boardClickHandle = event => {
-  const x = parseInt((event.offsetX - boardSetting.ox + boardSetting.mid) /  boardSetting.ss)
-  const y = parseInt((event.offsetY - boardSetting.oy + boardSetting.mid) /  boardSetting.ss)
-  onBoardClick(x, y)
+    const x = parseInt((event.offsetX - boardSetting.ox + boardSetting.mid) / boardSetting.ss)
+    const y = parseInt((event.offsetY - boardSetting.oy + boardSetting.mid) / boardSetting.ss)
+    onBoardClick(x, y)
 }
 
 render()

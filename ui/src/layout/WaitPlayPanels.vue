@@ -1,25 +1,25 @@
-<script setup >
+<script setup>
 import Loading from '@/components/loading/index.vue'
-import { ref, watch } from 'vue'
-import dayjs from 'dayjs'
 import { useUserStore } from '@/stores/user'
 import http from '@/utils/http'
 import { throttle } from '@/utils/index.js'
+import dayjs from 'dayjs'
+import { ref, watch } from 'vue'
 
 const ModeConstant = [
-  { label: '休闲赛', value: 'CASUAL' },
-  { label: '积分赛', value: 'RANK' }
+    { label: '休闲赛', value: 'CASUAL' },
+    { label: '积分赛', value: 'RANK' }
 ]
 
 const { waitGame, closeWaitGame } = useUserStore()
 
 watch(waitGame, value => {
-  if (value.status) {
-    startWait(value)
-  } else {
-    isStart.value = false
-    clearTimer()
-  }
+    if (value.status) {
+        startWait(value)
+    } else {
+        isStart.value = false
+        clearTimer()
+    }
 })
 
 const timeText = ref('')
@@ -28,54 +28,54 @@ const isStart = ref(false)
 const loading = ref(false)
 
 const startWait = game => {
-  isStart.value = true
-  timerInterval = setInterval(() => {
-    if (!isStart) {
-      clearTimer()
-      return
-    }
-    const diff = dayjs().unix() - game.timestamp
-    timeText.value = `${(diff / 60).toFixed(0).padStart(2, '0')}:${(diff % 60).toFixed(0).padStart(2, '0')}`
-  }, 1000)
+    isStart.value = true
+    timerInterval = setInterval(() => {
+        if (!isStart) {
+            clearTimer()
+            return
+        }
+        const diff = dayjs().unix() - game.timestamp
+        timeText.value = `${ (diff / 60).toFixed(0).padStart(2, '0') }:${ (diff % 60).toFixed(0).padStart(2, '0') }`
+    }, 1000)
 }
 
 const clearTimer = () => {
-  if (timerInterval) {
-    clearInterval(timerInterval)
-    timerInterval = null
-  }
-  timeText.value = ''
+    if (timerInterval) {
+        clearInterval(timerInterval)
+        timerInterval = null
+    }
+    timeText.value = ''
 }
 
 const endWait = throttle(() => {
-  if (loading.value) {
-    return
-  }
-  isStart.value = false
-  loading.value = true
+    if (loading.value) {
+        return
+    }
+    isStart.value = false
+    loading.value = true
 
-  http.post(`/game/${waitGame.mode === 'RANK' ? 'ranking/cancel' : 'cancel'}`).then(() => {
-    clearTimer()
-    loading.value = false
-    closeWaitGame()
-  }).catch(() => loading.value = false)
+    http.post(`/game/${ waitGame.mode === 'RANK' ? 'ranking/cancel' : 'cancel' }`).then(() => {
+        clearTimer()
+        loading.value = false
+        closeWaitGame()
+    }).catch(() => loading.value = false)
 })
 
 const detailedText = () => {
-  if (!isStart.value) {
-    return ''
-  }
-  let text = ''
-  if (waitGame.type === 'SHORT') {
-    text += waitGame.duration + 'm+' + waitGame.stepDuration + 's'
-  } else if (waitGame.type === 'LONG') {
-    text += waitGame.duration + 'd'
-  } else {
-    text += '∞'
-  }
+    if (!isStart.value) {
+        return ''
+    }
+    let text = ''
+    if (waitGame.type === 'SHORT') {
+        text += waitGame.duration + 'm+' + waitGame.stepDuration + 's'
+    } else if (waitGame.type === 'LONG') {
+        text += waitGame.duration + 'd'
+    } else {
+        text += '∞'
+    }
 
-  text = waitGame.boardSize + 'x' + waitGame.boardSize +  ' • ' + text
-  return text
+    text = waitGame.boardSize + 'x' + waitGame.boardSize + ' • ' + text
+    return text
 }
 
 </script>
@@ -86,7 +86,7 @@ const detailedText = () => {
       <Loading color="#fff" size="24px"/>
       <div class="info">
         <div>
-          <span class="type">{{ isStart ? ModeConstant.find(item => item.value === waitGame.mode).label : ''}}</span>
+          <span class="type">{{ isStart ? ModeConstant.find(item => item.value === waitGame.mode).label : '' }}</span>
           <span class="text">{{ detailedText() }}</span>
         </div>
         <span class="code" v-if="waitGame.code">#{{ waitGame.code }}</span>
@@ -102,6 +102,7 @@ const detailedText = () => {
 
 <style scoped lang="less">
 @import "@/assets/css/variable.less";
+
 .play-panels {
   position: fixed;
   top: 0;
@@ -113,15 +114,18 @@ const detailedText = () => {
   &:hover {
     .panels {
       height: 90px;
+
       .text, .code {
         opacity: 1;
         height: auto;
       }
+
       .time {
         margin: auto 0 0 0;
         font-size: 14px;
       }
     }
+
     .button {
       height: 30px;
       opacity: 1;
@@ -135,7 +139,7 @@ const detailedText = () => {
   padding: 8px 10px;
   width: 250px;
   color: #fff;
-  border-radius:  0 0 4px 4px;
+  border-radius: 0 0 4px 4px;
   display: flex;
   height: 40px;
   transition: height 0.3s ease;

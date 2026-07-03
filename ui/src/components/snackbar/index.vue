@@ -7,26 +7,26 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
-  message: String,
-  type: {
-    type: String,
-    default: 'info',
-    validator: v => ['info', 'success', 'warning', 'error'].includes(v)
-  }
+    message: String,
+    type: {
+        type: String,
+        default: 'info',
+        validator: v => ['info', 'success', 'warning', 'error'].includes(v)
+    }
 })
 
 
 const visible = ref(false)
-const typeClass = computed(() => `message-${props.type}`)
+const typeClass = computed(() => `message-${ props.type }`)
 
 const close = () => {
-  visible.value = false
+    visible.value = false
 }
 const open = () => {
-  visible.value = true
+    visible.value = true
 }
 
 defineExpose({ open, close })
@@ -34,6 +34,7 @@ defineExpose({ open, close })
 
 <style scoped lang="less">
 @import "@/assets/css/variable.less";
+
 .message-box {
   position: fixed;
   top: 8%;
@@ -58,9 +59,11 @@ defineExpose({ open, close })
 .message-success {
   background-color: #67c23a;
 }
+
 .message-warning {
   background-color: #F57C00;
 }
+
 .message-error {
   background-color: #D1392E;
 }

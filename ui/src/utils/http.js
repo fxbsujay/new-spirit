@@ -1,7 +1,7 @@
 import snackbar from '@/components/snackbar/index.js'
 import { useUserStore } from '@/stores/user.js'
 
-export const ContentType ={
+export const ContentType = {
     form: 'application/x-www-form-urlencoded',
     json: 'application/json;charset=utf-8',
     multipart: 'multipart/form-data'
@@ -12,20 +12,20 @@ export const Method = {
     POST: 'POST',
     PUT: 'PUT',
     PATCH: 'PATCH',
-    DELETE: 'DELETE',
+    DELETE: 'DELETE'
 }
 
 /**
  * 根据路径和参数构建请求URL
  */
-export const buildURL = (url, params)=> {
-    if (!params){
+export const buildURL = (url, params) => {
+    if (!params) {
         return url
     }
 
     Object.keys(params).forEach((key, index) => {
         const val = params[key]
-        if (val === null || typeof val === 'undefined'){
+        if (val === null || typeof val === 'undefined') {
             return
         }
         url += (index === 0 ? '?' : '&') + key + '=' + val
@@ -42,42 +42,44 @@ class Http {
 
     api(path, options) {
         return new Promise((resolve, reject) => {
-            fetch(this.apiPrefix + path, {...options}).then(res => {
-                switch (res.status) {
-                    case 200:
-                        const contentType = res.headers.get('content-type')
-                        if (contentType && contentType.includes('application/json')){
-                            resolve(res.json())
-                        } else {
-                            resolve(res.text())
-                        }
-                        break;
-                    case 400:
-                        snackbar.warning('非法操作')
-                        break
-                    case 401:
-                        useUserStore().logout()
-                        break
-                    case 403:
-                        snackbar.warning('请登录后操作')
-                        break
-                    case 404:
-                        snackbar.error('网络异常')
-                        break
-                    case 500:
-                        if (Number.isInteger(parseInt(res.statusText))) {
-                            res.json().then(err => {
-                                snackbar.warning(err.message)
-                                reject(err)
-                            }).catch(() => {
-                                reject()
-                            })
-                        } else {
-                            snackbar.error('网络异常')
+            fetch(this.apiPrefix + path, { ...options }).then(res => {
+                if (res.status === 200) {
+                    const contentType = res.headers.get('content-type')
+                    if (contentType && contentType.includes('application/json')) {
+                        resolve(res.json())
+                    } else {
+                        resolve(res.text())
+                    }
+                } else if (res.status === 500) {
+                    if (Number.isInteger(parseInt(res.statusText))) {
+                        res.json().then(err => {
+                            snackbar.warning(err.message)
+                            reject(err)
+                        }).catch(() => {
                             reject()
-                        }
-                        break
+                        })
+                    } else {
+                        snackbar.error('网络异常')
+                        reject()
+                    }
+                } else {
+                    switch (res.status) {
+                        case 400:
+                            snackbar.warning('非法操作')
+                            break
+                        case 401:
+                            useUserStore().logout()
+                            break
+                        case 403:
+                            snackbar.warning('请登录后操作')
+                            break
+                        case 404:
+                            snackbar.error('网络异常')
+                            break
+                    }
+                    reject()
                 }
+
             })
         })
     }
@@ -86,8 +88,8 @@ class Http {
         const options = {
             method: Method.GET,
             headers: {
-                "Content-Type": ContentType.form
-            },
+                'Content-Type': ContentType.form
+            }
         }
         return this.api(buildURL(path, params), options)
     }
@@ -97,8 +99,8 @@ class Http {
             method: Method.POST,
             body: data ? JSON.stringify(data) : null,
             headers: {
-                "Content-Type": ContentType.json
-            },
+                'Content-Type': ContentType.json
+            }
         }
         return this.api(path, options)
     }

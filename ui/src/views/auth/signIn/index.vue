@@ -1,25 +1,25 @@
 <script setup>
-import { reactive, ref } from 'vue'
-import http from '@/utils/http.js'
 import { useUserStore } from '@/stores/user.js'
+import http from '@/utils/http.js'
+import { reactive, ref } from 'vue'
 
 const formState = reactive({
-  username: '',
-  password: ''
+    username: '',
+    password: ''
 })
 const loading = ref(false)
 const passwordReveal = ref(false)
 const userStore = useUserStore()
 
 const submitHandle = () => {
-  loading.value = true
-  http.post("/auth/signin", formState).then(() => {
-    userStore.login()
-    loading.value = false
-  }).catch(err =>  {
-    console.log(err)
-    loading.value = false
-  })
+    loading.value = true
+    http.post('/auth/signin', formState).then(() => {
+        userStore.login()
+        loading.value = false
+    }).catch(err => {
+        console.log(err)
+        loading.value = false
+    })
 }
 </script>
 
@@ -30,7 +30,7 @@ const submitHandle = () => {
       <form class="form" @submit.prevent="submitHandle">
         <div class="form-group">
           <div class="border-input-wrap">
-            <label class="label" >
+            <label class="label">
               用户名 或 邮箱
             </label>
             <input
@@ -44,7 +44,7 @@ const submitHandle = () => {
         </div>
         <div class="form-group">
           <div class="border-input-wrap">
-            <label class="label" >
+            <label class="label">
               密码
             </label>
             <div class="password-reveal">
@@ -66,9 +66,9 @@ const submitHandle = () => {
           </div>
         </div>
         <button type="submit" class="black button">登录</button>
-        <q-btn style="width: 100%;background-color: #312D2A" padding="10px" :loading="loading" size="1rem" color="with" label="登录" type="submit" >
+        <q-btn style="width: 100%;background-color: #312D2A" padding="10px" :loading="loading" size="1rem" color="with" label="登录" type="submit">
           <template #loading>
-            <q-spinner-facebook />
+            <q-spinner-facebook/>
           </template>
         </q-btn>
         <div class="alternative">
@@ -84,8 +84,12 @@ const submitHandle = () => {
       </RouterLink>
       <ul class="links">
         <li><span>© Spirit</span></li>
-        <li><RouterLink to="">使用条款</RouterLink></li>
-        <li><RouterLink to="">隐私协议</RouterLink></li>
+        <li>
+          <RouterLink to="">使用条款</RouterLink>
+        </li>
+        <li>
+          <RouterLink to="">隐私协议</RouterLink>
+        </li>
       </ul>
     </div>
   </div>

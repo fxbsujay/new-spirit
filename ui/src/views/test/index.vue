@@ -1,6 +1,6 @@
 <script setup>
 import slider from '@/components/slider/index.vue'
-import {ref} from 'vue'
+import { ref } from 'vue'
 
 const value = ref(20)
 const value2 = ref(20)

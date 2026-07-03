@@ -6,9 +6,9 @@ import snackbar from '@/components/snackbar/index.js'
 
 const store = useUserStore()
 const formState = reactive({
-  password: '',
-  email: '',
-  code: ''
+    password: '',
+    email: '',
+    code: ''
 })
 formState.email = store.user.email
 const formEmail = useTemplateRef('form-email')
@@ -18,50 +18,50 @@ const success = ref(false)
 const sender = ref(0)
 
 const submitHandle = () => {
-  if (loading.value) {
-    return
-  }
-  if (success.value) {
-    Object.assign(formState, {
-      password: '',
-      email: '',
-      code: ''
-    })
-    success.value = false
-    return
-  }
-  loading.value = true
-  http.post('/account/email', formState).then(() => {
-    loading.value = false
-    success.value = true
-    sender.value = 0
-  }).catch(() => loading.value = false)
+    if (loading.value) {
+        return
+    }
+    if (success.value) {
+        Object.assign(formState, {
+            password: '',
+            email: '',
+            code: ''
+        })
+        success.value = false
+        return
+    }
+    loading.value = true
+    http.post('/account/email', formState).then(() => {
+        loading.value = false
+        success.value = true
+        sender.value = 0
+    }).catch(() => loading.value = false)
 }
 
 const sendCode = () => {
-  if (loading.value) {
-    return
-  }
-  if (!formEmail.value.reportValidity()) {
-    return
-  }
-  if (formState.email === store.user.email) {
-    snackbar.warning("邮箱地址不能与原邮箱地址相同")
-    return
-  }
+    if (loading.value) {
+        return
+    }
+    if (!formEmail.value.reportValidity()) {
+        return
+    }
+    if (formState.email === store.user.email) {
+        snackbar.warning('邮箱地址不能与原邮箱地址相同')
+        return
+    }
 
-  loading.value = true
-  http.post('/account/send/code', { email: formState.email }).then(() => {
-    snackbar.success("发送成功")
-    loading.value = false
-    sender.value = 60
-    const timer = setInterval(() => {
-      sender.value--;
-      if (sender.value <= 0) {
-        clearInterval(timer)
-      }
-    }, 1000)
-  }).catch(() => loading.value = false)
+    loading.value = true
+    http.post('/account/send/code', { email: formState.email }).then(() => {
+        snackbar.success('发送成功')
+        loading.value = false
+        sender.value = 60
+        const timer = setInterval(() => {
+            sender.value--
+            if (sender.value <= 0) {
+                clearInterval(timer)
+            }
+        }, 1000)
+    }).catch(() => loading.value = false)
 }
 
 </script>
@@ -69,7 +69,7 @@ const sendCode = () => {
 <template>
   <form class="form" @submit.prevent="submitHandle" autocomplete="off">
     <div class="success-tip" v-if="success">
-      <Icon name="check-bold" color="#fff" size="2rem" />
+      <Icon name="check-bold" color="#fff" size="2rem"/>
       <span>操作成功</span>
     </div>
     <div class="form-group">
@@ -108,7 +108,9 @@ const sendCode = () => {
               title="请输入2-20位字母开头的字母数字，或有效的邮箱地址"
               v-model="formState.email"
           />
-          <button type="button" :disabled="sender !== 0 || loading || success" class="button border send-code-btn" @click="sendCode">{{  sender !== 0 ? `${sender}秒后重新发送` : '发送验证码' }}</button>
+          <button type="button" :disabled="sender !== 0 || loading || success" class="button border send-code-btn" @click="sendCode">
+            {{ sender !== 0 ? `${sender}秒后重新发送` : '发送验证码' }}
+          </button>
         </div>
       </div>
     </div>
@@ -125,7 +127,9 @@ const sendCode = () => {
         />
       </div>
     </div>
-    <button type="submit" class="submit-button button " :disabled="loading" :class="success ? 'border' : 'black'">{{ success ? '再次修改' : '保存' }}</button>
+    <button type="submit" class="submit-button button " :disabled="loading" :class="success ? 'border' : 'black'">
+      {{ success ? '再次修改' : '保存' }}
+    </button>
   </form>
 </template>
 

@@ -1,141 +1,141 @@
 <script setup>
 import Icon from '@/components/icon/Icon.vue'
-import { ref, reactive, watch } from 'vue'
-import { TypeConstant } from '@/constant'
-import { debounce } from '@/utils/index'
-import http from '@/utils/http'
-import { useUserStore } from '@/stores/user'
 import snackbar from '@/components/snackbar/index.js'
+import { TypeConstant } from '@/constant'
+import { useUserStore } from '@/stores/user'
+import http from '@/utils/http'
+import { debounce } from '@/utils/index'
+import { reactive, ref, watch } from 'vue'
 
 const { startWaitGame } = useUserStore()
 
 const props = defineProps({
-  modelValue: Boolean
+    modelValue: Boolean
 })
 const emit = defineEmits(['update:modelValue'])
 
 const BoardSizeConstant = [
-  { label: '9x9', value: 9 },
-  { label: '13x13', value: 13 },
-  { label: '19x19', value: 19 },
-  { label: '21x21', value: 21 },
-  { label: '25x25', value: 25 }
+    { label: '9x9', value: 9 },
+    { label: '13x13', value: 13 },
+    { label: '19x19', value: 19 },
+    { label: '21x21', value: 21 },
+    { label: '25x25', value: 25 }
 ]
 
 const RuleConstant = [
-  { label: '中国规则', value: 1 },
-  { label: '韩国', value: 2 }
+    { label: '中国规则', value: 1 },
+    { label: '韩国', value: 2 }
 ]
 
 const shortDurations = []
 const shortStepDuration = []
 for (let i = 1; i < 35; i++) {
-  if (i <= 20) {
-    shortDurations.push(i)
-    shortStepDuration.push(i)
-  } else if (i <= 25) {
-    shortDurations.push(shortDurations[i - 2] + 5)
-    shortStepDuration.push(shortStepDuration[i - 2] + 5)
-  } else {
-    shortDurations.push(shortDurations[i - 2] + 15)
-    if (i <= 26) {
-      shortStepDuration.push(shortStepDuration[i - 2] + 15)
-    } else if (i <= 30) {
-      shortStepDuration.push(shortStepDuration[i - 2] + 30)
+    if (i <= 20) {
+        shortDurations.push(i)
+        shortStepDuration.push(i)
+    } else if (i <= 25) {
+        shortDurations.push(shortDurations[i - 2] + 5)
+        shortStepDuration.push(shortStepDuration[i - 2] + 5)
+    } else {
+        shortDurations.push(shortDurations[i - 2] + 15)
+        if (i <= 26) {
+            shortStepDuration.push(shortStepDuration[i - 2] + 15)
+        } else if (i <= 30) {
+            shortStepDuration.push(shortStepDuration[i - 2] + 30)
+        }
     }
-  }
 }
 
 const loading = ref(false)
 const formShow = ref(false)
 const formState = reactive({
-  type: 'SHORT',
-  rule: 1,
-  boardSize: 21,
-  duration: 10,
-  stepDuration: 10
-})
-
-const modeChangeHandle = (mode) => {
-  if (mode === 'CASUAL') {
-    formShow.value = true
-  } else if (mode === 'RANK') {
-    http.post('/game/ranking').then(res => {
-      if (res) {
-        startWaitGame({
-          boardSize: 19,
-          type: 'SHORT',
-          mode: 'RANK',
-          duration: 60 ,
-          stepDuration: 60,
-          timestamp: 0
-        })
-        closeDrawer()
-      } else {
-        snackbar.warning('您已在匹配队列中')
-      }
-    })
-  }
-}
-
-const typeChangeHandle = (type) => {
-  formState.type = type
-  if (type === 'SHORT') {
-    formState.duration = 10
-    formState.stepDuration = 10
-  } else if (type === 'LONG') {
-    formState.duration = 1
-    formState.stepDuration = 0
-  } else {
-    formState.duration = 0
-    formState.stepDuration = 0
-  }
-}
-
-const createHandle = debounce(() => {
-  if (loading.value) {
-    return
-  }
-  loading.value = true
-
-  const info = formState.type === 'SHORT' ? { ...formState, duration: shortDurations[formState.duration], stepDuration: shortStepDuration[formState.stepDuration] } : formState
-
-  http.post("/game/create", info).then(code => {
-    loading.value = false
-    startWaitGame({
-      ...info,
-      code,
-      mode: 'CASUAL'
-    })
-    closeDrawer()
-  }).catch(() => {
-    loading.value = false
-  })
-})
-
-watch(() => props.modelValue, () => {
-  if (!props.modelValue) {
-    cancelCreateHandle()
-  }
-})
-
-const closeDrawer = () => {
-  cancelCreateHandle()
-  emit('update:modelValue', false)
-}
-
-const cancelCreateHandle = () => {
-  if (loading.value) {
-    return
-  }
-  Object.assign(formState, {
     type: 'SHORT',
     rule: 1,
     boardSize: 21,
     duration: 10,
-    stepDuration: 0
-  })
-  formShow.value = false
+    stepDuration: 10
+})
+
+const modeChangeHandle = (mode) => {
+    if (mode === 'CASUAL') {
+        formShow.value = true
+    } else if (mode === 'RANK') {
+        http.post('/game/ranking').then(res => {
+            if (res) {
+                startWaitGame({
+                    boardSize: 19,
+                    type: 'SHORT',
+                    mode: 'RANK',
+                    duration: 60,
+                    stepDuration: 60,
+                    timestamp: 0
+                })
+                closeDrawer()
+            } else {
+                snackbar.warning('您已在匹配队列中')
+            }
+        })
+    }
+}
+
+const typeChangeHandle = (type) => {
+    formState.type = type
+    if (type === 'SHORT') {
+        formState.duration = 10
+        formState.stepDuration = 10
+    } else if (type === 'LONG') {
+        formState.duration = 1
+        formState.stepDuration = 0
+    } else {
+        formState.duration = 0
+        formState.stepDuration = 0
+    }
+}
+
+const createHandle = debounce(() => {
+    if (loading.value) {
+        return
+    }
+    loading.value = true
+
+    const info = formState.type === 'SHORT' ? { ...formState, duration: shortDurations[formState.duration], stepDuration: shortStepDuration[formState.stepDuration] } : formState
+
+    http.post('/game/create', info).then(code => {
+        loading.value = false
+        startWaitGame({
+            ...info,
+            code,
+            mode: 'CASUAL'
+        })
+        closeDrawer()
+    }).catch(() => {
+        loading.value = false
+    })
+})
+
+watch(() => props.modelValue, () => {
+    if (!props.modelValue) {
+        cancelCreateHandle()
+    }
+})
+
+const closeDrawer = () => {
+    cancelCreateHandle()
+    emit('update:modelValue', false)
+}
+
+const cancelCreateHandle = () => {
+    if (loading.value) {
+        return
+    }
+    Object.assign(formState, {
+        type: 'SHORT',
+        rule: 1,
+        boardSize: 21,
+        duration: 10,
+        stepDuration: 0
+    })
+    formShow.value = false
 }
 
 </script>
@@ -201,14 +201,18 @@ const cancelCreateHandle = () => {
                   <div class="form-group col">
                     <label class="form-label" style="width: 100%;">
                       <span>{{ formState.type === 'SHORT' ? '各方限时（分钟）' : '每步允许天数' }}</span>
-                      <span style="float: right; font-weight: bolder">{{  formState.type === 'SHORT' ? shortDurations[formState.duration] : formState.duration }}</span>
+                      <span style="float: right; font-weight: bolder">{{
+                          formState.type === 'SHORT' ? shortDurations[formState.duration] : formState.duration
+                        }}</span>
                     </label>
                     <input class="range" type="range" v-model="formState.duration" min="0" :max="formState.type === 'SHORT' ? 33 : 14"/>
                   </div>
                   <div class="form-group col" v-if="formState.type === 'SHORT'">
                     <label class="form-label" style="width: 100%">
                       <span>每步加时（秒）</span>
-                      <span style="float: right; font-weight: bolder">{{  shortStepDuration[formState.stepDuration] }}</span>
+                      <span style="float: right; font-weight: bolder">{{
+                          shortStepDuration[formState.stepDuration]
+                        }}</span>
                     </label>
                     <input class="range" type="range" v-model="formState.stepDuration" min="0" max="29"/>
                   </div>

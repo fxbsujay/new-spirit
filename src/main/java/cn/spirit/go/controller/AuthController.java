@@ -18,6 +18,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -261,7 +262,7 @@ public class AuthController {
                     RestContext.fail(ctx, RestStatus.CODE_INVALID);
                 } else {
                     if (code.equals(v.toString())) {
-                        userDao.updatePassword(user.getString("username"),  SecurityUtils.bCrypt(password)).onSuccess(_id -> {
+                        userDao.updatePassword(user.getString("username"), SecurityUtils.bCrypt(password)).onSuccess(_id -> {
                             RestContext.success(ctx);
                             AppContext.REDIS.del(List.of(key));
                         }).onFailure(e -> {

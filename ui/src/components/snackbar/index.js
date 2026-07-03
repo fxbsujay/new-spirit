@@ -1,5 +1,5 @@
+import { createVNode, nextTick, render } from 'vue'
 import Snackbar from './index.vue'
-import { createVNode, render, nextTick } from 'vue'
 
 const wrapper = document.createElement('div')
 wrapper.className = 'message-wrapper'
@@ -31,5 +31,5 @@ export default {
     info: text => snackbar(text, 'info'),
     success: text => snackbar(text, 'success'),
     warning: text => snackbar(text, 'warning'),
-    error: text => snackbar(text, 'error'),
+    error: text => snackbar(text, 'error')
 }

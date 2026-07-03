@@ -8,13 +8,14 @@
 </template>
 <script setup>
 const props = defineProps({
-  visible: Boolean,
+    visible: Boolean
 })
 const emits = defineEmits(['close'])
 </script>
 
 <style scoped lang="less">
 @import "@/assets/css/variable.less";
+
 .dialog-modal {
   position: fixed;
   top: 0;

@@ -24,6 +24,7 @@
 .lobby-side {
 
 }
+
 .lobby-side, .lobby-play {
   padding-top: calc(@toggle-height + 1.5rem);
 }
@@ -37,6 +38,7 @@
     width: 100%;
     height: 100%;
     background-color: #ffffff;
+
     img {
       width: 100%;
       height: 100%;
@@ -64,18 +66,21 @@
     background-color: rgba(255, 255, 255, 0.9);;
     background-size: 100% auto;
     background-position: center;
+
     tr {
       @borderSize: 3px;
       background-color: rgba(255, 255, 255, 0.95);
       cursor: pointer;
       font-size: 14px;
       border-bottom: @borderSize solid #F7F7F7;
+
       &:hover {
         td {
           background-color: rgba(0, 0, 0, 0.05);
           border-bottom: @borderSize solid #11a953;
         }
       }
+
       td {
         white-space: nowrap;
         overflow: hidden;
@@ -108,6 +113,7 @@
     align-items: center;
     background-color: #fff;
     border-radius: 2px;
+
     .search-input {
       height: 1rem;
       font: inherit;
@@ -122,11 +128,14 @@
   .btn-group {
     display: flex;
     gap: 8px;
+
     .btn-icon {
       background-color: #fff;
       border-radius: @borderRadius;
+
       &:hover {
         background-color: @c-dark;
+
         .icon {
           fill: #fff;
         }
