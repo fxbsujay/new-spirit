@@ -2,29 +2,34 @@ package cn.spirit.go.dao;
 
 import cn.spirit.go.common.util.SqlUtils;
 import cn.spirit.go.common.util.StringUtils;
+import cn.spirit.go.service.db.MongoStream;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Projections;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.BulkOperation;
 import io.vertx.ext.mongo.BulkOperationType;
-import io.vertx.ext.mongo.MongoClient;
 import java.util.Arrays;
 import java.util.List;
 
 public class UserDao {
 
-    private final MongoClient client;
+    private final MongoStream client;
 
-    public UserDao(MongoClient client) {
+    public UserDao(MongoStream client) {
         this.client = client;
     }
 
     public Future<String> save(JsonObject obj) {
-        obj.put("createdAt", System.currentTimeMillis());
-        return client.save("user", obj);
+        return client.insertOne("user", obj);
     }
 
     public Future<JsonObject> findOneById(String uid, String ...fields) {
-        return client.findOne("user", JsonObject.of("_id", uid), SqlUtils.fields(fields));
+        return client.findOne("user", Filters.eq(MongoStream.ID_KEY, uid), MongoStream.fields(fields));
+    }
+
+    public Future<JsonObject> findOneByUsernameOrEmail(String username, String email, String ...fields) {
+        return client.findOne("user", Filters.or(Filters.eq("username", username), Filters.eq("email", email)), MongoStream.fields(fields));
     }
 
     public Future<JsonObject> findOne(JsonObject query, String ...fields) {
@@ -32,21 +37,19 @@ public class UserDao {
     }
 
     public Future<Long> findCount(JsonObject query) {
-        return client.count("user", query);
+        return null;
     }
 
     public Future<List<JsonObject>> findAll(JsonObject query, String ...fields) {
-        return client.findWithOptions("user", query, SqlUtils.findOpts(fields));
+        return null;
     }
 
     public Future<String> updatePassword(String username, String password) {
-        return client.updateCollection("user", JsonObject.of("username", username), JsonObject.of("$set", JsonObject.of("password", password)))
-                .compose(res -> Future.succeededFuture(username));
+        return null;
     }
 
     public Future<String> updateEmail(String username, String email) {
-        return client.updateCollection("user", JsonObject.of("username", username), JsonObject.of("$set", JsonObject.of("email", email)))
-                .compose(res -> Future.succeededFuture(username));
+        return null;
     }
 
     public Future<String> updateProfile(String username, String avatar, String nickname) {
@@ -60,9 +63,7 @@ public class UserDao {
         if (entries.isEmpty()) {
             return Future.failedFuture("nothing to update");
         }
-
-        return client.updateCollection("user", JsonObject.of("username", username), JsonObject.of("$set", entries))
-                .compose(res -> Future.succeededFuture(username));
+        return null;
     }
 
     public Future<List<JsonObject>> updateRating(String user1, Integer rating1, String user2, Integer rating2) {
@@ -75,6 +76,6 @@ public class UserDao {
                 "filter", JsonObject.of("username", user2),
                 "document", JsonObject.of("$inc", JsonObject.of("rating", rating2))));
 
-        return client.bulkWrite("user", Arrays.asList(opt1, opt2)).compose(res -> Future.succeededFuture(res.getUpserts()));
+        return null;
     }
 }

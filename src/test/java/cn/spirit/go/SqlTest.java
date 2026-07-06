@@ -6,21 +6,31 @@ import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.GameWinner;
 import cn.spirit.go.common.util.SqlUtils;
 import cn.spirit.go.dao.GameDao;
-import cn.spirit.go.dao.UserDao;
+import cn.spirit.go.service.db.MongoStream;
 import cn.spirit.go.web.config.AppContext;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.model.Filters;
+import com.mongodb.reactivestreams.client.*;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.internal.PromiseInternal;
+import io.vertx.core.internal.VertxInternal;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.FindOptions;
+import io.vertx.ext.mongo.impl.SingleResultSubscriber;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import org.bson.Document;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 
 @DisplayName("Sql")
 @ExtendWith(VertxExtension.class)
@@ -31,13 +41,63 @@ public class SqlTest {
     @Test
     @DisplayName("update rating")
     void updateRating(Vertx vertx, VertxTestContext testContext) {
-        vertx.deployVerticle(new Application()).onComplete(testContext.succeeding(id -> {
-            UserDao dao = AppContext.getBean(UserDao.class);
-            dao.updateRating("admin1", 10, "admin2",-10).onSuccess(res -> {
-                log.info("update rating successful {}", Json.encode(res));
-                testContext.completeNow();
+
+        MongoClientSettings settings = MongoClientSettings.builder()
+                .applyConnectionString(new ConnectionString("mongodb://localhost:27017"))
+                .codecRegistry(MongoStream.commonCodecRegistry)
+                .build();
+
+        try (MongoClient mongoClient = MongoClients.create(settings)) {
+            MongoDatabase database = mongoClient.getDatabase("spirit");
+            log.info("---------------------");
+            MongoCollection<Document> user = database.getCollection("user");
+            Publisher<Document> first = user.find(Filters.eq("username", "admin1")).first();
+
+            PromiseInternal<Document> promise = ((VertxInternal) vertx).promise();
+
+            first.subscribe(new SingleResultSubscriber<>(promise));
+
+
+            promise.future().onComplete(r -> {
+                log.info(r.result().toJson());
+                Publisher<JsonObject> first2 = database.getCollection("game", JsonObject.class).find(Filters.eq("code", "FILT3")).first();
+                Flux.from(first2).doOnNext(r2 -> {
+                    log.info("2 {}",r2.toString());
+                }).blockLast();
+
+                log.info("--------------3-------");
+                Publisher<Document> first3 = database.getCollection("game").find(Filters.eq("code", "FILT3")).first();
+                Flux.from(first3).doOnNext(r3 -> {
+                    log.info("3 {}",r3.toJson());
+                    log.info("3 {}",Json.decodeValue(r3.toJson(), JsonObject.class).toString());
+                }).blockLast();
+
             });
-       }));
+
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("update rating")
+    void updateRatin2g(Vertx vertx, VertxTestContext testContext) {
+
+        io.vertx.ext.mongo.MongoClient mongoClient = io.vertx.ext.mongo.MongoClient.createShared(vertx, JsonObject.of("connection_string", "mongodb://localhost:27017" , "db_name", "spirit"));
+        mongoClient.findOne("user", JsonObject.of("username", "admin1"), JsonObject.of()).onSuccess(result -> {
+            log.info("------------------1---");
+            mongoClient.findOne("user", JsonObject.of("username", "admin2"), JsonObject.of()).onSuccess(r -> {
+                log.info(r.toString());
+                log.info("------------------2---");
+                mongoClient.findOne("user", JsonObject.of("username", "admin1"), JsonObject.of()).onSuccess(r2 -> {
+                    log.info(r2.toString());
+                    testContext.completeNow();
+                });
+            });
+        });
     }
 
     @Test

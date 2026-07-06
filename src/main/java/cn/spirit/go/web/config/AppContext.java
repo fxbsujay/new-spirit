@@ -6,6 +6,7 @@ import cn.spirit.go.controller.GameController;
 import cn.spirit.go.controller.UserController;
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
+import cn.spirit.go.service.db.MongoStream;
 import cn.spirit.go.service.sys.FileStorageSystem;
 import cn.spirit.go.service.GameManager;
 import cn.spirit.go.service.sys.MailSystem;
@@ -60,12 +61,14 @@ public class AppContext {
 
         MongoClient mongoClient = MongoClient.createShared(vertx, JsonObject.of("connection_string", "mongodb://" + config.mongodb.url, "db_name", config.mongodb.db));
 
+        MongoStream mongoStream = new MongoStream(vertx,"mongodb://" +  config.mongodb.url, config.mongodb.db);
+
         Redis client = Redis.createClient(vertx, new RedisOptions().addConnectionString("redis://" + config.redis.url).setPassword(config.redis.password));
         REDIS = RedisAPI.api(client);
         Router router = Router.router(vertx);
         addBean(new ClientManger());
 
-        addBean(new UserDao(mongoClient));
+        addBean(new UserDao(mongoStream));
         addBean(new GameDao(mongoClient));
 
         addBean(new FileStorageSystem(vertx.fileSystem(), config.server.storageFilePath));

@@ -20,7 +20,7 @@ public class RoomSocket {
     private final ServerWebSocket socket;
 
     public RoomSocket(UserSession session, ServerWebSocket socket) {
-        this.sessionId = session.sessionId;
+        this.sessionId = session.sId;
         this.username = session.username;
         this.socket = socket;
         this.socketId = StringUtils.uuid();

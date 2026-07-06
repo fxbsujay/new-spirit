@@ -28,7 +28,7 @@ public class ClientManger {
      */
     public boolean contains(UserSession session) {
         Set<String> sessions = userSessions.get(session.username);
-        return null != sessions && sessions.contains(session.sessionId);
+        return null != sessions && sessions.contains(session.sId);
     }
 
     /**
@@ -44,12 +44,12 @@ public class ClientManger {
         Set<String> sessions = userSessions.get(session.username);
         if (null == sessions) {
             sessions = new HashSet<>();
-            sessions.add(session.sessionId);
+            sessions.add(session.sId);
             userSessions.put(session.username, sessions);
-            sockets.put(session.sessionId, socket);
+            sockets.put(session.sId, socket);
         } else {
-            sessions.add(session.sessionId);
-            sockets.put(session.sessionId, socket);
+            sessions.add(session.sId);
+            sockets.put(session.sId, socket);
         }
 
         return true;
@@ -62,8 +62,8 @@ public class ClientManger {
     public void cancel(UserSession session) {
         Set<String> sessions = userSessions.get(session.username);
         if (null != sessions) {
-            sessions.remove(session.sessionId);
-            sockets.remove(session.sessionId);
+            sessions.remove(session.sId);
+            sockets.remove(session.sId);
             if (sessions.isEmpty()) {
                 userSessions.remove(session.username);
             }

@@ -268,7 +268,7 @@ public class GameRoomService {
                 try {
                     pck = Json.decodeValue(text, SocketPackage.class);
                 } catch (DecodeException e) {
-                    log.error("Failed to parse websocket message packet, from: {}, sessionId: {}", session.username, session.sessionId);
+                    log.error("Failed to parse websocket message packet, from: {}, sessionId: {}", session.username, session.sId);
                     ws.close();
                     return;
                 }
@@ -297,7 +297,7 @@ public class GameRoomService {
                         send(code, pck);
                         break;
                     default:
-                        log.error("Illegal websocket message packet type, from: {}, sessionId: {}", session.username, session.sessionId);
+                        log.error("Illegal websocket message packet type, from: {}, sessionId: {}", session.username, session.sId);
                         ws.close();
                 }
             });
