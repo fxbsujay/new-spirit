@@ -7,6 +7,7 @@ import cn.spirit.go.common.enums.UploadBucket;
 import cn.spirit.go.common.util.*;
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
+import cn.spirit.go.service.db.MongoStream;
 import cn.spirit.go.service.sys.FileStorageSystem;
 import cn.spirit.go.service.sys.MailSystem;
 import cn.spirit.go.web.SessionStore;
@@ -56,14 +57,12 @@ public class UserController {
      * 自己的用户资料
      */
     public void info(RoutingContext ctx) {
-        UserSession session = SessionStore.sessionUser(ctx);
-        userDao.findOne(JsonObject.of("username", session.username), "nickname", "avatar", "email", "status", "rating").onSuccess(user -> {
-            user.put("username", session.username);
-            RestContext.success(ctx, user);
-        }).onFailure(e -> {
-            log.error(e.getMessage(), e.getCause());
-            RestContext.fail(ctx);
-        });
+        userDao.findOneById(SessionStore.uid(ctx), MongoStream.fields("username", "nickname", "avatar", "email", "status", "rating"))
+                .onSuccess(user -> RestContext.success(ctx, user))
+                .onFailure(e -> {
+                    log.error(e.getMessage(), e.getCause());
+                    RestContext.fail(ctx);
+                });
     }
 
     /**
@@ -75,13 +74,13 @@ public class UserController {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
-        userDao.findOne(JsonObject.of("username", username), "nickname", "avatar", "status", "rating").onSuccess(user -> {
+        userDao.findOneByUsername(username, MongoStream.fields("nickname", "avatar", "status", "rating")).onSuccess(user -> {
             if (null == user) {
                 RestContext.fail(ctx, HttpResponseStatus.NOT_FOUND);
                 return;
             }
             user.put("username", username);
-            // 场次
+            // TODO 场次
             user.put("count", 20);
             // 胜率
             user.put("rate", 50.1);
@@ -146,7 +145,7 @@ public class UserController {
                 }
                 return Future.succeededFuture(games);
             });
-        }).onSuccess( games -> {
+        }).onSuccess(games -> {
             RestContext.success(ctx, games);
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
@@ -197,7 +196,7 @@ public class UserController {
             String username = SessionStore.username(ctx);
 
             fileSystem.upload(UploadBucket.avatar, file)
-                    .compose(filename -> userDao.findOne(JsonObject.of("username", username), "avatar").compose(u -> {
+                    .compose(filename -> userDao.findOneByUsername(username, MongoStream.fields("avatar")).compose(u -> {
                         String avatar = u.getString("avatar");
                         if (StringUtils.isNotBlank(avatar)) {
                             fileSystem.delete(UploadBucket.avatar, avatar);
@@ -243,7 +242,7 @@ public class UserController {
         UserSession session = SessionStore.sessionUser(ctx);
         String key = RedisConstant.AUTH_CODE_EMAIL + email;
 
-        userDao.findOne(JsonObject.of("username", session.username),  "password").onSuccess(user -> {
+        userDao.findOneById(session.uid, MongoStream.fields("password")).onSuccess(user -> {
             if (!SecurityUtils.matchesBCrypt(password, user.getString("password"))) {
                 RestContext.fail(ctx, RestStatus.EMAIL_CODE_IS_INVALID);
             } else {
@@ -318,7 +317,7 @@ public class UserController {
             return;
         }
         UserSession session = SessionStore.sessionUser(ctx);
-        userDao.findOne(JsonObject.of("username", session.username),  "password").onSuccess(user -> {
+        userDao.findOneById(session.uid,  MongoStream.fields("password")).onSuccess(user -> {
             if (!SecurityUtils.matchesBCrypt(oldPassword, user.getString("password"))) {
                 RestContext.fail(ctx, RestStatus.EMAIL_CODE_IS_INVALID);
             } else {

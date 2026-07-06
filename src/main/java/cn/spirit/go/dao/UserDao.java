@@ -1,15 +1,12 @@
 package cn.spirit.go.dao;
 
-import cn.spirit.go.common.util.SqlUtils;
 import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.service.db.MongoStream;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Projections;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.BulkOperation;
 import io.vertx.ext.mongo.BulkOperationType;
-import java.util.Arrays;
 import java.util.List;
 
 public class UserDao {
@@ -20,20 +17,24 @@ public class UserDao {
         this.client = client;
     }
 
-    public Future<String> save(JsonObject obj) {
+    public Future<String> insert(JsonObject obj) {
         return client.insertOne("user", obj);
     }
 
-    public Future<JsonObject> findOneById(String uid, String ...fields) {
-        return client.findOne("user", Filters.eq(MongoStream.ID_KEY, uid), MongoStream.fields(fields));
+    public Future<JsonObject> findOneById(String uid, JsonObject fields) {
+        return client.findOne("user", Filters.eq(MongoStream.ID_KEY, uid), fields);
     }
 
-    public Future<JsonObject> findOneByUsernameOrEmail(String username, String email, String ...fields) {
-        return client.findOne("user", Filters.or(Filters.eq("username", username), Filters.eq("email", email)), MongoStream.fields(fields));
+    public Future<JsonObject> findOneByUsernameOrEmail(String username, String email, JsonObject fields) {
+        return client.findOne("user", Filters.or(Filters.eq("username", username), Filters.eq("email", email)), fields);
     }
 
-    public Future<JsonObject> findOne(JsonObject query, String ...fields) {
-        return client.findOne("user", query, SqlUtils.fields(fields));
+    public Future<JsonObject> findOneByUsername(String username, JsonObject fields) {
+        return client.findOne("user", Filters.eq("username", username), fields);
+    }
+
+    public Future<JsonObject> findOneByEmail(String email, JsonObject fields) {
+        return client.findOne("user", Filters.eq("email", email), fields);
     }
 
     public Future<Long> findCount(JsonObject query) {

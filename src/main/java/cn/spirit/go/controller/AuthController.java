@@ -7,18 +7,18 @@ import cn.spirit.go.common.enums.UserStatus;
 import cn.spirit.go.common.util.RandomUtils;
 import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.common.util.SecurityUtils;
+import cn.spirit.go.service.db.MongoStream;
 import cn.spirit.go.service.sys.MailSystem;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.dao.UserDao;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.core.json.JsonArray;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -52,17 +52,17 @@ public class AuthController {
             return;
         }
 
-        JsonObject query = new JsonObject();
+        Future<JsonObject> future;
         if (RegexUtils.matches(username, RegexUtils.EMAIL)) {
-            query.put("email", username);
+            future = userDao.findOneByEmail(username, MongoStream.fields(false,"status", "password"));
         } else if (RegexUtils.matches(username, RegexUtils.USERNAME)) {
-            query.put("username", username);
+            future = userDao.findOneByUsername(username, MongoStream.fields(false,"status", "password"));
         } else {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
 
-        userDao.findOne(query, "_id", "status", "password").onSuccess(user -> {
+        future.onSuccess(user -> {
             if (null == user) {
                 RestContext.fail(ctx, RestStatus.ACCOUNT_NOT_EXIST);
                 return;
@@ -106,10 +106,7 @@ public class AuthController {
             return;
         }
 
-        JsonObject query = JsonObject.of("$or", new JsonArray()
-                .add(JsonObject.of("username", username))
-                .add(JsonObject.of("email", email)));
-        userDao.findOne(query, "username").onSuccess(user -> {
+        userDao.findOneByUsernameOrEmail(username, email, MongoStream.fields("username")).onSuccess(user -> {
             if (user != null) {
                 if (username.equals(user.getString("username"))) {
                     RestContext.fail(ctx, RestStatus.USERNAME_IS_EXIST);
@@ -133,7 +130,7 @@ public class AuthController {
                                 "nickname", username,
                                 "rating", 800,
                                 "status", UserStatus.NORMAL);
-                        userDao.save(obj).onSuccess(_id -> {
+                        userDao.insert(obj).onSuccess(_id -> {
                             RestContext.success(ctx, username);
                             AppContext.REDIS.del(List.of(key));
                         }).onFailure(e -> {
@@ -175,11 +172,7 @@ public class AuthController {
             return;
         }
 
-        JsonObject query = JsonObject.of("$or", new JsonArray()
-                .add(JsonObject.of("username", username))
-                .add(JsonObject.of("email", email)));
-
-        userDao.findOne(query, "username").onSuccess(user -> {
+        userDao.findOneByUsernameOrEmail(username, email, MongoStream.fields("username")).onSuccess(user -> {
             if (user != null) {
                 if (username.equals(user.getString("username"))) {
                     RestContext.fail(ctx, RestStatus.USERNAME_IS_EXIST);
@@ -251,7 +244,7 @@ public class AuthController {
             return;
         }
 
-        userDao.findOne(JsonObject.of("email", email), "username").onSuccess(user -> {
+        userDao.findOneByEmail(email,MongoStream.fields("username")).onSuccess(user -> {
             if (null == user) {
                 RestContext.fail(ctx, RestStatus.ACCOUNT_NOT_EXIST);
                 return;

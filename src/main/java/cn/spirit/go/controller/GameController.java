@@ -6,6 +6,7 @@ import cn.spirit.go.common.util.RegexUtils;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.*;
 import cn.spirit.go.service.GameManager;
+import cn.spirit.go.service.db.MongoStream;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
@@ -164,8 +165,9 @@ public class GameController {
             dto.stepDuration = 0;
         }
 
-        dto.username = SessionStore.username(ctx);
-        userDao.findOne(JsonObject.of("username", dto.username), "nickname", "rating").onSuccess(user -> {
+        UserSession session = SessionStore.sessionUser(ctx);
+        dto.username = session.username;
+        userDao.findOneById(session.uid, MongoStream.fields("nickname", "rating")).onSuccess(user -> {
             dto.score = user.getInteger("rating");
             dto.nickname = user.getString("nickname");
             gameManager.createCasualGame(dto).onSuccess(flag -> {
@@ -238,9 +240,9 @@ public class GameController {
      * 排位比赛
      */
     public void ranking(RoutingContext ctx) {
-        String username = SessionStore.username(ctx);
-        userDao.findOne(JsonObject.of("username", username), "rating")
-                .compose(user -> gameManager.startRanking(username, user.getInteger("rating")))
+        String uid = SessionStore.uid(ctx);
+        userDao.findOneById(uid, MongoStream.fields("rating"))
+                .compose(user -> gameManager.startRanking(SessionStore.username(ctx), user.getInteger("rating")))
                 .onSuccess(isSuccess -> {
                     RestContext.success(ctx, isSuccess);
                 }).onFailure(e -> {
