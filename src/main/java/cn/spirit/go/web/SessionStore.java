@@ -93,7 +93,7 @@ public class SessionStore {
      */
     public static Future<Void> logged(RoutingContext ctx, String uid, String username) {
         String sessionId = setSessionCookie(ctx);
-        String value = uid + ":" + username + ";" + ctx.request().remoteAddress().hostAddress() ;
+        String value = uid + ";" + username + ";" + ctx.request().remoteAddress().hostAddress();
         return AppContext.REDIS.set(Arrays.asList(AUTH_SESSION + sessionId, value, "EX", String.valueOf(AUTH_SESSION_EXPIRE))).map(r -> null);
     }
 
