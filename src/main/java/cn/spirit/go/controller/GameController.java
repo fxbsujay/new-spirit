@@ -70,8 +70,7 @@ public class GameController {
             usernames.add(room.white);
             usernames.add(room.black);
         }
-        JsonObject query = JsonObject.of("username", JsonObject.of("$in", usernames));
-        userDao.findAll(query, "username", "nickname", "avatar", "rating").onSuccess(users -> {
+        userDao.findAllByUsernames(usernames, MongoStream.fields("username", "nickname", "avatar", "rating")).onSuccess(users -> {
             JsonArray list = new JsonArray();
             Map<String, JsonObject> userMap = new HashMap<>();
             for (JsonObject user : users) {
@@ -104,8 +103,7 @@ public class GameController {
         if (null == room) {
 
         } else {
-            JsonObject query = JsonObject.of("username", JsonObject.of("$in", JsonArray.of(room.white, room.black)));
-            userDao.findAll(query, "username", "nickname", "avatar", "rating").onSuccess(users -> {
+            userDao.findAllByUsernames(Set.of(room.white, room.black), MongoStream.fields("username", "nickname", "avatar", "rating")).onSuccess(users -> {
                 JsonObject res = JsonObject.of(
                         "info", room.info,
                         "steps", room.steps);

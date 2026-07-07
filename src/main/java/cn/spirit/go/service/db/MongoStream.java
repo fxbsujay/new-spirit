@@ -12,7 +12,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.internal.VertxInternal;
 import io.vertx.core.json.JsonObject;
 import cn.spirit.go.service.db.codes.JsonObjectCodec;
-import org.bson.Document;
 import org.bson.codecs.*;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -91,11 +90,18 @@ public class MongoStream {
     }
 
     /**
+     * 文档计数
+     */
+    public Future<Long> count(String collection, Bson query) {
+        return promiseOne(getCollection(collection).countDocuments(query));
+    }
+
+    /**
      * 新增
      * @return  新增的ID
      */
     public Future<String> insertOne(String collection, JsonObject document) {
-        return promiseOne(getCollection(collection).insertOne(document)).map((v) -> v.getInsertedId().asObjectId().toString());
+        return promiseOne(getCollection(collection).insertOne(document)).map(v -> v.getInsertedId().asObjectId().getValue().toHexString());
     }
 
     /**
@@ -133,6 +139,14 @@ public class MongoStream {
         }
         if (excludeId) {
             query.put(MongoStream.ID_KEY, 0);
+        }
+        return query;
+    }
+
+    public static JsonObject exclude(String ...fields) {
+        JsonObject query = new JsonObject();
+        for (String field : fields) {
+            query.put(field, 0);
         }
         return query;
     }

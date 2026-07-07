@@ -1,33 +1,26 @@
 package cn.spirit.go.dao;
 
-import cn.spirit.go.common.util.SqlUtils;
+import cn.spirit.go.service.db.MongoStream;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.FindOptions;
-import io.vertx.ext.mongo.MongoClient;
+import org.bson.conversions.Bson;
 import java.util.List;
 
 public class GameDao {
-    private final MongoClient client;
 
-    public GameDao(MongoClient client) {
+    private final MongoStream client;
+
+    public GameDao(MongoStream client) {
         this.client = client;
     }
 
-    public Future<JsonObject> findOne(JsonObject query, String ...fields) {
-        return client.findOne("game", query, SqlUtils.fields(fields));
+
+    public Future<List<JsonObject>> findPage(Bson query, JsonObject fields, int page) {
+        return client.findPage("user", query, fields, page, 10);
     }
 
-    public Future<List<JsonObject>> findAll(JsonObject query, String ...fields) {
-        return client.findWithOptions("game", query, SqlUtils.findOpts(fields));
-    }
-
-    public Future<List<JsonObject>> find(JsonObject query, FindOptions options) {
-        return client.findWithOptions("game", query, options);
-    }
-
-    public Future<String> save(JsonObject obj) {
-        return client.save("game", obj);
+    public Future<String> insert(JsonObject obj) {
+        return client.insertOne("game", obj);
     }
 
 }

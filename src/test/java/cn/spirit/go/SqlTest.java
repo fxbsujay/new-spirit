@@ -24,6 +24,7 @@ import io.vertx.ext.mongo.impl.SingleResultSubscriber;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -122,7 +123,7 @@ public class SqlTest {
             game.put("reason", GameReason.SURRENDER);
             game.put("board", JsonArray.of("AFB", "CG3"));
             game.put("steps", steps);
-            dao.save(game).compose(res -> {
+            dao.insert(game).compose(res -> {
                 log.info("Game save {}", res);
                 return Future.succeededFuture(res);
             }).onSuccess(res -> {
@@ -139,20 +140,11 @@ public class SqlTest {
     void queryGame(Vertx vertx, VertxTestContext testContext) {
         vertx.deployVerticle(new Application()).onComplete(testContext.succeeding(id -> {
             int page = 1;
-            int limit = 10;
             String username = "admin1";
             GameDao dao = AppContext.getBean(GameDao.class);
-            JsonObject query = JsonObject.of("$or", new JsonArray()
-                    .add(JsonObject.of("white", username))
-                    .add(JsonObject.of("black", username)));
-
-            FindOptions opts = SqlUtils.findOpts(0,"board", "steps");
-
-            opts.setSort(JsonObject.of("startTime", -1));
-            opts.setSkip((page - 1) * limit);
-            opts.setLimit(limit);
-            log.info("Game query");
-            dao.find(query, opts).onSuccess(res -> {
+            Bson query = Filters.or(Filters.eq("white", username), Filters.eq("black", username));
+            JsonObject fields = MongoStream.exclude(MongoStream.ID_KEY, "board", "steps");
+            dao.findPage(query, fields, page).onSuccess(res -> {
                 log.info("Game query successful {}", Json.encode(res));
                 testContext.completeNow();
             });

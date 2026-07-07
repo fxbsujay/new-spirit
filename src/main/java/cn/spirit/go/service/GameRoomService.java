@@ -221,8 +221,8 @@ public class GameRoomService {
             }
             game.put("steps", steps);
             int whiteAddRating = winner == GameWinner.WHITE ? 20 : -20;
-            gameDao.save(game).compose(res -> userDao.updateRating(room.white, whiteAddRating, room.black, -whiteAddRating))
-                    .onSuccess(res -> log.info("Save game success, code = {}", code))
+            gameDao.insert(game).compose(res -> userDao.updateRating(room.white, whiteAddRating, room.black, -whiteAddRating))
+                    .onSuccess(count -> log.info("Save game success, code = {}", code))
                     .onFailure(e -> log.error("Save game failed, code = {}", code));
         }).onFailure(e -> log.error("Game ended in failure, code = {}, reason = {}. failure message = {}", code, reason, e.getMessage()));
     }

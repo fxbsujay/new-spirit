@@ -59,8 +59,6 @@ public class AppContext {
     public static Router init(Vertx vertx, Config config) {
         AppContext.vertx = vertx;
 
-        MongoClient mongoClient = MongoClient.createShared(vertx, JsonObject.of("connection_string", "mongodb://" + config.mongodb.url, "db_name", config.mongodb.db));
-
         MongoStream mongoStream = new MongoStream(vertx,"mongodb://" +  config.mongodb.url, config.mongodb.db);
 
         Redis client = Redis.createClient(vertx, new RedisOptions().addConnectionString("redis://" + config.redis.url).setPassword(config.redis.password));
@@ -69,7 +67,7 @@ public class AppContext {
         addBean(new ClientManger());
 
         addBean(new UserDao(mongoStream));
-        addBean(new GameDao(mongoClient));
+        addBean(new GameDao(mongoStream));
 
         addBean(new FileStorageSystem(vertx.fileSystem(), config.server.storageFilePath));
         addBean(new MailSystem(vertx, config.mail));

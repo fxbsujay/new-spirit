@@ -13,6 +13,9 @@ import cn.spirit.go.service.sys.MailSystem;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
+import com.mongodb.client.model.Field;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Projections;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
@@ -21,6 +24,7 @@ import io.vertx.ext.mongo.FindOptions;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,24 +108,12 @@ public class UserController {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
-
         if (null == page || page < 1) {
             page = 1;
         }
-
-        int limit = 10;
-
-        JsonObject query = JsonObject.of("$or", new JsonArray()
-                .add(JsonObject.of("white", username))
-                .add(JsonObject.of("black", username)));
-
-        FindOptions opts = SqlUtils.findOpts(0,"board", "steps");
-
-        opts.setSort(JsonObject.of("startTime", -1));
-        opts.setSkip((page - 1) * limit);
-        opts.setLimit(limit);
-
-        gameDao.find(query, opts).compose(games -> {
+        Bson query = Filters.or(Filters.eq("white", username), Filters.eq("black", username));
+        JsonObject fields = MongoStream.exclude(MongoStream.ID_KEY, "board", "steps");
+        gameDao.findPage(query, fields, page).compose(games -> {
             // 查询对局中用户的用户头像昵称
             JsonArray usernames = new JsonArray();
             for (JsonObject game : games) {
@@ -193,17 +185,16 @@ public class UserController {
                 RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
                 return;
             }
-            String username = SessionStore.username(ctx);
-
+            String uid = SessionStore.uid(ctx);
             fileSystem.upload(UploadBucket.avatar, file)
-                    .compose(filename -> userDao.findOneByUsername(username, MongoStream.fields("avatar")).compose(u -> {
+                    .compose(filename -> userDao.findOneById(uid, MongoStream.fields("avatar")).compose(u -> {
                         String avatar = u.getString("avatar");
                         if (StringUtils.isNotBlank(avatar)) {
                             fileSystem.delete(UploadBucket.avatar, avatar);
                         }
                         return Future.succeededFuture(filename);
                     }))
-                    .compose(filename -> userDao.updateProfile(username, filename, nickname))
+                    .compose(filename -> userDao.updateAvatarAndNickname(uid, filename, nickname))
                     .onSuccess(res -> RestContext.success(ctx))
                     .onFailure(e -> {
                         log.error(e.getMessage(), e.getCause());
@@ -211,7 +202,7 @@ public class UserController {
                     });
         } else {
             // 只修改昵称
-            userDao.updateProfile(SessionStore.username(ctx), null, nickname)
+            userDao.updateAvatarAndNickname(SessionStore.uid(ctx), null, nickname)
                     .onSuccess(res -> RestContext.success(ctx))
                     .onFailure(e -> {
                         log.error(e.getMessage(), e.getCause());
@@ -251,7 +242,7 @@ public class UserController {
                         RestContext.fail(ctx, RestStatus.CODE_INVALID);
                     } else {
                         if (code.equals(v.toString())) {
-                            userDao.updateEmail(session.username, email).onSuccess(_id -> {
+                            userDao.updateEmail(session.uid, email).onSuccess(count -> {
                                 RestContext.success(ctx);
                                 AppContext.REDIS.del(List.of(key));
                             }).onFailure(e -> {
@@ -280,8 +271,8 @@ public class UserController {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
-        userDao.findCount(JsonObject.of("email", email)).onSuccess(size -> {
-            if (size > 0) {
+        userDao.existsEmail(email).onSuccess(isExists -> {
+            if (isExists) {
                 RestContext.fail(ctx, RestStatus.EMAIL_IS_EXIST);
             } else {
                 String code = RandomUtils.getRandom(5, true);
@@ -321,7 +312,7 @@ public class UserController {
             if (!SecurityUtils.matchesBCrypt(oldPassword, user.getString("password"))) {
                 RestContext.fail(ctx, RestStatus.EMAIL_CODE_IS_INVALID);
             } else {
-                userDao.updatePassword(session.username, SecurityUtils.bCrypt(newPassword)).onSuccess(username -> {
+                userDao.updatePassword(session.uid, SecurityUtils.bCrypt(newPassword)).onSuccess(count -> {
                     RestContext.success(ctx);
                 }).onFailure(e -> {
                     log.error(e.getMessage(), e.getCause());

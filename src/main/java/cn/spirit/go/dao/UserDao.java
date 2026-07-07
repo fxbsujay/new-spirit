@@ -2,11 +2,12 @@ package cn.spirit.go.dao;
 
 import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.service.db.MongoStream;
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateManyModel;
+import com.mongodb.client.model.Updates;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.BulkOperation;
-import io.vertx.ext.mongo.BulkOperationType;
 import java.util.List;
 
 public class UserDao {
@@ -37,23 +38,23 @@ public class UserDao {
         return client.findOne("user", Filters.eq("email", email), fields);
     }
 
-    public Future<Long> findCount(JsonObject query) {
-        return null;
+    public Future<Boolean> existsEmail(String email) {
+       return client.count("user", Filters.eq("email", email)).map(v -> v > 0);
     }
 
-    public Future<List<JsonObject>> findAll(JsonObject query, String ...fields) {
-        return null;
+    public Future<List<JsonObject>> findAllByUsernames(Iterable<String> usernames, JsonObject fields) {
+        return client.findAll("user", Filters.in("username", usernames), fields);
     }
 
-    public Future<String> updatePassword(String username, String password) {
-        return null;
+    public Future<Long> updatePassword(String uid, String password) {
+        return client.updateOne("user", Filters.eq(MongoStream.ID_KEY, uid), JsonObject.of("password", password));
     }
 
-    public Future<String> updateEmail(String username, String email) {
-        return null;
+    public Future<Long> updateEmail(String uid, String email) {
+        return client.updateOne("user", Filters.eq(MongoStream.ID_KEY, uid), JsonObject.of("email", email));
     }
 
-    public Future<String> updateProfile(String username, String avatar, String nickname) {
+    public Future<Long> updateAvatarAndNickname(String uid, String avatar, String nickname) {
         JsonObject entries = new JsonObject();
         if (StringUtils.isNotBlank(avatar)) {
             entries.put("avatar", avatar);
@@ -64,19 +65,14 @@ public class UserDao {
         if (entries.isEmpty()) {
             return Future.failedFuture("nothing to update");
         }
-        return null;
+        return client.updateOne("user", Filters.eq(MongoStream.ID_KEY, uid), entries);
     }
 
-    public Future<List<JsonObject>> updateRating(String user1, Integer rating1, String user2, Integer rating2) {
-        BulkOperation opt1 = new BulkOperation(JsonObject.of(
-                "type", BulkOperationType.UPDATE,
-                "filter", JsonObject.of("username", user1),
-                "document", JsonObject.of("$inc", JsonObject.of("rating", rating1))));
-        BulkOperation opt2 = new BulkOperation(JsonObject.of(
-                "type", BulkOperationType.UPDATE,
-                "filter", JsonObject.of("username", user2),
-                "document", JsonObject.of("$inc", JsonObject.of("rating", rating2))));
-
-        return null;
+    public Future<Integer> updateRating(String user1, Integer rating1, String user2, Integer rating2) {
+        return client.promiseOne(client.db().getCollection("user").bulkWrite(
+                List.of(
+                        new UpdateManyModel<>(Filters.eq("username", user1), Updates.inc("rating", rating1)),
+                        new UpdateManyModel<>(Filters.eq("username", user2), Updates.inc("rating", rating2))
+                ))).map(BulkWriteResult::getModifiedCount);
     }
 }

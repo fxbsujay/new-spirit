@@ -208,8 +208,8 @@ public class AuthController {
             return;
         }
 
-        userDao.findCount(JsonObject.of("email", email)).onSuccess(size -> {
-            if (size != 1) {
+        userDao.existsEmail(email).onSuccess(isExists -> {
+            if (isExists) {
                 RestContext.fail(ctx, RestStatus.EMAIL_IS_EXIST);
                 return;
             }
@@ -244,7 +244,7 @@ public class AuthController {
             return;
         }
 
-        userDao.findOneByEmail(email,MongoStream.fields("username")).onSuccess(user -> {
+        userDao.findOneByEmail(email,MongoStream.fields(false,"username")).onSuccess(user -> {
             if (null == user) {
                 RestContext.fail(ctx, RestStatus.ACCOUNT_NOT_EXIST);
                 return;
@@ -255,7 +255,7 @@ public class AuthController {
                     RestContext.fail(ctx, RestStatus.CODE_INVALID);
                 } else {
                     if (code.equals(v.toString())) {
-                        userDao.updatePassword(user.getString("username"), SecurityUtils.bCrypt(password)).onSuccess(_id -> {
+                        userDao.updatePassword(user.getString(MongoStream.ID_KEY), SecurityUtils.bCrypt(password)).onSuccess(count -> {
                             RestContext.success(ctx);
                             AppContext.REDIS.del(List.of(key));
                         }).onFailure(e -> {
