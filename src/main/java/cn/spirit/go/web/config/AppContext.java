@@ -63,7 +63,7 @@ public class AppContext {
         REDIS = RedisAPI.api(client);
         Router router = Router.router(vertx);
         addBean(new ClientManger());
-
+        addBean(mongoStream);
         addBean(new UserDao(mongoStream));
         addBean(new GameDao(mongoStream));
 
@@ -83,7 +83,6 @@ public class AppContext {
             log.error("500", ctx.failure());
             RestContext.fail(ctx);
         });
-
 
         new AuthController(router);
         new GameController(router, sessionHandle);
