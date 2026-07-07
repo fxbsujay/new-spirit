@@ -15,8 +15,6 @@ import cn.spirit.go.web.socket.ClientManger;
 import cn.spirit.go.web.socket.WebSocketHandler;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.StaticHandler;

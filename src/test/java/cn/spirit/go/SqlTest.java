@@ -4,9 +4,9 @@ import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameReason;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.GameWinner;
-import cn.spirit.go.common.util.SqlUtils;
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.service.db.MongoStream;
+import cn.spirit.go.service.db.SingleSubscriber;
 import cn.spirit.go.web.config.AppContext;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
@@ -19,8 +19,6 @@ import io.vertx.core.internal.VertxInternal;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.FindOptions;
-import io.vertx.ext.mongo.impl.SingleResultSubscriber;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.bson.Document;
@@ -56,7 +54,7 @@ public class SqlTest {
 
             PromiseInternal<Document> promise = ((VertxInternal) vertx).promise();
 
-            first.subscribe(new SingleResultSubscriber<>(promise));
+            first.subscribe(new SingleSubscriber<>(promise));
 
 
             promise.future().onComplete(r -> {
@@ -83,23 +81,6 @@ public class SqlTest {
         }
     }
 
-    @Test
-    @DisplayName("update rating")
-    void updateRatin2g(Vertx vertx, VertxTestContext testContext) {
-
-        io.vertx.ext.mongo.MongoClient mongoClient = io.vertx.ext.mongo.MongoClient.createShared(vertx, JsonObject.of("connection_string", "mongodb://localhost:27017" , "db_name", "spirit"));
-        mongoClient.findOne("user", JsonObject.of("username", "admin1"), JsonObject.of()).onSuccess(result -> {
-            log.info("------------------1---");
-            mongoClient.findOne("user", JsonObject.of("username", "admin2"), JsonObject.of()).onSuccess(r -> {
-                log.info(r.toString());
-                log.info("------------------2---");
-                mongoClient.findOne("user", JsonObject.of("username", "admin1"), JsonObject.of()).onSuccess(r2 -> {
-                    log.info(r2.toString());
-                    testContext.completeNow();
-                });
-            });
-        });
-    }
 
     @Test
     @DisplayName("save game")

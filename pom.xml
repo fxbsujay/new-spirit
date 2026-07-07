@@ -39,11 +39,13 @@
   </dependencyManagement>
 
   <dependencies>
+
     <!-- VERTX CORE -->
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-launcher-application</artifactId>
     </dependency>
+
     <!-- WEB -->
     <dependency>
       <groupId>io.vertx</groupId>
@@ -59,10 +61,18 @@
       <groupId>io.vertx</groupId>
       <artifactId>vertx-redis-client</artifactId>
     </dependency>
+
     <!-- MONGO -->
     <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-mongo-client</artifactId>
+      <groupId>org.mongodb</groupId>
+      <artifactId>mongodb-driver-reactivestreams</artifactId>
+      <version>5.3.1</version>
+      <exclusions>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- 邮件 -->
@@ -76,6 +86,7 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
     </dependency>
+
     <!-- JSON 日期处理-->
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>

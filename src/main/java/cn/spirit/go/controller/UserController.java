@@ -13,21 +13,17 @@ import cn.spirit.go.service.sys.MailSystem;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
-import com.mongodb.client.model.Field;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Projections;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.FindOptions;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -115,18 +111,12 @@ public class UserController {
         JsonObject fields = MongoStream.exclude(MongoStream.ID_KEY, "board", "steps");
         gameDao.findPage(query, fields, page).compose(games -> {
             // 查询对局中用户的用户头像昵称
-            JsonArray usernames = new JsonArray();
+            Set<String> usernames = new HashSet<>();
             for (JsonObject game : games) {
-                String white = game.getString("white");
-                if (!usernames.contains(white)) {
-                    usernames.add(white);
-                }
-                String black = game.getString("black");
-                if (!usernames.contains(black)) {
-                    usernames.add(black);
-                }
+                usernames.add(game.getString("white"));
+                usernames.add(game.getString("black"));
             }
-            return userDao.findAll(JsonObject.of("username", JsonObject.of("$in", usernames)), "username", "nickname", "rating").compose(users -> {
+            return userDao.findAllByUsernames(usernames, MongoStream.fields("username", "nickname", "rating")).compose(users -> {
                 Map<String, JsonObject> userMap = new HashMap<>();
                 for (JsonObject user : users) {
                     userMap.put(user.getString("username"), user);

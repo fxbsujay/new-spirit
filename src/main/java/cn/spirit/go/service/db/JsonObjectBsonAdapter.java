@@ -15,7 +15,6 @@ public class JsonObjectBsonAdapter implements Bson {
     }
 
     public <C> BsonDocument toBsonDocument(Class<C> documentClass, CodecRegistry codecRegistry) {
-
         return new BsonDocumentWrapper<>(this.obj, codecRegistry.get(JsonObject.class));
     }
 }
