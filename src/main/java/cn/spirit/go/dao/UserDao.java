@@ -42,10 +42,6 @@ public class UserDao {
        return client.count("user", Filters.eq("email", email)).map(v -> v > 0);
     }
 
-    public Future<List<JsonObject>> findAllByUsernames(Iterable<String> usernames, JsonObject fields) {
-        return client.findAll("user", Filters.in("username", usernames), fields);
-    }
-
     public Future<List<JsonObject>> findAllByUids(Iterable<String> uids, JsonObject fields) {
         return client.findAll("user", Filters.in(MongoStream.ID_KEY, uids), fields);
     }
