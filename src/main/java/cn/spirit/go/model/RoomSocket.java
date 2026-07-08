@@ -13,15 +13,15 @@ public class RoomSocket {
 
     public String socketId;
 
-    public String username;
+    public String uid;
 
-    public String sessionId;
+    public String sid;
 
     private final ServerWebSocket socket;
 
     public RoomSocket(UserSession session, ServerWebSocket socket) {
-        this.sessionId = session.sId;
-        this.username = session.username;
+        this.sid = session.sId;
+        this.uid = session.uid;
         this.socket = socket;
         this.socketId = StringUtils.uuid();
     }
@@ -33,7 +33,7 @@ public class RoomSocket {
     public void send(String msg) {
         if (!socket.isClosed()) {
             socket.writeFinalTextFrame(msg);
-            log.info("send msg, target: {}, msg: {}", username,  msg);
+            log.info("send msg, target: {}, msg: {}", uid,  msg);
         }
     }
 

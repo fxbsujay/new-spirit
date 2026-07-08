@@ -18,7 +18,7 @@ public class GameLobbyService {
     private static final Logger log = LoggerFactory.getLogger(GameLobbyService.class);
 
     /**
-     * username -> code
+     * uid -> code
      */
     private final Map<String, String> userGames = new HashMap<>();
 
@@ -33,18 +33,17 @@ public class GameLobbyService {
 
     /**
      * 创建游戏
-     * @param session   Session
      * @param game      对局
      */
     public boolean addGame(CasualGameInfo game) {
-        if (userGames.containsKey(game.username)) {
-            log.warn("{} failed to create the game", game.username);
+        if (userGames.containsKey(game.uid)) {
+            log.warn("{} failed to create the game", game.uid);
             return false;
         }
         game.timestamp = System.currentTimeMillis();
-        userGames.put(game.username, game.code);
+        userGames.put(game.uid, game.code);
         games.put(game.code, game);
-        log.info("{} has created a game, code = {}", game.username, game.code);
+        log.info("{} has created a game, code = {}", game.uid, game.code);
         return true;
     }
 
@@ -52,10 +51,10 @@ public class GameLobbyService {
      * 删除自己的游戏
      * socket断开时删除、自己取消游戏时删除、别人加入游戏时删除
      *
-     * @param username  用户名
+     * @param uid  用户ID
      */
-    public CasualGameInfo removeGame(String username) {
-        String code = userGames.remove(username);
+    public CasualGameInfo removeGame(String uid) {
+        String code = userGames.remove(uid);
         if (null != code) {
             return games.remove(code);
         }
@@ -66,8 +65,8 @@ public class GameLobbyService {
         return games.get(code);
     }
 
-    public CasualGameInfo getByUsername(String username) {
-        String code = userGames.get(username);
+    public CasualGameInfo getByUid(String uid) {
+        String code = userGames.get(uid);
         if (null == code) {
             return null;
         }

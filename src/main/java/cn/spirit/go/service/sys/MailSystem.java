@@ -1,11 +1,9 @@
 package cn.spirit.go.service.sys;
 
 import cn.spirit.go.web.config.Config;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.ext.mail.MailClient;
-import io.vertx.ext.mail.MailConfig;
-import io.vertx.ext.mail.MailMessage;
-import io.vertx.ext.mail.StartTLSOptions;
+import io.vertx.ext.mail.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +27,7 @@ public class MailSystem {
         this.username = config.username;
     }
 
-    public void send(String subject, String to, String content, boolean html) {
+    public Future<MailResult> send(String subject, String to, String content, boolean html) {
         MailMessage message = new MailMessage()
                 .setFrom(username + " (Spirit Go)")
                 .setTo(to)
@@ -39,7 +37,8 @@ public class MailSystem {
         } else {
             message.setText(content);
         }
-        log.info("Send email subject: {}, to: {}, content: {}", subject, to, content);
-        client.sendMail(message);
+
+        return client.sendMail(message);
     }
+
 }

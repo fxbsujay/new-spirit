@@ -99,31 +99,58 @@ public class UserController {
     public void history(RoutingContext ctx) {
         JsonObject body = ctx.body().asJsonObject();
         String username = body.getString("username");
-        Integer page = body.getInteger("page");
+        Integer page = body.getInteger("page", 0);
         if (!RegexUtils.matches(username, RegexUtils.USERNAME)) {
             RestContext.fail(ctx, HttpResponseStatus.BAD_REQUEST);
             return;
         }
-        if (null == page || page < 1) {
-            page = 1;
-        }
-        Bson query = Filters.or(Filters.eq("white", username), Filters.eq("black", username));
-        JsonObject fields = MongoStream.exclude(MongoStream.ID_KEY, "board", "steps");
-        gameDao.findPage(query, fields, page).compose(games -> {
-            // 查询对局中用户的用户头像昵称
-            Set<String> usernames = new HashSet<>();
-            for (JsonObject game : games) {
-                usernames.add(game.getString("white"));
-                usernames.add(game.getString("black"));
+
+        // 查询这个用户
+        userDao.findOneByUsername(username, MongoStream.fields(false,"username", "nickname", "rating")).compose(user -> {
+            if (null == user) {
+                return Future.failedFuture("not found user");
             }
-            return userDao.findAllByUsernames(usernames, MongoStream.fields("username", "nickname", "rating")).compose(users -> {
-                Map<String, JsonObject> userMap = new HashMap<>();
-                for (JsonObject user : users) {
-                    userMap.put(user.getString("username"), user);
+            String uid = user.getString(MongoStream.ID_KEY);
+            // 查询这个用户的历史对局
+            Bson query = Filters.or(Filters.eq("whiteUid", uid), Filters.eq("blackUid", uid));
+            JsonObject fields = MongoStream.exclude(MongoStream.ID_KEY, "board", "steps");
+            return gameDao.findPage(query, fields, Math.max(0, page)).map(games -> JsonObject.of("games", games, "user", user));
+        }).compose(res -> {
+            JsonArray games = res.getJsonArray("games");
+
+            if (games.isEmpty()) {
+                return Future.succeededFuture(Collections.emptyList());
+            }
+
+            JsonObject user = res.getJsonObject("user");
+            Set<String> uids = new HashSet<>();
+            String uid = user.getString(MongoStream.ID_KEY);
+
+            for (int i = 0; i < games.size(); i++) {
+                JsonObject game = games.getJsonObject(i);
+                if (!uid.equals(game.getString("whiteUid"))) {
+                    uids.add(game.getString("whiteUid"));
                 }
-                for (JsonObject game : games) {
-                    game.put("white", userMap.get(game.getString("white")));
-                    game.put("black", userMap.get(game.getString("black")));
+                if (!uid.equals(game.getString("blackUid"))) {
+                    uids.add(game.getString("blackUid"));
+                }
+            }
+
+            Map<String, JsonObject> userMap = new HashMap<>();
+            userMap.put(uid, user);
+
+            return userDao.findAllByUids(uids, MongoStream.fields(false, "username", "nickname", "rating")).compose(users -> {
+                for (JsonObject u : users) {
+                    userMap.put(u.getString(MongoStream.ID_KEY), u);
+                }
+                for (int i = 0; i < games.size(); i++) {
+                    JsonObject game = games.getJsonObject(i);
+                    JsonObject wu = userMap.get(game.getString("whiteUid"));
+                    wu.remove(MongoStream.ID_KEY);
+                    game.put("wu", wu);
+                    JsonObject bu = userMap.get(game.getString("blackUid"));
+                    bu.remove(MongoStream.ID_KEY);
+                    game.put("bu", bu);
                 }
                 return Future.succeededFuture(games);
             });

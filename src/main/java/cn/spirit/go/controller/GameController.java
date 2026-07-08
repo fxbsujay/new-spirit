@@ -3,6 +3,7 @@ package cn.spirit.go.controller;
 import cn.spirit.go.common.RestContext;
 import cn.spirit.go.common.enums.*;
 import cn.spirit.go.common.util.RegexUtils;
+import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.*;
 import cn.spirit.go.service.GameManager;
@@ -24,6 +25,8 @@ public class GameController {
     private final Logger log = LoggerFactory.getLogger(GameController.class);
 
     private final UserDao userDao = AppContext.getBean(UserDao.class);
+
+    private final GameDao gameDao = AppContext.getBean(GameDao.class);
 
     private final GameManager gameManager = AppContext.getBean(GameManager.class);
 
@@ -57,8 +60,7 @@ public class GameController {
      * 查询自己进行中的对局
      */
     public void ongoingRooms(RoutingContext ctx) {
-        UserSession session = SessionStore.sessionUser(ctx);
-        List<Room> rooms = gameManager.searchRooms(session.username);
+        List<Room> rooms = gameManager.searchRooms(SessionStore.uid(ctx));
 
         if (null == rooms || rooms.isEmpty()) {
             RestContext.success(ctx, Collections.emptyList());
@@ -67,21 +69,23 @@ public class GameController {
 
         Set<String> usernames = new HashSet<>();
         for (Room room : rooms) {
-            usernames.add(room.white);
-            usernames.add(room.black);
+            usernames.add(room.whiteUid);
+            usernames.add(room.blackUid);
         }
-        userDao.findAllByUsernames(usernames, MongoStream.fields("username", "nickname", "avatar", "rating")).onSuccess(users -> {
+        userDao.findAllByUids(usernames, MongoStream.fields(false,"username", "nickname", "avatar", "rating")).onSuccess(users -> {
             JsonArray list = new JsonArray();
             Map<String, JsonObject> userMap = new HashMap<>();
             for (JsonObject user : users) {
-                userMap.put(user.getString("username"), user);
+                String uid = user.getString(MongoStream.ID_KEY);
+                user.remove(MongoStream.ID_KEY);
+                userMap.put(uid, user);
             }
             for (Room room : rooms) {
                 list.add(JsonObject.of(
                         "info", room.info,
                         "steps", room.steps,
-                        "white", userMap.get(room.white).put("remainder", room.whiteRemainder),
-                        "black", userMap.get(room.black).put("remainder", room.blackRemainder)));
+                        "white", userMap.get(room.whiteUid).put("remainder", room.whiteRemainder),
+                        "black", userMap.get(room.blackUid).put("remainder", room.blackRemainder)));
             }
             RestContext.success(ctx, list);
         }).onFailure(cause -> {
@@ -103,18 +107,20 @@ public class GameController {
         if (null == room) {
 
         } else {
-            userDao.findAllByUsernames(Set.of(room.white, room.black), MongoStream.fields("username", "nickname", "avatar", "rating")).onSuccess(users -> {
+            userDao.findAllByUids(Set.of(room.whiteUid, room.blackUid), MongoStream.fields(false, "username", "nickname", "avatar", "rating")).onSuccess(users -> {
                 JsonObject res = JsonObject.of(
                         "info", room.info,
                         "steps", room.steps);
                 for (JsonObject user : users) {
-                   if (room.white.equals(user.getString("username"))) {
+                   if (room.whiteUid.equals(user.getString(MongoStream.ID_KEY))) {
                        user.put("remainder", room.whiteRemainder);
                        user.put("captured", room.whiteCaptured);
+                       user.remove(MongoStream.ID_KEY);
                        res.put("white", user);
                    } else {
                        user.put("remainder", room.blackRemainder);
                        user.put("captured", room.blackCaptured);
+                       user.remove(MongoStream.ID_KEY);
                        res.put("black", user);
                    }
                 }
@@ -163,11 +169,12 @@ public class GameController {
             dto.stepDuration = 0;
         }
 
-        UserSession session = SessionStore.sessionUser(ctx);
-        dto.username = session.username;
-        userDao.findOneById(session.uid, MongoStream.fields("nickname", "rating")).onSuccess(user -> {
-            dto.score = user.getInteger("rating");
+        String uid = SessionStore.uid(ctx);
+        dto.uid = uid;
+        userDao.findOneById(uid, MongoStream.fields("username", "nickname", "rating")).onSuccess(user -> {
+            dto.username = user.getString("username");
             dto.nickname = user.getString("nickname");
+            dto.rating = user.getInteger("rating");
             gameManager.createCasualGame(dto).onSuccess(flag -> {
                 if (flag) {
                     RestContext.success(ctx, dto.code);
@@ -185,7 +192,7 @@ public class GameController {
      * 取消游戏
      */
     public void cancelGame(RoutingContext ctx) {
-        gameManager.cancelCasualGame(SessionStore.username(ctx))
+        gameManager.cancelCasualGame(SessionStore.uid(ctx))
                 .onSuccess(game -> RestContext.success(ctx, game != null))
                 .onFailure(__ -> RestContext.fail(ctx, HttpResponseStatus.LOCKED));
     }
@@ -200,19 +207,19 @@ public class GameController {
             return;
         }
 
-        String username = SessionStore.username(ctx);
-        if (null != gameManager.getCasualGameByUsername(username)) {
+        String uid = SessionStore.uid(ctx);
+        if (null != gameManager.getCasualGameByUid(uid)) {
             RestContext.fail(ctx, RestStatus.GAME_CREATED);
             return;
         }
 
         CasualGameInfo g = gameManager.getCasualGame(code);
-        if (null == g || g.username.equals(username)) {
+        if (null == g || g.uid.equals(uid)) {
             RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
             return;
         }
 
-        gameManager.cancelCasualGame(g.username).onSuccess(game -> {
+        gameManager.cancelCasualGame(g.uid).onSuccess(game -> {
             if (null == game || !game.code.equals(code)) {
                 RestContext.fail(ctx, RestStatus.GAME_NOT_EXIST);
                 return;
@@ -226,7 +233,7 @@ public class GameController {
             info.duration = game.duration;
             info.stepDuration = game.stepDuration;
             info.startTime = System.currentTimeMillis();
-            gameManager.createRoom(info, username, g.username);
+            gameManager.createRoom(info, uid, g.uid);
             RestContext.success(ctx, code);
         }).onFailure(e -> {
             log.error("{}: {}", e.getMessage(), code);
@@ -240,7 +247,7 @@ public class GameController {
     public void ranking(RoutingContext ctx) {
         String uid = SessionStore.uid(ctx);
         userDao.findOneById(uid, MongoStream.fields("rating"))
-                .compose(user -> gameManager.startRanking(SessionStore.username(ctx), user.getInteger("rating")))
+                .compose(user -> gameManager.startRanking(SessionStore.uid(ctx), user.getInteger("rating")))
                 .onSuccess(isSuccess -> {
                     RestContext.success(ctx, isSuccess);
                 }).onFailure(e -> {
@@ -253,7 +260,7 @@ public class GameController {
      * 取消排位
      */
     public void cancelRanking(RoutingContext ctx) {
-        gameManager.cancelRanking(SessionStore.username(ctx)).onSuccess(ranking -> {
+        gameManager.cancelRanking(SessionStore.uid(ctx)).onSuccess(ranking -> {
             RestContext.success(ctx);
         }).onFailure(e -> {
             log.error(e.getMessage(), e);

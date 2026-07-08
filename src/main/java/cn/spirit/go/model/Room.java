@@ -23,12 +23,12 @@ public class Room {
     /**
      * 白棋用户
      */
-    public String white;
+    public String whiteUid;
 
     /**
      * 黑棋用户
      */
-    public String black;
+    public String blackUid;
 
     /**
      * 白-每一步剩余时间的累计

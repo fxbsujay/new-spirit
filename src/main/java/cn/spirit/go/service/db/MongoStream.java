@@ -18,6 +18,7 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.reactivestreams.Publisher;
 import java.util.List;
+import java.util.Objects;
 
 public class MongoStream {
 
@@ -101,7 +102,7 @@ public class MongoStream {
      * @return  新增的ID
      */
     public Future<String> insertOne(String collection, JsonObject document) {
-        return promiseOne(getCollection(collection).insertOne(document)).map(v -> v.getInsertedId().asObjectId().getValue().toHexString());
+        return promiseOne(getCollection(collection).insertOne(document)).map(v -> Objects.requireNonNull(v.getInsertedId()).asString().getValue());
     }
 
     /**

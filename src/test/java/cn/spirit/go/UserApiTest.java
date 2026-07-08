@@ -1,5 +1,6 @@
 package cn.spirit.go;
 
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
@@ -22,27 +23,63 @@ public class UserApiTest {
 
     public String password = "admin2";
 
+    public String token = null;
+
+    public WebClient client;
+
+    Future<String> getToken() {
+        if (null == token) {
+            return client.post(8899, "localhost", "/api/auth/signin")
+                    .sendJson(JsonObject.of("username", username, "password", password)).map(resp -> resp.getHeader("set-cookie"));
+        }
+        return Future.succeededFuture(token);
+    }
+
     @Test
-    @DisplayName("Update Info")
-    void sampleServer(Vertx vertx, VertxTestContext testContext) {
-        WebClient client = WebClient.create(vertx);
+    @DisplayName("Query Profile")
+    void queryProfile(Vertx vertx, VertxTestContext testContext) {
+        client = WebClient.create(vertx);
         vertx.deployVerticle(new Application()).onComplete(testContext.succeeding(id -> {
-            client.post(8899, "localhost", "/api/auth/signin")
-                    .sendJson(JsonObject.of("username", username, "password", password)).onSuccess(resp -> {
-                                log.info("Sign in success, {}", resp.getHeader("set-cookie"));
-                                vertx.fileSystem().readFile("upload.jpg").onSuccess(img -> {
-                                    client.post(8899, "localhost", "/api/account/edit")
-                                            .putHeader("Cookie", resp.getHeader("set-cookie"))
-                                            .sendMultipartForm(MultipartForm.create()
-                                                    .attribute("nickname", "test")
-                                                    .binaryFileUpload("image", "upload.jpg", img, "image/jpg")
-                                            )
-                                            .onSuccess(res -> {
-                                                log.info("edit success, res = {}", res.statusCode());
-                                                testContext.completeNow();
-                                            });
-                                });
-                    });
+            getToken().onSuccess(token -> {
+
+                Future<String> profile = client.post(8899, "localhost", "/api/user/profile/" + username)
+                        .putHeader("Cookie", token)
+                        .send()
+                        .map(resp -> resp.bodyAsString("utf-8"));
+
+                Future<String> map = client.post(8899, "localhost", "/api/user/history")
+                        .putHeader("Cookie", token)
+                        .sendJsonObject(JsonObject.of("username", username))
+                        .map(resp -> resp.bodyAsString("utf-8"));
+
+                Future.all(profile, map).onSuccess(result -> {
+                    log.info("Profile Success: {}", result.resultAt(0).toString());
+                    log.info("History Success: {}", result.resultAt(1).toString());
+                    testContext.completeNow();
+                });
+
+            });
         }));
     }
+
+    @Test
+    @DisplayName("Update Info")
+    void updateInfo(Vertx vertx, VertxTestContext testContext) {
+        client = WebClient.create(vertx);
+        vertx.deployVerticle(new Application()).onComplete(testContext.succeeding(id -> {
+            getToken().onSuccess(token -> vertx.fileSystem().readFile("upload.jpg").onSuccess(img -> {
+                client.post(8899, "localhost", "/api/account/edit")
+                        .putHeader("Cookie", token)
+                        .sendMultipartForm(MultipartForm.create()
+                                .attribute("nickname", "test")
+                                .binaryFileUpload("image", "upload.jpg", img, "image/jpg")
+                        )
+                        .onSuccess(res -> {
+                            log.info("edit success, res = {}", res.statusCode());
+                            testContext.completeNow();
+                        });
+            }));
+        }));
+    }
+
 }

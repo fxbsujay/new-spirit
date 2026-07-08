@@ -46,6 +46,10 @@ public class UserDao {
         return client.findAll("user", Filters.in("username", usernames), fields);
     }
 
+    public Future<List<JsonObject>> findAllByUids(Iterable<String> uids, JsonObject fields) {
+        return client.findAll("user", Filters.in(MongoStream.ID_KEY, uids), fields);
+    }
+
     public Future<Long> updatePassword(String uid, String password) {
         return client.updateOne("user", Filters.eq(MongoStream.ID_KEY, uid), JsonObject.of("password", password));
     }

@@ -16,7 +16,7 @@ public class GameDao {
 
 
     public Future<List<JsonObject>> findPage(Bson query, JsonObject fields, int page) {
-        return client.findPage("user", query, fields, page, 10);
+        return client.findPage("game", query, fields, page, 10);
     }
 
     public Future<String> insert(JsonObject obj) {

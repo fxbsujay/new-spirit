@@ -244,7 +244,7 @@ public class AuthController {
             return;
         }
 
-        userDao.findOneByEmail(email,MongoStream.fields(false,"username")).onSuccess(user -> {
+        userDao.findOneByEmail(email, MongoStream.fields(false,"username")).onSuccess(user -> {
             if (null == user) {
                 RestContext.fail(ctx, RestStatus.ACCOUNT_NOT_EXIST);
                 return;

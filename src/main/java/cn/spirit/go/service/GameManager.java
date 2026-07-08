@@ -63,30 +63,27 @@ public class GameManager {
      */
     public Page<CasualGameInfo> searchLobbyGames(UserSession session, GameType type, int page) {
         Page<CasualGameInfo> result = new Page<>();
-        List<CasualGameInfo> games = new ArrayList<>();
+        List<CasualGameInfo> games = new ArrayList<>(10);
         if (page < 0) {
             page = 0;
         }
 
         CasualGameInfo userGame = null;
-        if (session.visitor) {
-            for (CasualGameInfo game : lobbyService.getGames()) {
-                if (null != type && type != game.type) {
-                    continue;
-                }
-                games.add(game);
+
+        for (CasualGameInfo game : lobbyService.getGames()) {
+            if ((!session.visitor && session.uid.equals(game.uid)) || (null != type && type != game.type)) {
+                continue;
             }
-        } else {
-            for (CasualGameInfo game : lobbyService.getGames()) {
-                if (session.username.equals(game.username) || (null != type && type != game.type)) {
-                    continue;
-                }
-                games.add(game);
-            }
-            userGame = lobbyService.getByUsername(session.username);
+            games.add(game);
         }
+
+        if (!session.visitor) {
+            userGame = lobbyService.getByUid(session.uid);
+        }
+
         int min = page * 10;
         if (games.isEmpty() || min > games.size()) {
+            // 返回所有
             result.page = page;
             if (null != userGame) {
                 result.list.add(userGame);
@@ -95,17 +92,15 @@ public class GameManager {
             result.total = result.list.size();
             return result;
         }
+
         int max;
-        if (!session.visitor) {
-            if (null != userGame) {
-                max = min + 9;
-                result.list.add(userGame);
-            } else {
-                max = min + 10;
-            }
+        if (null != userGame) {
+            max = min + 9;
+            result.list.add(userGame);
         } else {
-           max = min + 10;
+            max = min + 10;
         }
+
         result.total = games.size();
         result.list.addAll(games.subList(min, Math.min(max, games.size())));
         result.page = page;
@@ -116,8 +111,8 @@ public class GameManager {
         return lobbyService.get(code);
     }
 
-    public CasualGameInfo getCasualGameByUsername(String username) {
-        return lobbyService.getByUsername(username);
+    public CasualGameInfo getCasualGameByUid(String uid) {
+        return lobbyService.getByUid(uid);
     }
 
     /**
@@ -127,12 +122,12 @@ public class GameManager {
      * @return 是否创建成功
      */
     public Future<Boolean> createCasualGame(CasualGameInfo game) {
-        game.code = generateCode();
-        return lock(game.username, () -> {
+        return lock(game.uid, () -> {
             // 客户端没有链接或者在排位匹配中无法创建休闲对局
-            if (!clientManger.isOnLine(game.username) || rankedService.isMatching(game.username)) {
+            if (!clientManger.isOnLine(game.uid) || rankedService.isMatching(game.uid)) {
                 return Future.succeededFuture(false);
             }
+            game.code = generateCode();
             return Future.succeededFuture(lobbyService.addGame(game));
         });
     }
@@ -140,22 +135,22 @@ public class GameManager {
     /**
      * 取消自己创建的休闲比赛
      *
-     * @param username  用户名
+     * @param uid  用户名
      * @return 取消的比赛信息
      */
-    public Future<CasualGameInfo> cancelCasualGame(String username) {
-        return lock(username, () -> Future.succeededFuture(lobbyService.removeGame(username)));
+    public Future<CasualGameInfo> cancelCasualGame(String uid) {
+        return lock(uid, () -> Future.succeededFuture(lobbyService.removeGame(uid)));
     }
 
     /**
      * 取消自己所有等待中的比赛,大厅创建的比赛以及排放比赛
      *
-     * @param username  用户名
+     * @param uid  用户名
      */
-    public void cancelAllWaitGame(String username) {
-       lock(username, () -> {
-            lobbyService.removeGame(username);
-            rankedService.cancel(username);
+    public void cancelAllWaitGame(String uid) {
+       lock(uid, () -> {
+            lobbyService.removeGame(uid);
+            rankedService.cancel(uid);
             return Future.succeededFuture();
        });
     }
@@ -163,12 +158,12 @@ public class GameManager {
     /**
      * 开始排位
      */
-    public Future<Boolean> startRanking(String username, int rating) {
-        return lock(username, () -> {
-            if (!clientManger.isOnLine(username) || lobbyService.getByUsername(username) != null) {
+    public Future<Boolean> startRanking(String uid, int rating) {
+        return lock(uid, () -> {
+            if (!clientManger.isOnLine(uid) || lobbyService.getByUid(uid) != null) {
                 return Future.succeededFuture(false);
             }
-            return Future.succeededFuture(rankedService.ranking(username, rating, opponent -> {
+            return Future.succeededFuture(rankedService.ranking(uid, rating, opponent -> {
                 RoomInfo info = new RoomInfo();
                 info.code = generateCode();
                 info.mode = GameMode.RANK;
@@ -178,7 +173,7 @@ public class GameManager {
                 info.duration = 60 * 60 * 1000;
                 info.stepDuration = 60 * 1000;
                 info.startTime = System.currentTimeMillis();
-                createRoom(info, username, opponent);
+                createRoom(info, uid, opponent);
             }));
         });
     }
@@ -186,28 +181,28 @@ public class GameManager {
     /**
      * 取消排位
      */
-    public Future<Boolean> cancelRanking(String username) {
-        return lock(username, () -> Future.succeededFuture(rankedService.cancel(username)));
+    public Future<Boolean> cancelRanking(String uid) {
+        return lock(uid, () -> Future.succeededFuture(rankedService.cancel(uid)));
     }
 
     /**
      * 玩家是否在寻找对局中
      *
-     * @param username  用户名
+     * @param uid  用户ID
      */
-    public Boolean isExistWaitGame(String username) {
-        return lobbyService.getByUsername(username) != null || rankedService.isMatching(username);
+    public Boolean isExistWaitGame(String uid) {
+        return lobbyService.getByUid(uid) != null || rankedService.isMatching(uid);
     }
 
-    private <T> Future<T> lock(String username, Supplier<Future<T>> block) {
-        return AppContext.withLock(LockConstant.GAME_LOCK + username, block);
+    private <T> Future<T> lock(String uid, Supplier<Future<T>> block) {
+        return AppContext.withLock(LockConstant.GAME_LOCK + uid, block);
     }
 
     /**
      * 搜索正在进行中的对局，自己的房间
      */
-    public List<Room> searchRooms(String username) {
-        Set<String> userRoomCodes = roomService.getUserRoomCodes(username);
+    public List<Room> searchRooms(String uid) {
+        Set<String> userRoomCodes = roomService.getUserRoomCodes(uid);
 
         if (userRoomCodes.isEmpty()) {
             return Collections.emptyList();

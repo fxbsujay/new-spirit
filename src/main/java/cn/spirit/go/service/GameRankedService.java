@@ -28,13 +28,13 @@ public class GameRankedService {
      * 积分赛匹配
      * 玩家不能有其他模式的等待队列，比如大厅已经创建的自定义对局但未开始
      *
-     * @param username  用户名
+     * @param uid       用户ID
      * @param rating    积分
      * @return 是否加入匹配队列成功
      */
-    public Boolean ranking(String username, Integer rating, Consumer<String> matchSuccess) {
-        Player player = new Player(username, rating);
-        if (isMatching(username)) {
+    public Boolean ranking(String uid, Integer rating, Consumer<String> matchSuccess) {
+        Player player = new Player(uid, rating);
+        if (isMatching(uid)) {
             return false;
         }
         matchingQueue.add(player);
@@ -46,8 +46,8 @@ public class GameRankedService {
                 waitingQueue.add(player);
                 matchingQueue.remove(player);
             } else {
-                log.info("Game Matchmaking successful, Players: [{},{}]", player.username, opponent.username);
-                matchSuccess.accept(opponent.username);
+                log.info("Game Matchmaking successful, Players: [{},{}]", player.uid, opponent.uid);
+                matchSuccess.accept(opponent.uid);
                 matchingQueue.remove(opponent);
                 matchingQueue.remove(player);
             }
@@ -58,16 +58,16 @@ public class GameRankedService {
     /**
      * 是否在排位中
      */
-    public boolean isMatching(String username) {
-        Player player = new Player(username);
+    public boolean isMatching(String uid) {
+        Player player = new Player(uid);
         return waitingQueue.contains(player) || matchingQueue.contains(player);
     }
 
     /**
      * 取消匹配
      */
-    public Boolean cancel(String username) {
-        return waitingQueue.remove(new Player(username, 0));
+    public Boolean cancel(String uid) {
+        return waitingQueue.remove(new Player(uid, 0));
     }
 
     private Future<Player> match(Player p, Integer range) {
@@ -76,7 +76,7 @@ public class GameRankedService {
         }
         for (Player wp : waitingQueue) {
             if (Math.abs(p.compareTo(wp)) <= range) {
-                 return AppContext.withLock(LockConstant.GAME_LOCK + wp.username, () -> {
+                 return AppContext.withLock(LockConstant.GAME_LOCK + wp.uid, () -> {
                      // 删除等待匹配队列加入到正在匹配的队列
                     if (waitingQueue.remove(wp)) {
                         matchingQueue.add(wp);
@@ -98,20 +98,20 @@ public class GameRankedService {
 
     private static class Player implements Comparable<Player> {
 
-        private final String username;
+        private final String uid;
 
         private final Integer rating;
 
         private final Long time;
 
-        public Player(String username, Integer rating) {
-            this.username = username;
+        public Player(String uid, Integer rating) {
+            this.uid = uid;
             this.rating = rating;
             this.time = System.currentTimeMillis();
         }
 
-        private Player(String username) {
-            this(username, 0);
+        private Player(String uid) {
+            this(uid, 0);
         }
 
         @Override
@@ -123,12 +123,12 @@ public class GameRankedService {
         public boolean equals(Object o) {
             if (o == null || getClass() != o.getClass()) return false;
             Player player = (Player) o;
-            return Objects.equals(username, player.username);
+            return Objects.equals(uid, player.uid);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(username);
+            return Objects.hashCode(uid);
         }
     }
 }

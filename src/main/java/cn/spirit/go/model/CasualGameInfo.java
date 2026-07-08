@@ -40,6 +40,11 @@ public class CasualGameInfo {
     /**
      * 创建者
      */
+    public String uid;
+
+    /**
+     * 创建者昵称
+     */
     public String username;
 
     /**
@@ -50,7 +55,7 @@ public class CasualGameInfo {
     /**
      * 积分
      */
-    public Integer score;
+    public Integer rating;
 
     /**
      * 创建时间
