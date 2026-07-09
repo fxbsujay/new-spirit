@@ -256,6 +256,7 @@ public class GameRoomService {
             RoomSocket socket = new RoomSocket(session, ws);
             boolean flag = connection(code, socket);
             if (!flag) {
+                // TODO 通知该会话已经在此房间中，不可重复加入
                 ws.close();
                 return;
             }
