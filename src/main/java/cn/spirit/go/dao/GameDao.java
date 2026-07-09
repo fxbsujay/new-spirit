@@ -1,6 +1,7 @@
 package cn.spirit.go.dao;
 
 import cn.spirit.go.service.db.MongoStream;
+import com.mongodb.client.model.Sorts;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import org.bson.conversions.Bson;
@@ -14,9 +15,8 @@ public class GameDao {
         this.client = client;
     }
 
-
     public Future<List<JsonObject>> findPage(Bson query, JsonObject fields, int page) {
-        return client.findPage("game", query, fields, page, 10);
+        return client.findPage("game", query, Sorts.descending("startTime"), fields, page, 10);
     }
 
     public Future<String> insert(JsonObject obj) {

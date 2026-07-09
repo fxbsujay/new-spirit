@@ -23,7 +23,7 @@ const username = router.params.username
 http.post('/user/profile/' + username).then(res => {
     Object.assign(user, res)
 })
-http.post('/user/history', { page: 1, username }).then(res => {
+http.post('/user/history', { page: 0, username }).then(res => {
     history.value = res
 })
 
@@ -33,7 +33,7 @@ const gameResult = (item) => {
             value: 'tie',
             label: '平'
         }
-    } else if (item[item.winner.toLowerCase()].username === username) {
+    } else if (item[item.winner.toLowerCase().substring(0, 1) + 'u'].username === username) {
         return {
             value: 'victory',
             label: '胜'
@@ -103,13 +103,13 @@ const gameResult = (item) => {
           </div>
           <div class="versus">
             <div class="player left">
-              <div class="player-name">{{ item.white.nickname }}<span class="white-tag"/></div>
-              <div class="player-rating">{{ item.white.username }} ({{ item.white.rating }})</div>
+              <div class="player-name">{{ item.wu.nickname }}<span class="white-tag"/></div>
+              <div class="player-rating">{{ item.wu.username }} ({{ item.wu.rating }})</div>
             </div>
             <div class="vs">{{ gameResult(item).label }}</div>
             <div class="player right">
-              <div class="player-name"><span class="black-tag"/>{{ item.black.nickname }}</div>
-              <div class="player-rating">{{ item.black.username }} ({{ item.black.rating }})</div>
+              <div class="player-name"><span class="black-tag"/>{{ item.bu.nickname }}</div>
+              <div class="player-rating">{{ item.bu.username }} ({{ item.bu.rating }})</div>
             </div>
           </div>
           <div class="secondary">

@@ -2,11 +2,9 @@ package cn.spirit.go.service.db;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.client.model.Sorts;
 import com.mongodb.client.result.UpdateResult;
-import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
-import com.mongodb.reactivestreams.client.MongoCollection;
-import com.mongodb.reactivestreams.client.MongoDatabase;
+import com.mongodb.reactivestreams.client.*;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.internal.VertxInternal;
@@ -22,7 +20,7 @@ import java.util.Objects;
 
 public class MongoStream {
 
-    public static final CodecRegistry commonCodecRegistry = CodecRegistries.fromCodecs(new StringCodec(), new IntegerCodec(), new BooleanCodec(), new DoubleCodec(), new LongCodec(), new BsonDocumentCodec(), new DocumentCodec(), new JsonObjectCodec(JsonObject.of()));
+    public static final CodecRegistry commonCodecRegistry = CodecRegistries.fromCodecs(new StringCodec(), new IntegerCodec(), new BooleanCodec(), new DoubleCodec(), new LongCodec(), new BsonDocumentCodec(), new DocumentCodec(), new JsonObjectCodec(false));
 
     private final MongoDatabase database;
 
@@ -82,12 +80,20 @@ public class MongoStream {
      * 分页查询
      *
      * @param query     查询条件
+     * @param sort      排序
      * @param fields    返回字段
      * @param page      页码
      * @param size      每页条数
      */
-    public Future<List<JsonObject>> findPage(String collection, Bson query, JsonObject fields, int page, int size) {
-        return promiseMany(getCollection(collection).find(query).skip(page * size).limit(size).projection(wrap(fields)));
+    public Future<List<JsonObject>> findPage(String collection, Bson query, Bson sort, JsonObject fields, int page, int size) {
+        FindPublisher<JsonObject> publisher = getCollection(collection).find(query).skip(page * size).limit(size);
+        if (null != sort) {
+            publisher.sort(sort);
+        }
+        if (!fields.isEmpty()) {
+            publisher.projection(wrap(fields));
+        }
+        return promiseMany(publisher);
     }
 
     /**

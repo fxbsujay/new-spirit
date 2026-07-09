@@ -1,6 +1,5 @@
 package cn.spirit.go.service.db.codes;
 
-
 import io.vertx.core.json.JsonObject;
 import org.bson.BsonReader;
 import org.bson.BsonType;

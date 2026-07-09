@@ -49,9 +49,10 @@ public class GameRoomService {
 
     /**
      * 创建房间
-     * @param info      基本信息
-     * @param whiteUid  白棋玩家用户ID
-     * @param blackUid  黑棋玩家用户ID
+     *
+     * @param info     基本信息
+     * @param whiteUid 白棋玩家用户ID
+     * @param blackUid 黑棋玩家用户ID
      * @return 房间 号
      */
     public String createRoom(RoomInfo info, String whiteUid, String blackUid) {
@@ -71,14 +72,14 @@ public class GameRoomService {
      * 玩家落子
      * 0412-1760178234 横坐标纵坐标(x,y)-落子时间戳
      *
-     * @param code      房间编号
-     * @param uid       玩家ID
-     * @param x         纵坐标
-     * @param y         纵坐标
+     * @param code 房间编号
+     * @param uid  玩家ID
+     * @param x    纵坐标
+     * @param y    纵坐标
      */
-    private void move(String uid, String code, Integer x, Integer y) {
+    private Future<Room> move(String uid, String code, Integer x, Integer y) {
         GameStep step = new GameStep(x, y);
-        lock(code, () -> {
+        return lock(code, () -> {
             Room room = get(code);
             if (null == room) {
                 return Future.failedFuture("Room not found");
@@ -145,17 +146,13 @@ public class GameRoomService {
             }
             room.steps.add(step);
             return Future.succeededFuture(room);
-        }).onSuccess(room -> {
-            room.outPrintBoard();
-            log.info("[{}] - Add a step to the game {}, uid={}, x = {}, y = {}", room.whiteUid.equals(uid) ? 'W' : 'B', code, uid, x, y);
-            send(code, SocketPackage.build(PackageType.GAME_STEP, uid,  JsonObject.of("whiteRemainder", room.whiteRemainder, "blackRemainder", room.blackRemainder, "step", step)));
-        }).onFailure(e -> log.error("Adding step failed, code = {}, x = {}, y = {}, failure message = {},", code, x, y, e.getMessage()));
+        });
     }
 
     /**
      * 游戏结束
      *
-     * @param code 编号
+     * @param code   编号
      * @param winner 胜利方
      * @param reason 胜利原因
      */
@@ -272,16 +269,26 @@ public class GameRoomService {
                     ws.close();
                     return;
                 }
-                pck.sender = session.uid;
                 switch (pck.type) {
                     case GAME_STEP:
-                        Map<String, Object> obj = (Map) pck.data;
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> obj = (Map<String, Object>) pck.data;
                         Integer x = (Integer) obj.get("x");
                         Integer y = (Integer) obj.get("y");
                         if (RegexUtils.mismatchGameCode(code) || x == null || y == null) {
                             ws.close();
                         }
-                        move(pck.sender, code, x, y);
+                        move(session.uid, code, x, y)
+                                .onSuccess(room -> {
+                                    JsonObject data = JsonObject.of(
+                                            "whiteRemainder", room.whiteRemainder,
+                                            "blackRemainder", room.blackRemainder,
+                                            "step", room.steps.get(room.steps.size() - 1)
+                                    );
+                                    send(code, SocketPackage.build(PackageType.GAME_STEP, data));
+                                    log.info("[{}] - Add a step to the game {}, uid={}, x = {}, y = {}", room.whiteUid.equals(session.uid) ? 'W' : 'B', code, session.uid, x, y);
+                                    room.outPrintBoard();
+                                }).onFailure(e -> log.error("Adding step failed, code = {}, x = {}, y = {}, failure message = {},", code, x, y, e.getMessage()));
                         break;
                     case GAME_END:
                         Room room = get(code);
@@ -306,10 +313,11 @@ public class GameRoomService {
     }
 
     /**
-     * 游戏网络连接
-     * @param code      房间 号
-     * @param socket    Socket
-     * @return          是否连接成功
+     * 游戏网络连接 必须是玩家
+     *
+     * @param code   房间 号
+     * @param socket Socket
+     * @return 是否连接成功
      */
     private boolean connection(String code, RoomSocket socket) {
         Room room = get(code);
@@ -318,7 +326,7 @@ public class GameRoomService {
         }
         boolean flag = room.sockets.add(socket);
         if (flag) {
-            send(code, SocketPackage.build(PackageType.GAME_CONNECTION, socket.uid, code));
+            send(code, SocketPackage.build(PackageType.GAME_CONNECTION, code));
         }
         return flag;
     }
@@ -333,19 +341,20 @@ public class GameRoomService {
         }
         boolean flag = room.sockets.remove(socket);
         if (flag) {
-            send(code, SocketPackage.build(PackageType.GAME_DISCONNECTION, socket.uid, code));
+            send(code, SocketPackage.build(PackageType.GAME_DISCONNECTION, code));
         }
     }
 
     /**
      * 发送消息
      *
-     * @param pack          消息包
-     * @param code          对局编号
+     * @param pack 消息包
+     * @param code 对局编号
      */
     private void send(String code, SocketPackage pack) {
         Room room = rooms.get(code);
-        if (room == null || (!room.whiteUid.equals(pack.sender) && !room.blackUid.equals(pack.sender))) {
+        if (null == room) {
+            log.error("send code {}, but room is null", code);
             return;
         }
         String msg = Json.encode(pack);
@@ -354,6 +363,11 @@ public class GameRoomService {
         }
     }
 
+    /**
+     * 房间锁
+     *
+     * @param code  房间 号
+     */
     private <T> Future<T> lock(String code, Supplier<Future<T>> block) {
         return AppContext.withLock(LockConstant.ROOM_LOCK + code, block);
     }

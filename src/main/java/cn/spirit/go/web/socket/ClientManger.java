@@ -16,7 +16,7 @@ public class ClientManger {
 
     /**
      * 客户端
-     * <username, sessionId, socket>
+     * <uid, sessionId, socket>
      */
     private final Map<String, Set<String>> userSessions = new HashMap<>();
 
@@ -27,7 +27,7 @@ public class ClientManger {
      * @param session 客户端 Session
      */
     public boolean contains(UserSession session) {
-        Set<String> sessions = userSessions.get(session.username);
+        Set<String> sessions = userSessions.get(session.uid);
         return null != sessions && sessions.contains(session.sId);
     }
 
@@ -41,11 +41,11 @@ public class ClientManger {
         if (contains(session)) {
             return false;
         }
-        Set<String> sessions = userSessions.get(session.username);
+        Set<String> sessions = userSessions.get(session.uid);
         if (null == sessions) {
             sessions = new HashSet<>();
             sessions.add(session.sId);
-            userSessions.put(session.username, sessions);
+            userSessions.put(session.uid, sessions);
             sockets.put(session.sId, socket);
         } else {
             sessions.add(session.sId);
@@ -60,12 +60,12 @@ public class ClientManger {
      * @param session 客户端 Session
      */
     public void cancel(UserSession session) {
-        Set<String> sessions = userSessions.get(session.username);
+        Set<String> sessions = userSessions.get(session.uid);
         if (null != sessions) {
             sessions.remove(session.sId);
             sockets.remove(session.sId);
             if (sessions.isEmpty()) {
-                userSessions.remove(session.username);
+                userSessions.remove(session.uid);
             }
         }
     }
@@ -73,21 +73,21 @@ public class ClientManger {
     /**
      * 用户是否在线
      */
-    public boolean isOnLine(String username) {
-        return userSessions.containsKey(username);
+    public boolean isOnLine(String uid) {
+        return userSessions.containsKey(uid);
     }
 
     /**
      * 发送消息
      *
      * @param pack          消息包
-     * @param usernames     接收方
+     * @param uids          接收方
      */
-    public void sendToUser(SocketPackage pack, String ...usernames) {
+    public void sendToUser(SocketPackage pack, String ...uids) {
         String msg = Json.encode(pack);
-        log.info("Sending message to usernames: {}, package: {}", usernames, msg);
-        for (String username : usernames) {
-            Set<String> sessions = userSessions.get(username);
+        log.info("Sending message to uids: {}, package: {}", uids, msg);
+        for (String uid : uids) {
+            Set<String> sessions = userSessions.get(uid);
             if (null != sessions) {
                 send(msg, sessions.toArray(new String[0]));
             }

@@ -1,6 +1,5 @@
 package cn.spirit.go.model;
 
-import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.web.UserSession;
 import io.vertx.core.http.ServerWebSocket;
 import org.slf4j.Logger;
@@ -11,10 +10,14 @@ public class RoomSocket {
 
     private static final Logger log = LoggerFactory.getLogger(RoomSocket.class);
 
-    public String socketId;
-
+    /**
+     * 用户ID
+     */
     public String uid;
 
+    /**
+     * Session Id
+     */
     public String sid;
 
     private final ServerWebSocket socket;
@@ -23,7 +26,6 @@ public class RoomSocket {
         this.sid = session.sId;
         this.uid = session.uid;
         this.socket = socket;
-        this.socketId = StringUtils.uuid();
     }
 
     public ServerWebSocket getConnection() {
@@ -41,12 +43,12 @@ public class RoomSocket {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         RoomSocket that = (RoomSocket) o;
-        return Objects.equals(socketId, that.socketId);
+        return Objects.equals(sid, that.sid);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(socketId);
+        return Objects.hashCode(sid);
     }
 
 }

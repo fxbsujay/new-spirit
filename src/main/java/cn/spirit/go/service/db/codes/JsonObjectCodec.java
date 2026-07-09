@@ -1,6 +1,5 @@
 package cn.spirit.go.service.db.codes;
 
-
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.bson.*;
@@ -16,7 +15,6 @@ import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-
 import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
 /**
@@ -36,15 +34,14 @@ public class JsonObjectCodec extends AbstractJsonCodec<JsonObject, JsonArray> im
     public static final String TIMESTAMP_TIME_FIELD = "t";
     public static final String TIMESTAMP_INCREMENT_FIELD = "i";
 
-    private boolean useObjectId = false;
+    private final boolean useObjectId;
 
-    public JsonObjectCodec(JsonObject config) {
-        useObjectId = config.getBoolean("useObjectId", false);
+    public JsonObjectCodec(boolean useObjectId) {
+        this.useObjectId = useObjectId;
     }
 
     @Override
     public JsonObject generateIdIfAbsentFromDocument(JsonObject json) {
-
         if (!documentHasId(json)) {
             String value = generateHexObjectId();
             if (useObjectId) json.put(ID_FIELD, new JsonObject().put(OID_FIELD, value));
@@ -90,10 +87,7 @@ public class JsonObjectCodec extends AbstractJsonCodec<JsonObject, JsonArray> im
 
     @Override
     protected boolean isObjectIdInstance(Object instance) {
-        if (instance instanceof JsonObject && ((JsonObject) instance).containsKey(OID_FIELD)) {
-            return true;
-        }
-        return false;
+        return instance instanceof JsonObject && ((JsonObject) instance).containsKey(OID_FIELD);
     }
 
     @Override
