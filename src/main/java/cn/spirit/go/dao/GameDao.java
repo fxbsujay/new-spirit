@@ -7,6 +7,9 @@ import io.vertx.core.json.JsonObject;
 import org.bson.conversions.Bson;
 import java.util.List;
 
+/**
+ * 对局记录
+ */
 public class GameDao {
 
     private final MongoStream client;

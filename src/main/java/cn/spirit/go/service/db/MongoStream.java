@@ -2,14 +2,18 @@ package cn.spirit.go.service.db;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
-import com.mongodb.client.model.Sorts;
+import com.mongodb.TransactionOptions;
+import com.mongodb.WriteConcern;
+import com.mongodb.client.result.InsertOneResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.*;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.internal.PromiseInternal;
 import io.vertx.core.internal.VertxInternal;
 import io.vertx.core.json.JsonObject;
 import cn.spirit.go.service.db.codes.JsonObjectCodec;
+import org.bson.Document;
 import org.bson.codecs.*;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -156,5 +160,17 @@ public class MongoStream {
             query.put(field, 0);
         }
         return query;
+    }
+
+    public void transaction(Future<Void> future) {
+
+        promiseOne(client.startSession()).onSuccess(session -> {
+            // 提交
+            session.commitTransaction();
+            // 终止
+            session.abortTransaction();
+            // 关闭
+            session.close();
+        });
     }
 }

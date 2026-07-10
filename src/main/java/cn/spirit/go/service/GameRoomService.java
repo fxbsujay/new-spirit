@@ -217,6 +217,8 @@ public class GameRoomService {
                 steps.add(String.valueOf(Room.LOCATION[step.x]) + step.y + "-" + step.timestamp);
             }
             game.put("steps", steps);
+
+
             int whiteAddRating = winner == GameWinner.WHITE ? 20 : -20;
             gameDao.insert(game).compose(res -> userDao.updateRating(room.whiteUid, whiteAddRating, room.blackUid, -whiteAddRating))
                     .onSuccess(count -> log.info("Save game success, code = {}", code))
@@ -256,7 +258,8 @@ public class GameRoomService {
             RoomSocket socket = new RoomSocket(session, ws);
             boolean flag = connection(code, socket);
             if (!flag) {
-                // TODO 通知该会话已经在此房间中，不可重复加入
+                // 一个用户只能有一个会话在此房间内
+                socket.send(Json.encode(SocketPackage.build(PackageType.ROOM_CONNECTION_EXISTS, code)));
                 ws.close();
                 return;
             }
@@ -271,13 +274,14 @@ public class GameRoomService {
                     return;
                 }
                 switch (pck.type) {
-                    case GAME_STEP:
+                    case ROOM_STEP:
                         @SuppressWarnings("unchecked")
                         Map<String, Object> obj = (Map<String, Object>) pck.data;
                         Integer x = (Integer) obj.get("x");
                         Integer y = (Integer) obj.get("y");
                         if (RegexUtils.mismatchGameCode(code) || x == null || y == null) {
                             ws.close();
+                            return;
                         }
                         move(session.uid, code, x, y)
                                 .onSuccess(room -> {
@@ -286,7 +290,7 @@ public class GameRoomService {
                                             "blackRemainder", room.blackRemainder,
                                             "step", room.steps.get(room.steps.size() - 1)
                                     );
-                                    send(code, SocketPackage.build(PackageType.GAME_STEP, data));
+                                    send(code, SocketPackage.build(PackageType.ROOM_STEP, data));
                                     log.info("[{}] - Add a step to the game {}, uid={}, x = {}, y = {}", room.whiteUid.equals(session.uid) ? 'W' : 'B', code, session.uid, x, y);
                                     room.outPrintBoard();
                                 }).onFailure(e -> log.error("Adding step failed, code = {}, x = {}, y = {}, failure message = {},", code, x, y, e.getMessage()));
@@ -301,7 +305,7 @@ public class GameRoomService {
                                 end(code, winner, reason);
                             }
                         }
-                    case GAME_CHAT:
+                    case ROOM_CHAT:
                         send(code, pck);
                         break;
                     default:
@@ -327,7 +331,7 @@ public class GameRoomService {
         }
         boolean flag = room.sockets.add(socket);
         if (flag) {
-            send(code, SocketPackage.build(PackageType.GAME_CONNECTION, code));
+            send(code, SocketPackage.build(PackageType.ROOM_CONNECTION, code));
         }
         return flag;
     }
@@ -342,7 +346,7 @@ public class GameRoomService {
         }
         boolean flag = room.sockets.remove(socket);
         if (flag) {
-            send(code, SocketPackage.build(PackageType.GAME_DISCONNECTION, code));
+            send(code, SocketPackage.build(PackageType.ROOM_DISCONNECTION, code));
         }
     }
 

@@ -5,12 +5,16 @@ public enum PackageType {
     GAME_START,
     // 游戏结束
     GAME_END,
+
     // 加入房间通知
-    GAME_CONNECTION,
+    ROOM_CONNECTION,
     // 离开房间通知
-    GAME_DISCONNECTION,
+    ROOM_DISCONNECTION,
+    // 已经连接了不允许再次连接
+    ROOM_CONNECTION_EXISTS,
     // 游戏走棋
-    GAME_STEP,
+    ROOM_STEP,
     // 游戏聊天
-    GAME_CHAT
+    ROOM_CHAT,
+
 }

@@ -10,6 +10,9 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import java.util.List;
 
+/**
+ * 用户
+ */
 public class UserDao {
 
     private final MongoStream client;
