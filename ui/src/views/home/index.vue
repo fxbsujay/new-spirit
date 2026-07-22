@@ -96,9 +96,10 @@ watch(waitGame, searchHandle)
       </table>
     </div>
     <div class="lobby-play">
+
       <Responsive :aspect-ratio="0.5">
         <div class="banner">
-          <img alt="" style="width: auto; height: 100%" src="https://picsum.photos/200/100"/>
+
         </div>
       </Responsive>
     </div>

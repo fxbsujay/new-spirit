@@ -1,12 +1,18 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
+import Vue from '@vitejs/plugin-vue'
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
+import { quasar, transformAssetUrls } from '@quasar/vite-plugin'
+
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    vue(),
+    Vue({
+      template: { transformAssetUrls },
+    }),
+    // https://github.com/vuetifyjs/vuetify-loader/tree/master/packages/vite-plugin#readme
+    quasar(),
     createSvgIconsPlugin({
       iconDirs: [fileURLToPath(new URL('./src/assets/icons', import.meta.url))],
       symbolId: 'icon-[name]'
