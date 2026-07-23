@@ -96,7 +96,14 @@ watch(waitGame, searchHandle)
       </table>
     </div>
     <div class="lobby-play">
-
+      <v-btn
+          class="text-none ms-4 text-white"
+          color="blue-darken-4"
+          rounded="0"
+          variant="flat"
+      >
+        Accept Cookies
+      </v-btn>
       <Responsive :aspect-ratio="0.5">
         <div class="banner">
 

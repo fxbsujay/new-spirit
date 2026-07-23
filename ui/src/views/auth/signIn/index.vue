@@ -66,11 +66,6 @@ const submitHandle = () => {
           </div>
         </div>
         <button type="submit" class="black button">登录</button>
-        <q-btn style="width: 100%;background-color: #312D2A" padding="10px" :loading="loading" size="1rem" color="with" label="登录" type="submit">
-          <template #loading>
-            <q-spinner-facebook/>
-          </template>
-        </q-btn>
         <div class="alternative">
           <RouterLink to="">重置密码</RouterLink>
           <RouterLink to="">邮箱登录</RouterLink>
