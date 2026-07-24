@@ -11,15 +11,29 @@ const loading = ref(false)
 const passwordReveal = ref(false)
 const userStore = useUserStore()
 
-const submitHandle = () => {
+const rules = {
+    username: [
+        value => !value || !/^[A-Za-z][A-Za-z0-9@!._+-]{1,19}$/.test(value) ? '请输入2-20位字母开头的字母数字，或有效的邮箱地址': true,
+    ],
+    password: [
+        value => !value || !/^[a-zA-Z0-9@!$^.*_%]{6,30}$/.test(value) ? '请输入6-30位字母，数字或以下@!$^.*_%合法符号': true,
+    ]
+}
+const submitHandle = async (event) => {
+
     loading.value = true
-    http.post('/auth/signin', formState).then(() => {
-        userStore.login()
+    const { valid } = await event
+    if (valid) {
+        http.post('/auth/signin', formState).then(() => {
+            userStore.login()
+            loading.value = false
+        }).catch(err => {
+            console.log(err)
+            loading.value = false
+        })
+    } else {
         loading.value = false
-    }).catch(err => {
-        console.log(err)
-        loading.value = false
-    })
+    }
 }
 </script>
 
@@ -27,50 +41,36 @@ const submitHandle = () => {
   <div class="content-box">
     <div class="card form-wrap">
       <h2 class="title">登录</h2>
-      <form class="form" @submit.prevent="submitHandle">
-        <div class="form-group">
-          <div class="border-input-wrap">
-            <label class="label">
-              用户名 或 邮箱
-            </label>
-            <input
-                class="input"
-                required
-                pattern="^[a-zA-Z0-9@!._-+]{2,20}$"
-                title="请输入2-20位字母开头的字母数字，或有效的邮箱地址"
-                v-model="formState.username"
-            />
-          </div>
-        </div>
-        <div class="form-group">
-          <div class="border-input-wrap">
-            <label class="label">
-              密码
-            </label>
-            <div class="password-reveal">
-              <input
-                  class="input"
-                  required
-                  pattern="^[a-zA-Z0-9@!$^.*_%]{6,30}$"
-                  title="6-30位字，数字或以下@!$^.*_%合法符号"
-                  v-model="formState.password"
-                  :type="passwordReveal ? 'input' : 'password'"
-              />
-              <Icon
-                  class="reveal-icon"
-                  size="1rem"
-                  :name="passwordReveal ? 'eye-outline' : 'eye-off-outline'"
-                  @click="passwordReveal = !passwordReveal"
-              />
-            </div>
-          </div>
-        </div>
-        <button type="submit" class="black button">登录</button>
+      <v-form class="form" validate-on="blur" @submit.prevent="submitHandle">
+        <v-text-field
+            :readonly="loading"
+            density="comfortable"
+            v-model="formState.username"
+            :rules="rules.username"
+            label="用户名 或 邮箱"
+            variant="outlined"
+            class="mb-2"
+        />
+        <v-text-field
+            @click:append-inner="passwordReveal = !passwordReveal"
+            :append-inner-icon="passwordReveal ? 'custom:eye' : 'custom:eye-off'"
+            :readonly="loading"
+            :type="passwordReveal ? 'text' : 'password'"
+            density="comfortable"
+            v-model="formState.password"
+            :rules="rules.password"
+            variant="outlined"
+            label="密码"
+            class="mb-2"
+        />
+        <v-btn :loading="loading" class="mt-2 mb-2" type="submit" block color="black" size="large">
+          登录
+        </v-btn>
         <div class="alternative">
-          <RouterLink to="">重置密码</RouterLink>
+          <RouterLink to="">忘记密码？</RouterLink>
           <RouterLink to="">邮箱登录</RouterLink>
         </div>
-      </form>
+      </v-form>
     </div>
     <div class="card signup-wrap">
       <div class="title">没有 Spirit 账户?</div>
