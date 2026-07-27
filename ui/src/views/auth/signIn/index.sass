@@ -1,0 +1,77 @@
+@use "vuetify"
+
+.content-box
+  height: 100%
+  min-height: fit-content
+  display: flex
+  align-items: center
+  flex-direction: column
+  justify-content: center
+
+.card
+  position: relative
+  background-color: #fff
+  box-shadow: rgba(0, 0, 0, 0.05) 0 1.25rem 1.6875rem 0
+  border-radius: 5px
+  width: 100%
+  max-width: 420px
+  padding: 2rem 2.5rem
+
+.form-wrap
+  .title
+    font-weight: 500
+    font-size: 2.5rem
+    color: map-get(vuetify.$grey, 'darken-4')
+    margin-bottom: 2rem
+    margin-top: 0
+
+  .alternative
+    display: flex
+    align-items: center
+    justify-content: space-between
+    a
+      font-size: 14px
+      color: map-get(vuetify.$blue, 'darken-4')
+
+.signup-wrap
+  z-index: 2
+  margin-top: 25px
+
+  .title
+    font-size: 24px
+    font-weight: 600
+    margin: 0 0 20px
+    padding: 0
+    text-align: center
+    color: map-get(vuetify.$grey, 'darken-4')
+    font-family: inherit
+
+  .links
+    width: 100%
+    text-align: center
+    font-size: 12px
+    margin: 20px 0 0 0
+    padding: 0
+
+    a
+      color: map-get(vuetify.$grey, 'darken-3')
+      &:hover
+        color: map-get(vuetify.$blue, 'darken-4')
+
+    li
+      display: inline-block
+      position: relative
+      padding: 3px 0 0 8px
+      margin: 0 0 0 6px
+      color: #676262
+
+      &:before
+        content: "|"
+        position: absolute
+        left: 0
+        bottom: 1px
+
+    li:first-child:before
+      content: none
+
+
