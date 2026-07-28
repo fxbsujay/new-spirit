@@ -1,19 +1,25 @@
 <script setup>
 import http from '@/utils/http.js'
-import { debounce, passwordStrength } from '@/utils/index.js'
+import { passwordStrength } from '@/utils/index.js'
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const rules = {
-    username: [
-        value => !value || !/^[A-Za-z][a-zA-Z0-9]{1,19}/.test(value) ? '请输入以英文字母开头，2-20位字母或数字': true,
-    ],
+    username: {
+        value: [
+            value => !value || !/^[A-Za-z][a-zA-Z0-9]{1,19}/.test(value) ? '请输入以英文字母开头，2-20位字母或数字': true,
+        ],
+        message: ''
+    },
     password: [
         value => !value || !/^[a-zA-Z0-9@!$^.*_%]{6,30}$/.test(value) ? '请输入6-30位字母，数字或以下@!$^.*_%合法符号': true,
     ],
-    email: [
-        value => !value ? '请输入电子邮箱': true
-    ]
+    email: {
+        value: [
+            value => !value ? '请输入电子邮箱': true
+        ],
+        message: ''
+    }
 }
 
 const formState = reactive({
@@ -23,7 +29,7 @@ const formState = reactive({
     code: ''
 })
 
-const stage = ref(true)
+const stage = ref(false)
 const loading = ref(false)
 const interval = ref()
 const outTime = ref(0)
@@ -31,19 +37,21 @@ const strength = ref(0)
 const router = useRouter()
 const passwordReveal = ref(false)
 
-const submitHandle = debounce(() => {
-    if (loading.value) {
-        return
+const submitHandle = async (event) => {
+    const { valid } = await event
+
+    if (valid) {
+        console.log('----------')
+        if (stage.value) {
+            sendCodeHandler()
+        } else {
+            loading.value = true
+            http.post('/auth/signup', formState).then(() => {
+                router.push({ path: '/sign-up/success', params: { username: formState.username } })
+            }).catch(() => loading.value = false)
+        }
     }
-    if (stage.value) {
-        sendCodeHandler()
-    } else {
-        loading.value = true
-        http.post('/auth/signup', formState).then(() => {
-            router.push({ path: '/sign-up/success', params: { username: formState.username } })
-        }).catch(() => loading.value = false)
-    }
-})
+}
 
 const sendCodeHandler = () => {
     loading.value = true
@@ -59,9 +67,14 @@ const sendCodeHandler = () => {
                 interval.value = null
             }
         }, 1000)
-    }).catch(() => {
+    }).catch(err => {
         outTime.value = 0
         loading.value = false
+        if (err.code === '10001') {
+            rules.email.message = err.message
+        } else if (err.code === '10002') {
+            rules.username.message = err.message
+        }
     })
 }
 
@@ -80,18 +93,23 @@ const passwordInputHandler = (event) => {
 <template>
   <div class="content-box">
     <div class="card form-wrap">
-      <h2 class="title">注册</h2>
       <v-form class="form" validate-on="blur" @submit.prevent="submitHandle">
         <div v-if="stage">
+          <h2 class="title">注册</h2>
+
+          <label class="text-label-large">用户名</label>
           <v-text-field
               :readonly="loading"
               density="comfortable"
               v-model="formState.username"
-              :rules="rules.username"
-              label="用户名"
+              :rules="rules.username.value"
+              :error-messages="rules.username.message"
               variant="outlined"
-              class="mb-2"
+              rounded="0"
+              @input="v => rules.username.message = ''"
+              class="mt-2"
           />
+          <label class="text-label-large">密码</label>
           <v-text-field
               @click:append-inner="passwordReveal = !passwordReveal"
               :append-inner-icon="passwordReveal ? 'custom:eye' : 'custom:eye-off'"
@@ -100,55 +118,53 @@ const passwordInputHandler = (event) => {
               density="comfortable"
               v-model="formState.password"
               :rules="rules.password"
+              @input="passwordInputHandler"
               variant="outlined"
-              label="密码"
-              class="mb-2"
+              rounded="0"
+              class="mt-2"
           />
-          <div class="form-group password-complexity">
-            <label class="form-help">密码强度</label>
-            <div class="password-complexity-meter">
-              <span :class="strength > 0 ? 'action' : ''"></span>
-              <span :class="strength > 1 ? 'action' : ''"></span>
-              <span :class="strength > 2 ? 'action' : ''"></span>
-              <span :class="strength > 3 ? 'action' : ''"></span>
-            </div>
+          <label class="text-label-large">密码强度</label>
+          <div class="password-complexity-meter mt-3 mb-6">
+            <span :class="strength > 0 ? 'action' : ''"></span>
+            <span :class="strength > 1 ? 'action' : ''"></span>
+            <span :class="strength > 2 ? 'action' : ''"></span>
+            <span :class="strength > 3 ? 'action' : ''"></span>
           </div>
+          <label class="text-label-large">电子邮箱</label>
           <v-text-field
               :readonly="loading"
               density="comfortable"
-              v-model="formState.username"
-              :rules="rules.username"
-              label="电子邮箱"
+              v-model="formState.email"
+              :rules="rules.email.value"
+              :error-messages="rules.email.message"
+              @input="v => rules.email.message = ''"
+              rounded="0"
               variant="outlined"
-              class="mb-2"
+              class="mt-2 mb-2"
           />
-          <div class="form-group">
-            <div class="border-input-wrap">
-              <label class="label">电子邮箱</label>
-              <input class="input" :disabled="loading" type="email" v-model="formState.email" required/>
-              <p class="form-help">仅用于重置密码</p>
-            </div>
+        </div>
+        <div class="mb-10" v-else>
+          <h3 class="text-title-large mt-0 mb-1">邮箱验证</h3>
+          <div class="text-body-medium font-weight-light">
+            Enter the code we just sent to your mobile phone <span class="font-weight-black text-primary">+1 408 555 1212</span>
+          </div>
+
+          <v-otp-input class="pa-0" v-model="formState.code" rounded="0" :length="5" :pattern="/[A-Z0-9]/"></v-otp-input>
+          <div class="text-body-medium ml-2 mr-2">
+            <span>验证码已发送到您的邮箱</span>
+            <span :class="outTime ? 'float-right' : 'float-right'">{{ outTime ? `${ outTime } 秒后可重新发送` : '重新发送' }}</span>
           </div>
         </div>
-        <div class="form-group" v-else>
-          <div class="border-input-wrap">
-            <label class="label">验证码</label>
-            <input class="input" :disabled="loading" v-model="formState.code" required pattern="[A-Z0-9]{5}" title="5位字母或数字"/>
-            <p class="form-help">
-              验证码已发送到您的邮箱
-              <a style="float: right" class="form-help" :class="!outTime ? 'code-help' : ''" @click="resendCodeHandler">
-                {{ outTime ? `${ outTime } 秒后可重新发送` : '重新发送' }}
-              </a>
-            </p>
-          </div>
-        </div>
-        <button type="submit" class="black button">提交</button>
+
+        <v-btn :loading="loading" rounded="0" class="mt-4 mb-2" type="submit" block color="black" size="large">
+          提交
+        </v-btn>
       </v-form>
     </div>
   </div>
 </template>
 
-<style lang="less" scoped>
-@import './index.less';
+<style lang="sass" scoped>
+@use 'index.sass'
 </style>
 

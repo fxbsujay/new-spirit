@@ -53,7 +53,6 @@ class Http {
                 } else if (res.status === 500) {
                     if (Number.isInteger(parseInt(res.statusText))) {
                         res.json().then(err => {
-                            snackbar.warning(err.message)
                             reject(err)
                         }).catch(() => {
                             reject()

@@ -1,0 +1,41 @@
+@use "vuetify"
+
+.content-box
+  height: 100%
+  display: flex
+  align-items: center
+  flex-direction: column
+  justify-content: center
+
+
+.card
+  position: relative
+  background-color: #fff
+  box-shadow: rgba(0, 0, 0, 0.05) 0 1.25rem 1.6875rem 0
+  border-radius: 5px
+  width: 100%
+  max-width: 400px
+  padding: 2rem 2.5rem
+
+.form-wrap
+  .title
+    font-weight: 500
+    font-size: 2.5rem
+    color: map-get(vuetify.$grey, 'darken-4')
+    margin-bottom: 2rem
+    margin-top: 0
+
+
+.password-complexity-meter
+  display: flex
+  grid-gap: .25rem
+  height: .4rem
+
+  & > span
+    background-color: map-get(vuetify.$grey, 'lighten-2')
+    width: 25%
+
+    &.action
+      background-color: map-get(vuetify.$green, 'base')
+
+

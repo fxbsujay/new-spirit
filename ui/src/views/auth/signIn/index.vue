@@ -44,15 +44,17 @@ const submitHandle = async (event) => {
     <div class="card form-wrap">
       <h2 class="title darken-4">登录</h2>
       <v-form class="form" validate-on="blur" @submit.prevent="submitHandle">
+        <label class="text-label-large ">用户名 或 邮箱</label>
         <v-text-field
             :readonly="loading"
             density="comfortable"
             v-model="formState.username"
             :rules="rules.username"
-            label="用户名 或 邮箱"
             variant="outlined"
-            class="mb-2"
+            rounded="0"
+            class="mt-2"
         />
+        <label class="text-label-large">密码</label>
         <v-text-field
             @click:append-inner="passwordReveal = !passwordReveal"
             :append-inner-icon="passwordReveal ? 'custom:eye' : 'custom:eye-off'"
@@ -62,10 +64,11 @@ const submitHandle = async (event) => {
             v-model="formState.password"
             :rules="rules.password"
             variant="outlined"
+            rounded="0"
             label="密码"
-            class="mb-2"
+            class="mb-2 mt-2"
         />
-        <v-btn :loading="loading" class="mt-2 mb-2" type="submit" block color="black" size="large">
+        <v-btn :loading="loading"  rounded="0" class="mt-4 mb-2" type="submit" block color="black" size="large">
           登录
         </v-btn>
         <div class="alternative red-accent-4">
@@ -80,8 +83,8 @@ const submitHandle = async (event) => {
         <v-btn
             class="w-100"
             color="grey-darken-4"
-            rounded="0"
             variant="outlined"
+            rounded="0"
             size="large"
         >
           创建账户
