@@ -14,7 +14,7 @@
   box-shadow: rgba(0, 0, 0, 0.05) 0 1.25rem 1.6875rem 0
   border-radius: 5px
   width: 100%
-  max-width: 400px
+  max-width: 420px
   padding: 2rem 2.5rem
 
 .form-wrap
@@ -25,6 +25,9 @@
     margin-bottom: 2rem
     margin-top: 0
 
+  :deep(.v-otp-input__content)
+    padding-right: 0
+    padding-left: 0
 
 .password-complexity-meter
   display: flex
@@ -37,5 +40,6 @@
 
     &.action
       background-color: map-get(vuetify.$green, 'base')
+
 
 

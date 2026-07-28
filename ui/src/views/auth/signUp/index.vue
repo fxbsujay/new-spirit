@@ -29,7 +29,7 @@ const formState = reactive({
     code: ''
 })
 
-const stage = ref(false)
+const stage = ref(true)
 const loading = ref(false)
 const interval = ref()
 const outTime = ref(0)
@@ -96,7 +96,6 @@ const passwordInputHandler = (event) => {
       <v-form class="form" validate-on="blur" @submit.prevent="submitHandle">
         <div v-if="stage">
           <h2 class="title">注册</h2>
-
           <label class="text-label-large">用户名</label>
           <v-text-field
               :readonly="loading"
@@ -105,7 +104,6 @@ const passwordInputHandler = (event) => {
               :rules="rules.username.value"
               :error-messages="rules.username.message"
               variant="outlined"
-              rounded="0"
               @input="v => rules.username.message = ''"
               class="mt-2"
           />
@@ -120,7 +118,6 @@ const passwordInputHandler = (event) => {
               :rules="rules.password"
               @input="passwordInputHandler"
               variant="outlined"
-              rounded="0"
               class="mt-2"
           />
           <label class="text-label-large">密码强度</label>
@@ -138,26 +135,31 @@ const passwordInputHandler = (event) => {
               :rules="rules.email.value"
               :error-messages="rules.email.message"
               @input="v => rules.email.message = ''"
-              rounded="0"
               variant="outlined"
               class="mt-2 mb-2"
           />
         </div>
-        <div class="mb-10" v-else>
-          <h3 class="text-title-large mt-0 mb-1">邮箱验证</h3>
+        <div v-else>
+          <h3 class="text-title-large mt-0 mb-2">邮箱验证</h3>
           <div class="text-body-medium font-weight-light">
-            Enter the code we just sent to your mobile phone <span class="font-weight-black text-primary">+1 408 555 1212</span>
+            发送验证码到邮箱 <span class="font-weight-black text-primary">{{ formState.email }}</span>
           </div>
+          <v-otp-input
+              v-model="formState.code"
+              length="5"
+              class="mt-3 ms-n2"
+              variant="underlined"
+          ></v-otp-input>
 
-          <v-otp-input class="pa-0" v-model="formState.code" rounded="0" :length="5" :pattern="/[A-Z0-9]/"></v-otp-input>
-          <div class="text-body-medium ml-2 mr-2">
-            <span>验证码已发送到您的邮箱</span>
-            <span :class="outTime ? 'float-right' : 'float-right'">{{ outTime ? `${ outTime } 秒后可重新发送` : '重新发送' }}</span>
+          <div class="mb-8 text-body-medium font-weight-light d-flex align-center justify-space-between">
+            <span >没有收到 <strong>验证码</strong>?</span>
+            <v-btn :loading="loading" color="blue-darken-4" size="small" variant="text" @click="resendCodeHandler">
+              {{ outTime ? `${ outTime } 秒后可重新发送` : '重新发送' }}
+            </v-btn>
           </div>
         </div>
-
-        <v-btn :loading="loading" rounded="0" class="mt-4 mb-2" type="submit" block color="black" size="large">
-          提交
+        <v-btn :loading="loading" class="mt-4 mb-2" type="submit" block color="black" size="large">
+          {{ stage ? '提交' : '验证' }}
         </v-btn>
       </v-form>
     </div>

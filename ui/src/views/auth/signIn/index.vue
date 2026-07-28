@@ -51,7 +51,6 @@ const submitHandle = async (event) => {
             v-model="formState.username"
             :rules="rules.username"
             variant="outlined"
-            rounded="0"
             class="mt-2"
         />
         <label class="text-label-large">密码</label>
@@ -64,11 +63,9 @@ const submitHandle = async (event) => {
             v-model="formState.password"
             :rules="rules.password"
             variant="outlined"
-            rounded="0"
-            label="密码"
             class="mb-2 mt-2"
         />
-        <v-btn :loading="loading"  rounded="0" class="mt-4 mb-2" type="submit" block color="black" size="large">
+        <v-btn :loading="loading" class="mt-4 mb-2" type="submit" block color="black" size="large">
           登录
         </v-btn>
         <div class="alternative red-accent-4">
@@ -84,7 +81,6 @@ const submitHandle = async (event) => {
             class="w-100"
             color="grey-darken-4"
             variant="outlined"
-            rounded="0"
             size="large"
         >
           创建账户
