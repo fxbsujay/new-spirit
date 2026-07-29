@@ -3,6 +3,7 @@ import http from '@/utils/http.js'
 import { passwordStrength } from '@/utils/index.js'
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import Icon from "@/components/icon/Icon.vue";
 
 const rules = {
     username: {
@@ -35,20 +36,24 @@ const interval = ref()
 const outTime = ref(0)
 const strength = ref(0)
 const router = useRouter()
+const isCodeError = ref(false)
 const passwordReveal = ref(false)
 
 const submitHandle = async (event) => {
     const { valid } = await event
-
     if (valid) {
-        console.log('----------')
         if (stage.value) {
             sendCodeHandler()
         } else {
             loading.value = true
             http.post('/auth/signup', formState).then(() => {
                 router.push({ path: '/sign-up/success', params: { username: formState.username } })
-            }).catch(() => loading.value = false)
+            }).catch(err => {
+              loading.value = false
+              if (err.code === '10007') {
+                isCodeError.value = true
+              }
+            })
         }
     }
 }
@@ -92,10 +97,13 @@ const passwordInputHandler = (event) => {
 </script>
 <template>
   <div class="content-box">
+
     <div class="card form-wrap">
       <v-form class="form" validate-on="blur" @submit.prevent="submitHandle">
+
         <div v-if="stage">
           <h2 class="title">注册</h2>
+
           <label class="text-label-large">用户名</label>
           <v-text-field
               :readonly="loading"
@@ -140,15 +148,30 @@ const passwordInputHandler = (event) => {
           />
         </div>
         <div v-else>
+          <v-alert
+              v-if="isCodeError"
+              class="mb-6"
+              variant="tonal"
+              density="compact"
+              text="验证码错误!"
+              type="warning" >
+            <template #prepend>
+              <v-icon  icon="custom:eye"/>
+            </template>
+          </v-alert>
           <h3 class="text-title-large mt-0 mb-2">邮箱验证</h3>
           <div class="text-body-medium font-weight-light">
             发送验证码到邮箱 <span class="font-weight-black text-primary">{{ formState.email }}</span>
           </div>
+
           <v-otp-input
               v-model="formState.code"
               length="5"
+              :loading="loading"
+              :pattern="/[A-Z0-9]/"
               class="mt-3 ms-n2"
               variant="underlined"
+              @input="v => isCodeError = false"
           ></v-otp-input>
 
           <div class="mb-8 text-body-medium font-weight-light d-flex align-center justify-space-between">
@@ -157,8 +180,9 @@ const passwordInputHandler = (event) => {
               {{ outTime ? `${ outTime } 秒后可重新发送` : '重新发送' }}
             </v-btn>
           </div>
+
         </div>
-        <v-btn :loading="loading" class="mt-4 mb-2" type="submit" block color="black" size="large">
+        <v-btn :disabled="(!stage && formState.code < 5) || isCodeError" :loading="loading" class="mt-4 mb-2" type="submit" block color="black" size="large">
           {{ stage ? '提交' : '验证' }}
         </v-btn>
       </v-form>

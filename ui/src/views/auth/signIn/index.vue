@@ -20,6 +20,7 @@ const formState = reactive({
 const loading = ref(false)
 const passwordReveal = ref(false)
 const userStore = useUserStore()
+const errorMessage = ref('')
 
 const submitHandle = async (event) => {
 
@@ -30,7 +31,9 @@ const submitHandle = async (event) => {
             userStore.login()
             loading.value = false
         }).catch(err => {
-            console.log(err)
+            if (err && err.code) {
+              errorMessage.value = err.message
+            }
             loading.value = false
         })
     } else {
@@ -43,6 +46,15 @@ const submitHandle = async (event) => {
   <div class="content-box">
     <div class="card form-wrap">
       <h2 class="title darken-4">登录</h2>
+      <v-alert
+          v-if="errorMessage"
+          class="mb-4"
+          color="orange"
+          variant="tonal"
+          density="compact"
+          :text="errorMessage"
+      >
+      </v-alert>
       <v-form class="form" validate-on="blur" @submit.prevent="submitHandle">
         <label class="text-label-large ">用户名 或 邮箱</label>
         <v-text-field

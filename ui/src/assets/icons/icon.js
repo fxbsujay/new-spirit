@@ -11,7 +11,7 @@ const customIcons = {
         return h('svg', {
             xmlns: 'http://www.w3.org/2000/svg',
             viewBox: '0 0 24 24',
-            class: props.class,
+            class: props.class + ' v-icon__svg',
         }, [
             h('path', { d: aliases[props.icon] })
         ])
