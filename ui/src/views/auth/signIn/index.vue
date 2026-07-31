@@ -20,7 +20,11 @@ const formState = reactive({
 const loading = ref(false)
 const passwordReveal = ref(false)
 const userStore = useUserStore()
-const errorMessage = ref('')
+const error = reactive({
+    show: false,
+    code: 0,
+    message: ''
+})
 
 const submitHandle = async (event) => {
 
@@ -32,7 +36,7 @@ const submitHandle = async (event) => {
             loading.value = false
         }).catch(err => {
             if (err && err.code) {
-              errorMessage.value = err.message
+                Object.assign(error, { ...err, show: true })
             }
             loading.value = false
         })
@@ -47,14 +51,15 @@ const submitHandle = async (event) => {
     <div class="card form-wrap">
       <h2 class="title darken-4">登录</h2>
       <v-alert
-          v-if="errorMessage"
+          v-model="error.show"
           class="mb-4"
           color="orange"
           variant="tonal"
           density="compact"
-          :text="errorMessage"
-      >
-      </v-alert>
+          :text="error.message"
+          closable
+          close-icon="custom:close"
+      />
       <v-form class="form" validate-on="blur" @submit.prevent="submitHandle">
         <label class="text-label-large ">用户名 或 邮箱</label>
         <v-text-field
@@ -67,8 +72,6 @@ const submitHandle = async (event) => {
         />
         <label class="text-label-large">密码</label>
         <v-text-field
-            @click:append-inner="passwordReveal = !passwordReveal"
-            :append-inner-icon="passwordReveal ? 'custom:eye' : 'custom:eye-off'"
             :readonly="loading"
             :type="passwordReveal ? 'text' : 'password'"
             density="comfortable"
@@ -76,7 +79,11 @@ const submitHandle = async (event) => {
             :rules="rules.password"
             variant="outlined"
             class="mb-2 mt-2"
-        />
+        >
+          <template #append-inner>
+            <v-icon @click="passwordReveal = !passwordReveal" :icon="passwordReveal ? 'custom:eye' : 'custom:eye-off'"  size="small"/>
+          </template>
+        </v-text-field>
         <v-btn :loading="loading" class="mt-4 mb-2" type="submit" block color="black" size="large">
           登录
         </v-btn>

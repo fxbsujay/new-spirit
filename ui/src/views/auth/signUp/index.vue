@@ -36,8 +36,14 @@ const interval = ref()
 const outTime = ref(0)
 const strength = ref(0)
 const router = useRouter()
-const isCodeError = ref(false)
 const passwordReveal = ref(false)
+
+const error = reactive({
+    show: false,
+    code: 0,
+    message: ''
+})
+
 
 const submitHandle = async (event) => {
     const { valid } = await event
@@ -47,12 +53,12 @@ const submitHandle = async (event) => {
         } else {
             loading.value = true
             http.post('/auth/signup', formState).then(() => {
-                router.push({ path: '/sign-up/success', params: { username: formState.username } })
+                router.push({ path: '/sign-up/success', query: { username: formState.username } })
             }).catch(err => {
               loading.value = false
-              if (err.code === '10007') {
-                isCodeError.value = true
-              }
+                if (err && err.code) {
+                    Object.assign(error, { ...err, show: true })
+                }
             })
         }
     }
@@ -64,7 +70,10 @@ const sendCodeHandler = () => {
     http.post('/auth/signup/code', formState).then(() => {
         stage.value = false
         loading.value = false
+        error.show = false
+        formState.code = ''
         outTime.value = 60
+
         interval.value = setInterval(() => {
             outTime.value--
             if (outTime.value <= 0) {
@@ -75,10 +84,8 @@ const sendCodeHandler = () => {
     }).catch(err => {
         outTime.value = 0
         loading.value = false
-        if (err.code === '10001') {
-            rules.email.message = err.message
-        } else if (err.code === '10002') {
-            rules.username.message = err.message
+        if (err && err.code) {
+            Object.assign(error, { ...err, show: true })
         }
     })
 }
@@ -100,10 +107,19 @@ const passwordInputHandler = (event) => {
 
     <div class="card form-wrap">
       <v-form class="form" validate-on="blur" @submit.prevent="submitHandle">
-
+        <h2 v-if="stage" class="title">注册</h2>
+        <h3 v-else class="text-title-large mt-0 mb-0">邮箱验证</h3>
+        <v-alert
+            v-model="error.show"
+            class="mt-4 mb-4"
+            color="orange"
+            variant="tonal"
+            density="compact"
+            :text="error.message"
+            closable
+            close-icon="custom:close"
+        />
         <div v-if="stage">
-          <h2 class="title">注册</h2>
-
           <label class="text-label-large">用户名</label>
           <v-text-field
               :readonly="loading"
@@ -117,8 +133,6 @@ const passwordInputHandler = (event) => {
           />
           <label class="text-label-large">密码</label>
           <v-text-field
-              @click:append-inner="passwordReveal = !passwordReveal"
-              :append-inner-icon="passwordReveal ? 'custom:eye' : 'custom:eye-off'"
               :readonly="loading"
               :type="passwordReveal ? 'text' : 'password'"
               density="comfortable"
@@ -127,7 +141,11 @@ const passwordInputHandler = (event) => {
               @input="passwordInputHandler"
               variant="outlined"
               class="mt-2"
-          />
+          >
+            <template #append-inner>
+              <v-icon @click="passwordReveal = !passwordReveal" :icon="passwordReveal ? 'custom:eye' : 'custom:eye-off'"  size="small"/>
+            </template>
+          </v-text-field>
           <label class="text-label-large">密码强度</label>
           <div class="password-complexity-meter mt-3 mb-6">
             <span :class="strength > 0 ? 'action' : ''"></span>
@@ -148,19 +166,7 @@ const passwordInputHandler = (event) => {
           />
         </div>
         <div v-else>
-          <v-alert
-              v-if="isCodeError"
-              class="mb-6"
-              variant="tonal"
-              density="compact"
-              text="验证码错误!"
-              type="warning" >
-            <template #prepend>
-              <v-icon  icon="custom:eye"/>
-            </template>
-          </v-alert>
-          <h3 class="text-title-large mt-0 mb-2">邮箱验证</h3>
-          <div class="text-body-medium font-weight-light">
+          <div class="text-body-medium font-weight-light mt-2">
             发送验证码到邮箱 <span class="font-weight-black text-primary">{{ formState.email }}</span>
           </div>
 
@@ -171,7 +177,6 @@ const passwordInputHandler = (event) => {
               :pattern="/[A-Z0-9]/"
               class="mt-3 ms-n2"
               variant="underlined"
-              @input="v => isCodeError = false"
           ></v-otp-input>
 
           <div class="mb-8 text-body-medium font-weight-light d-flex align-center justify-space-between">
@@ -180,9 +185,8 @@ const passwordInputHandler = (event) => {
               {{ outTime ? `${ outTime } 秒后可重新发送` : '重新发送' }}
             </v-btn>
           </div>
-
         </div>
-        <v-btn :disabled="(!stage && formState.code < 5) || isCodeError" :loading="loading" class="mt-4 mb-2" type="submit" block color="black" size="large">
+        <v-btn :disabled="!stage && formState.code.length < 5" :loading="loading" class="mt-4 mb-2" type="submit" block color="black" size="large">
           {{ stage ? '提交' : '验证' }}
         </v-btn>
       </v-form>

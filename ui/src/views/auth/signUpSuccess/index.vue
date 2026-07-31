@@ -2,7 +2,7 @@
   <div class="content-box">
     <div class="card">
       <div class="title">
-        <Icon name="check-bold" color="#71A339" size="3rem"/>
+        <v-icon class="mr-2" icon="check-bold" size="3rem"></v-icon>
         <h1>欢迎加入 <strong>Spirit Go</strong></h1>
       </div>
       <p>您好啊 {{ username }}，恭喜您成为我们的一员，赶快前往登录吧</p>
@@ -17,11 +17,10 @@
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-const params = useRoute().params
+const route = useRoute()
 const username = ref('')
-
-if (params.username) {
-    username.value = params.username
+if (route.query.username) {
+    username.value = route.query.username
 }
 </script>
 
