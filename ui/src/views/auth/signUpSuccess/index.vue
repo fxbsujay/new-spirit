@@ -2,12 +2,12 @@
   <div class="content-box">
     <div class="card">
       <div class="title">
-        <v-icon class="mr-2" icon="check-bold" size="3rem"></v-icon>
-        <h1>欢迎加入 <strong>Spirit Go</strong></h1>
+        <v-icon class="mr-2" icon="check-bold" size="4rem" color="green"></v-icon>
+        <h1>欢迎加入 <span class="font-weight-black">Spirit Go</span></h1>
       </div>
-      <p>您好啊 {{ username }}，恭喜您成为我们的一员，赶快前往登录吧</p>
+      <p>您好啊 <span class="font-weight-bold text-primary">{{ username }}</span>，恭喜您成为我们的一员，赶快前往登录吧</p>
       <RouterLink to="/sign-in">
-        <button class="black button">立即登录</button>
+        <v-btn block class="mt-8" color="black" size="large">立即登录</v-btn>
       </RouterLink>
     </div>
   </div>
@@ -24,6 +24,6 @@ if (route.query.username) {
 }
 </script>
 
-<style scoped lang="less">
-@import "./index.less";
+<style scoped lang="sass">
+@use 'index.sass'
 </style>
