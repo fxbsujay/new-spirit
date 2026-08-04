@@ -30,7 +30,6 @@ export const useSocketStore = defineStore('counter', () => {
         }
         socket.onclose = function (event) {
             open.value = false
-            console.log('----', event)
         }
     }
 

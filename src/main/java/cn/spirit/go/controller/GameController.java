@@ -9,7 +9,6 @@ import cn.spirit.go.model.*;
 import cn.spirit.go.service.GameManager;
 import cn.spirit.go.service.db.MongoStream;
 import cn.spirit.go.web.SessionStore;
-import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.json.JsonArray;
