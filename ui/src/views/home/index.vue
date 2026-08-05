@@ -15,7 +15,6 @@ const games = reactive({
     list: []
 })
 const tableLoading = ref(false)
-const dialogShow = ref(false)
 
 const searchHandle = throttle(() => {
     if (tableLoading.value) {
@@ -97,35 +96,12 @@ watch(waitGame, searchHandle)
       </table>
     </div>
     <div class="lobby-play">
-      <v-btn
-          class="text-none ms-4 text-white"
-          color="blue-darken-4"
-          rounded="0"
-          variant="flat"
-          @click="dialogShow = !dialogShow"
-      >
-        Accept Cookies
-      </v-btn>
       <Responsive :aspect-ratio="0.5">
         <div class="banner">
 
         </div>
       </Responsive>
     </div>
-    <v-dialog
-        class="align-start"
-        v-model="dialogShow"
-        transition="dialog-top-transition"
-        width="auto"
-    >
-      <v-card
-          width="100%"
-          prepend-icon="mdi-update"
-          text="Your application will relaunch automatically after the update is complete."
-          title="Update in progress"
-      >
-      </v-card>
-    </v-dialog>
   </div>
 
 </template>

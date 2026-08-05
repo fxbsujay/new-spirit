@@ -25,9 +25,7 @@
             </section>
           </nav>
         </div>
-        <button v-if="!waitGame.code && !user.visitor" type="button" class="button playing-btn" :class="drawerVisible ? 'cancel' : ''" @click="drawerVisible = !drawerVisible">
-          {{ drawerVisible ? '关闭' : '开始游戏' }}
-        </button>
+        <PlayDrawer />
         <div class="tools flex-1">
           <RouterLink to="/sign-in" v-if="user.visitor">
             登录
@@ -51,7 +49,7 @@
       </div>
     </div>
     <WaitPlayPanels/>
-    <PlayDrawer v-model="drawerVisible"/>
+
   </header>
 
   <main class="layout-main">
@@ -64,9 +62,8 @@ import { ref } from 'vue'
 import PlayDrawer from './PlayDrawer.vue'
 import WaitPlayPanels from './WaitPlayPanels.vue'
 
-const { user, logout, refreshInfo, waitGame } = useUserStore()
+const { user, logout, refreshInfo } = useUserStore()
 
-const drawerVisible = ref(false)
 refreshInfo()
 </script>
 <style lang="less" scoped>
