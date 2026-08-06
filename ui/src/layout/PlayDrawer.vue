@@ -226,7 +226,7 @@ const cancelCreateHandle = () => {
                   <input class="range" type="range" v-model="formState.stepDuration" min="0" max="29"/>
                 </div>
               </div>
-              <span class="form-label" v-else>请随意安排时间</span>
+              <span class="mb-3" v-else>请随意安排时间</span>
             </div>
           </div>
           <div class="flex justify-center btn-row">
