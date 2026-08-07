@@ -172,14 +172,14 @@ const cancelCreateHandle = () => {
           </div>
           <span class="tip">! 鼠标点击上分选择模式开始游戏</span>
         </div>
-        <div v-else class="form">
-          <div class="flex" style="gap: 2rem">
+        <div v-else>
+          <div class="d-flex ga-8">
             <div class="tabs-horiz">
               <button type="button" v-for="item in TypeConstant" :class="formState.type === item.value ? 'active' : ''"
                       @click="typeChangeHandle(item.value)">{{ item.label }}
               </button>
             </div>
-            <div class="flex flex-column flex-1">
+            <div class="d-flex flex-column flex-fill">
               <div class="row gap-1r">
                 <div class="col">
                   <span class="form-label">游戏规则</span>
@@ -226,7 +226,7 @@ const cancelCreateHandle = () => {
                   <input class="range" type="range" v-model="formState.stepDuration" min="0" max="29"/>
                 </div>
               </div>
-              <span class="mb-3" v-else>请随意安排时间</span>
+              <div v-else class="text-body-medium ma-auto">请随意安排时间</div>
             </div>
           </div>
           <div class="flex justify-center btn-row">
@@ -240,6 +240,6 @@ const cancelCreateHandle = () => {
 
 </template>
 
-<style scoped lang="less">
-@import "palyDrawer.less";
+<style scoped lang="sass">
+@use "palyDrawer.sass"
 </style>

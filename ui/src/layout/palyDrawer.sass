@@ -1,0 +1,159 @@
+@use "vuetify"
+
+.drawer-content
+  width: 100vw
+  background-color: #fff
+  box-shadow: 0 30px 28px 8px rgba(0, 0, 0, 0.05)
+  transform: unset
+  text-align: center
+
+.drawer-content-wrapper
+  max-width: 1000px
+  margin: 0 auto
+  padding: 1rem
+  height: 100%
+  text-align: left
+
+.mode-box
+  display: flex
+  height: 100%
+  flex-direction: column
+  align-items: center
+  justify-content: space-between
+
+.mode-selected
+  display: flex
+  align-items: center
+  justify-content: center
+  gap: 8px
+  width: 100%
+  text-align: center
+
+  .item
+    flex: 1
+    padding: 1rem
+    border: 2px solid transparent
+    cursor: pointer
+    border-radius: 3px
+    white-space: nowrap
+    overflow: hidden
+
+    .mode-name
+      font-weight: bolder
+
+
+    .mode-doc
+      font-size: calc(1rem - 2px)
+      color: #1e293b
+      margin-top: 8px
+
+
+    &:hover
+      background-color: rgba(245, 63, 63, 0.05)
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08)
+      border: 2px solid map-get(vuetify.$orange, 'base')
+
+.tip
+  font-size: 14px
+  color: #717171
+  margin-top: 1rem
+
+.form
+  width: 100%
+  margin: 1rem auto
+
+  .row
+    width: 100%
+
+
+  .form-label
+    display: inline-block
+    margin-bottom: .5rem
+
+
+  .form-left
+    min-width: 250px
+
+
+  .btn-row
+    margin-top: 3rem
+    gap: 1rem
+
+
+  .button
+    height: initial
+    font-size: 14px
+    padding: 8px 1rem
+
+    &.submit-btn
+      color: white
+      background-color: map-get(vuetify.$blue, 'darken-4')
+
+      &:hover
+        background-color: #0059b4
+        box-shadow: 0 4px 10px 0 rgba(0, 0, 0, .2)
+
+
+
+    &.cancel-btn
+      border: 1px solid rgba(0, 0, 0, .2)
+
+      &:hover
+        background-color: rgba(0, 0, 0, .05)
+        box-shadow: 0 4px 10px 0 rgba(0, 0, 0, .2)
+
+
+
+
+.tabs-horiz
+  width: 200px
+  display: flex
+  flex-direction: column
+
+  button
+    width: 100%
+    user-select: none
+    background-color: white
+    font-size: 14px
+    text-align: center
+    padding: .8em .2em
+    cursor: pointer
+    border: none
+    white-space: nowrap
+    overflow: hidden
+    font-weight: bolder
+    margin: .2rem 0
+    border-left: 4px solid transparent
+    color: map-get(vuetify.$grey, 'darken-3')
+
+    &.active
+      color: #000
+      background-color: rgba(0, 0, 0, 0.05)
+      border-color: map-get(vuetify.$blue, 'darken-2')
+
+
+    &:hover
+      color: map-get(vuetify.$grey, 'darken-4')
+      background-color: rgba(0, 0, 0, 0.05)
+
+
+
+.range
+  cursor: pointer
+  width: 100%
+  -webkit-appearance: none
+  appearance: none
+  background-color: rgba(0, 0, 0, 0.05)
+  border: 0
+  color: #000
+  border-radius: 7px
+
+input[type="range"]::-webkit-slider-thumb
+  -webkit-appearance: none
+  appearance: none
+  width: 20px
+  height: 14px
+  border-radius: 6px
+  background: #fff
+  cursor: pointer
+  border: 1px solid rgba(0, 0, 0, 0.2)
