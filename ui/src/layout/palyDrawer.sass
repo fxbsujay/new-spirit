@@ -1,4 +1,5 @@
 @use "vuetify"
+@use "sass:map"
 
 .drawer-content
   width: 100vw
@@ -51,59 +52,12 @@
     &:hover
       background-color: rgba(245, 63, 63, 0.05)
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08)
-      border: 2px solid map-get(vuetify.$orange, 'base')
+      border: 2px solid map.get(vuetify.$orange, 'base')
 
 .tip
   font-size: 14px
   color: #717171
   margin-top: 1rem
-
-.form
-  width: 100%
-  margin: 1rem auto
-
-  .row
-    width: 100%
-
-
-  .form-label
-    display: inline-block
-    margin-bottom: .5rem
-
-
-  .form-left
-    min-width: 250px
-
-
-  .btn-row
-    margin-top: 3rem
-    gap: 1rem
-
-
-  .button
-    height: initial
-    font-size: 14px
-    padding: 8px 1rem
-
-    &.submit-btn
-      color: white
-      background-color: map-get(vuetify.$blue, 'darken-4')
-
-      &:hover
-        background-color: #0059b4
-        box-shadow: 0 4px 10px 0 rgba(0, 0, 0, .2)
-
-
-
-    &.cancel-btn
-      border: 1px solid rgba(0, 0, 0, .2)
-
-      &:hover
-        background-color: rgba(0, 0, 0, .05)
-        box-shadow: 0 4px 10px 0 rgba(0, 0, 0, .2)
-
-
-
 
 .tabs-horiz
   width: 200px
@@ -124,19 +78,17 @@
     font-weight: bolder
     margin: .2rem 0
     border-left: 4px solid transparent
-    color: map-get(vuetify.$grey, 'darken-3')
+    color: map.get(vuetify.$grey, 'darken-3')
 
     &.active
       color: #000
       background-color: rgba(0, 0, 0, 0.05)
-      border-color: map-get(vuetify.$blue, 'darken-2')
+      border-color: map.get(vuetify.$blue, 'darken-2')
 
 
     &:hover
-      color: map-get(vuetify.$grey, 'darken-4')
+      color: map.get(vuetify.$grey, 'darken-4')
       background-color: rgba(0, 0, 0, 0.05)
-
-
 
 .range
   cursor: pointer

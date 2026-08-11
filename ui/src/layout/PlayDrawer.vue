@@ -132,7 +132,7 @@ const cancelCreateHandle = () => {
 <template>
   <v-btn
       color="blue-darken-2"
-      class="font-weight-medium text-white py-5"
+      class="text-white py-5"
       @click="drawerVisible = !drawerVisible"
       rounded="2"
       text="开始游戏"
@@ -141,7 +141,7 @@ const cancelCreateHandle = () => {
     <div class="drawer-content">
       <v-btn
           color="red-darken-2"
-          class="font-weight-medium text-white py-5 my-2"
+          class="text-white py-5 my-2"
           @click="closeDrawer"
           rounded="2"
           text="关闭"
@@ -180,10 +180,11 @@ const cancelCreateHandle = () => {
               </button>
             </div>
             <div class="d-flex flex-column flex-fill">
-              <div class="row gap-1r">
-                <div class="col">
-                  <span class="form-label">游戏规则</span>
+              <div class="d-flex ga-8">
+                <div class="flex-fill">
+                  <span class="text-body-medium text-grey-darken-3">游戏规则</span>
                   <v-select
+                      class="mt-1"
                       density="compact"
                       item-title="label"
                       :items="RuleConstant"
@@ -193,9 +194,10 @@ const cancelCreateHandle = () => {
                   >
                   </v-select>
                 </div>
-                <div class="col">
-                  <span class="form-label">棋盘尺寸</span>
+                <div class="flex-fill">
+                  <span class="text-body-medium text-grey-darken-3">棋盘尺寸</span>
                   <v-select
+                      class="mt-1"
                       density="compact"
                       item-title="label"
                       :items="BoardSizeConstant"
@@ -206,20 +208,20 @@ const cancelCreateHandle = () => {
                   </v-select>
                 </div>
               </div>
-              <div class="row gap-1r" v-if="formState.type !== 'NONE'">
-                <div class="form-group col">
-                  <label class="form-label" style="width: 100%;">
+              <div class="d-flex ga-8" v-if="formState.type !== 'NONE'">
+                <div class="flex-fill">
+                  <label class="text-body-medium text-grey-darken-3" >
                     <span>{{ formState.type === 'SHORT' ? '各方限时（分钟）' : '每步允许天数' }}</span>
-                    <span style="float: right; font-weight: bolder">{{
+                    <span class="font-weight-bold float-right">{{
                         formState.type === 'SHORT' ? shortDurations[formState.duration] : formState.duration
                       }}</span>
                   </label>
-                  <input class="range" type="range" v-model="formState.duration" min="0" :max="formState.type === 'SHORT' ? 33 : 14"/>
+                  <input class="range " type="range" v-model="formState.duration" min="0" :max="formState.type === 'SHORT' ? 33 : 14"/>
                 </div>
-                <div class="form-group col" v-if="formState.type === 'SHORT'">
-                  <label class="form-label" style="width: 100%">
+                <div class="flex-fill" v-if="formState.type === 'SHORT'">
+                  <label class="text-body-medium text-grey-darken-3" style="width: 100%">
                     <span>每步加时（秒）</span>
-                    <span style="float: right; font-weight: bolder">{{
+                    <span class="font-weight-bold float-right">{{
                         shortStepDuration[formState.stepDuration]
                       }}</span>
                   </label>
@@ -229,9 +231,25 @@ const cancelCreateHandle = () => {
               <div v-else class="text-body-medium ma-auto">请随意安排时间</div>
             </div>
           </div>
-          <div class="flex justify-center btn-row">
-            <button class="button submit-btn" @click="createHandle">立即创建</button>
-            <button class="button cancel-btn" @click="cancelCreateHandle">取消</button>
+          <div class="d-flex justify-center ga-4 mt-12">
+            <v-btn
+                style="width: 90px"
+                class="text-none"
+                color="blue-darken-4"
+                variant="outlined"
+                @click="cancelCreateHandle"
+                rounded="2"
+                text="取消"
+            />
+            <v-btn
+                style="width: 90px"
+                color="blue-darken-2"
+                class="text-white"
+                variant="flat"
+                @click="createHandle"
+                rounded="2"
+                text="立即创建"
+            />
           </div>
         </div>
       </div>
