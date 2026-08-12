@@ -105,9 +105,8 @@ export class GameSocket {
     addStep(x, y) {
         if (this.success && this.isOpen() && !this.game.steps.find(step => step.x === x && step.y === y)) {
             this.socket.send(JSON.stringify({
-                type: 'GAME_STEP',
+                type: 'ROOM_STEP',
                 data: {
-                    code: this.code,
                     x,
                     y
                 }

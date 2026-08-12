@@ -1,8 +1,8 @@
 <template>
   <header class="layout-header">
     <div class="header-content">
-      <div class="header-row flex">
-        <div class="site-title-nav flex-1">
+      <div class="header-row d-flex align-center">
+        <div class="site-title-nav flex-1-1-100">
           <RouterLink to="/" class="site-title">
             <img src="/logo.png" class="logo" alt="logo">
           </RouterLink>
@@ -26,7 +26,7 @@
           </nav>
         </div>
         <PlayDrawer />
-        <div class="tools flex-1">
+        <div class="tools flex-1-1-100">
           <RouterLink to="/sign-in" v-if="user.visitor">
             登录
           </RouterLink>

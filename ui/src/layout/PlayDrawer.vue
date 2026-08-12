@@ -170,7 +170,7 @@ const cancelCreateHandle = () => {
               <div class="mode-doc">与您的好友面对面下棋</div>
             </div>
           </div>
-          <span class="tip">! 鼠标点击上分选择模式开始游戏</span>
+          <span class="text-body-medium text-grey-darken-1 mt-2">! 鼠标点击上方选择模式开始游戏</span>
         </div>
         <div v-else>
           <div class="d-flex ga-8">
@@ -180,8 +180,8 @@ const cancelCreateHandle = () => {
               </button>
             </div>
             <div class="d-flex flex-column flex-fill">
-              <div class="d-flex ga-8">
-                <div class="flex-fill">
+              <div class="d-flex ga-4">
+                <div class="flex-1-1-100">
                   <span class="text-body-medium text-grey-darken-3">游戏规则</span>
                   <v-select
                       class="mt-1"
@@ -191,10 +191,11 @@ const cancelCreateHandle = () => {
                       variant="outlined"
                       menu-icon="custom:menu"
                       v-model="formState.rule"
+                      hide-details
                   >
                   </v-select>
                 </div>
-                <div class="flex-fill">
+                <div class="flex-1-1-100">
                   <span class="text-body-medium text-grey-darken-3">棋盘尺寸</span>
                   <v-select
                       class="mt-1"
@@ -204,12 +205,13 @@ const cancelCreateHandle = () => {
                       variant="outlined"
                       menu-icon="custom:menu"
                       v-model="formState.boardSize"
+                      hide-details
                   >
                   </v-select>
                 </div>
               </div>
-              <div class="d-flex ga-8" v-if="formState.type !== 'NONE'">
-                <div class="flex-fill">
+              <div class="d-flex ga-4 mt-4" v-if="formState.type !== 'NONE'">
+                <div class="flex-1-1-100">
                   <label class="text-body-medium text-grey-darken-3" >
                     <span>{{ formState.type === 'SHORT' ? '各方限时（分钟）' : '每步允许天数' }}</span>
                     <span class="font-weight-bold float-right">{{
@@ -218,7 +220,7 @@ const cancelCreateHandle = () => {
                   </label>
                   <input class="range " type="range" v-model="formState.duration" min="0" :max="formState.type === 'SHORT' ? 33 : 14"/>
                 </div>
-                <div class="flex-fill" v-if="formState.type === 'SHORT'">
+                <div class="flex-1-1-100" v-if="formState.type === 'SHORT'">
                   <label class="text-body-medium text-grey-darken-3" style="width: 100%">
                     <span>每步加时（秒）</span>
                     <span class="font-weight-bold float-right">{{
