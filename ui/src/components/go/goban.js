@@ -16,9 +16,10 @@ export const computeBoard = (svg, width, height, squareSize, showLabel) => {
         squareSize = 14
     }
 
-    const ss = showLabel ? squareSize : 0
-    let ox = ss + Math.round(squareSize / 2)
-    let oy = ss + Math.round(squareSize / 2)
+    const ss = squareSize
+    const os = showLabel ? ss : 0
+    let ox = os + Math.round(squareSize / 2)
+    let oy = os + Math.round(squareSize / 2)
 
     const TINY_SQUARE_SIZE = 10
 

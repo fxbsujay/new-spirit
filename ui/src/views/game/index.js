@@ -77,7 +77,7 @@ export class GameSocket {
                 const msg = JSON.parse(event.data)
                 console.log('socket msg', msg)
                 switch (msg.type) {
-                    case 'GAME_STEP':
+                    case 'ROOM_STEP':
                         that.updateStep(msg.data)
                         break
                 }
