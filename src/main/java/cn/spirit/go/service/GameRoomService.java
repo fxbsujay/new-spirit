@@ -279,7 +279,7 @@ public class GameRoomService {
                         Map<String, Object> obj = (Map<String, Object>) pck.data;
                         Integer x = (Integer) obj.get("x");
                         Integer y = (Integer) obj.get("y");
-                        if (RegexUtils.mismatchGameCode(code) || x == null || y == null) {
+                        if (x == null || y == null) {
                             ws.close();
                             return;
                         }
@@ -371,10 +371,9 @@ public class GameRoomService {
     /**
      * 房间锁
      *
-     * @param code  房间 号
+     * @param code 房间 号
      */
     private <T> Future<T> lock(String code, Supplier<Future<T>> block) {
         return AppContext.withLock(LockConstant.ROOM_LOCK + code, block);
     }
-
 }

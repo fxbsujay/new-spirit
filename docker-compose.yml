@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  spirit-go:
+    build: .
+    image: spirit-go:latest
+    container_name: spirit-go
+    restart: always
+    ports:
+      - "8899:8899"
+    volumes:
+      - ./server/config.json:/app/config.json
+      - ./server/static:/app/static
+      - ./server/logs:/app/logs

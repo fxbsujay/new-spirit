@@ -203,8 +203,7 @@ public class GameManager {
      */
     public List<Room> searchRooms(String uid) {
         Set<String> userRoomCodes = roomService.getUserRoomCodes(uid);
-
-        if (userRoomCodes.isEmpty()) {
+        if (null == userRoomCodes || userRoomCodes.isEmpty()) {
             return Collections.emptyList();
         }
         List<Room> rooms = new ArrayList<>();

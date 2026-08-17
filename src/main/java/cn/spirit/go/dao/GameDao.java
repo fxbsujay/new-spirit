@@ -1,6 +1,7 @@
 package cn.spirit.go.dao;
 
 import cn.spirit.go.service.db.MongoStream;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
@@ -26,4 +27,7 @@ public class GameDao {
         return client.insertOne("game", obj);
     }
 
+    public Future<JsonObject> selectByCode(String code) {
+        return client.findOne("game", Filters.eq("code", code), JsonObject.of());
+    }
 }

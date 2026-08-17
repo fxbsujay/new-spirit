@@ -78,7 +78,6 @@ public class StringUtils {
         return builder.toString();
     }
 
-
     /**
      * <p>Description: Are they all numbers</p>
      * <p>是否全是数字</p>
@@ -191,7 +190,7 @@ public class StringUtils {
      * <p>清除字符串中全部空白</p>
      */
     public static String dispelBlankAll(String str) {
-        if (isEmpty(str)){
+        if (isEmpty(str)) {
             return "";
         }
         StringBuilder sb = new StringBuilder(str);

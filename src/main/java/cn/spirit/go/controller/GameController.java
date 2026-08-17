@@ -11,6 +11,7 @@ import cn.spirit.go.service.db.MongoStream;
 import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.config.AppContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -103,33 +104,35 @@ public class GameController {
             return;
         }
         Room room = gameManager.getRoom(code);
-        if (null == room) {
+        Future<JsonObject> findInfo;
 
+        if (null == room) {
+            findInfo = gameDao.selectByCode(code).compose(game -> Future.succeededFuture(JsonObject.of("info", game, "steps", game.getJsonArray("steps"))));
         } else {
+            findInfo = Future.succeededFuture(JsonObject.of("info", room.info, "steps", room.steps));
+        }
+
+        findInfo.onSuccess(res -> {
             userDao.findAllByUids(Set.of(room.whiteUid, room.blackUid), MongoStream.fields(false, "username", "nickname", "avatar", "rating")).onSuccess(users -> {
-                JsonObject res = JsonObject.of(
-                        "info", room.info,
-                        "steps", room.steps);
                 for (JsonObject user : users) {
-                   if (room.whiteUid.equals(user.getString(MongoStream.ID_KEY))) {
-                       user.put("remainder", room.whiteRemainder);
-                       user.put("captured", room.whiteCaptured);
-                       user.remove(MongoStream.ID_KEY);
-                       res.put("white", user);
-                   } else {
-                       user.put("remainder", room.blackRemainder);
-                       user.put("captured", room.blackCaptured);
-                       user.remove(MongoStream.ID_KEY);
-                       res.put("black", user);
-                   }
+                    if (room.whiteUid.equals(user.getString(MongoStream.ID_KEY))) {
+                        user.put("remainder", room.whiteRemainder);
+                        user.put("captured", room.whiteCaptured);
+                        user.remove(MongoStream.ID_KEY);
+                        res.put("white", user);
+                    } else {
+                        user.put("remainder", room.blackRemainder);
+                        user.put("captured", room.blackCaptured);
+                        user.remove(MongoStream.ID_KEY);
+                        res.put("black", user);
+                    }
                 }
                 RestContext.success(ctx, res);
             }).onFailure(cause -> {
                 log.error(cause.getMessage(), cause);
                 RestContext.fail(ctx);
             });
-
-        }
+        });
     }
 
     /**

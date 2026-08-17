@@ -51,7 +51,9 @@ watch(waitGame, searchHandle)
 const ongoingRooms = ref([])
 
 http.get('/room/ongoing').then(res => {
-    ongoingRooms.value = [...res, ...res, ...res, ...res]
+    ongoingRooms.value = res
+}).catch(() => {
+    ongoingRooms.value = []
 })
 const tab = ref(1)
 </script>

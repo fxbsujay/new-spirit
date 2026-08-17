@@ -16,6 +16,12 @@ public class MailSystem {
     public final String username;
 
     public MailSystem(Vertx vertx, Config.Mail config) {
+        if (config == null) {
+            client = null;
+            username = null;
+            log.warn("MailSystem config is null");
+            return;
+        }
         MailConfig mailConfig = new MailConfig()
                 .setHostname(config.host)
                 .setPort(config.port)
@@ -28,6 +34,9 @@ public class MailSystem {
     }
 
     public Future<MailResult> send(String subject, String to, String content, boolean html) {
+        if (client == null) {
+            return Future.failedFuture("client is null");
+        }
         MailMessage message = new MailMessage()
                 .setFrom(username + " (Spirit Go)")
                 .setTo(to)
