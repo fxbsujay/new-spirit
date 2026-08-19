@@ -3,11 +3,11 @@
     "port": 8899
   },
   "mongodb": {
-    "url": "mongodb:27017",
+    "url": "localhost:27017",
     "db": "spirit"
   },
   "redis": {
-    "url": "redis:6379",
+    "url": "localhost:6379",
     "password": "MyRedis123"
   },
   "mail": {

@@ -13,7 +13,7 @@ const value = defineModel()
   </div>
 </template>
 
-<style scoped lang="less">
+<style scoped lang="scss">
 
 .switch-wrap {
   --height: 22px;

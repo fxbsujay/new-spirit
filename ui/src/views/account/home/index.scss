@@ -1,4 +1,4 @@
-@import "@/assets/css/variable.less";
+@use "@/assets/css/variable" as *;
 
 .container {
   max-width: 1000px;
@@ -19,7 +19,7 @@
     letter-spacing: 1px;
 
     &:hover, &.active {
-      border-color: @c-primary;
+      border-color: $c-primary;
       background-color: #fff;
       color: #000;
     }
@@ -31,7 +31,7 @@
     &:last-child {
       &:hover, &.active {
         background-color: #ff3333;
-        border-color: @c-negative;
+        border-color: $c-negative;
         color: #fff;
       }
     }

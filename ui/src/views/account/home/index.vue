@@ -31,6 +31,6 @@ const selectedMenu = ref(tabs[0].name)
   </div>
 </template>
 
-<style scoped lang="less">
-@import "index.less";
+<style scoped lang="scss">
+@use "./index" as *;
 </style>

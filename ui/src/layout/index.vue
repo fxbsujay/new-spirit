@@ -66,6 +66,6 @@ const { user, logout, refreshInfo } = useUserStore()
 
 refreshInfo()
 </script>
-<style lang="less" scoped>
-@import "./index.less";
+<style lang="scss" scoped>
+@use "./index" as *;
 </style>

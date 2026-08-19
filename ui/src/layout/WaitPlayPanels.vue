@@ -100,14 +100,14 @@ const detailedText = () => {
   </div>
 </template>
 
-<style scoped lang="less">
-@import "@/assets/css/variable.less";
+<style scoped lang="scss">
+@use "@/assets/css/variable" as *;
 
 .play-panels {
   position: fixed;
   top: 0;
   left: 50%;
-  z-index: @headerZIndex + 1;
+  z-index: $headerZIndex + 1;
   transform: translateX(-50%);
   cursor: pointer;
 

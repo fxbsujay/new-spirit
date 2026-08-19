@@ -106,9 +106,9 @@ const uploadChangeHandle = e => {
   </form>
 </template>
 
-<style scoped lang="less">
-@import "@/assets/css/variable.less";
-@import "./index.less";
+<style scoped lang="scss">
+@use "@/assets/css/variable" as *;
+@use "../index" as *;
 
 .row {
   gap: 1rem;
@@ -124,7 +124,7 @@ const uploadChangeHandle = e => {
     height: 100px;
 
     img {
-      border-radius: @borderRadius;
+      border-radius: $borderRadius;
     }
   }
 
@@ -140,7 +140,7 @@ const uploadChangeHandle = e => {
       padding: 4px 6px;
       margin-top: 4px;
       font-size: 12px;
-      border-radius: @borderRadius;
+      border-radius: $borderRadius;
       background-color: #f1f1f1;
       width: 100%;
       text-align: center;

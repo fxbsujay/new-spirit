@@ -141,9 +141,9 @@ const passwordInputHandler = (event) => {
   </form>
 </template>
 
-<style scoped lang="less">
-@import "@/assets/css/variable.less";
-@import "./index.less";
+<style scoped lang="scss">
+@use "@/assets/css/variable" as *;
+@use "../index" as *;
 
 .form-group {
   margin-bottom: 2rem;
@@ -155,7 +155,7 @@ const passwordInputHandler = (event) => {
 
   .form-help {
     font-size: 12px;
-    color: @c-grey;
+    color: $c-grey;
   }
 }
 
@@ -170,7 +170,7 @@ const passwordInputHandler = (event) => {
     width: 25%;
 
     &.action {
-      background-color: @c-positive;
+      background-color: $c-positive;
     }
   }
 }

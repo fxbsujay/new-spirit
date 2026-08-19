@@ -1,0 +1,215 @@
+@use "vuetify"
+
+.container
+  max-width: 1000px
+
+.people
+  background-color: #fff
+  padding: 1rem 1rem 1rem 7rem
+  position: relative
+  margin-top: 3rem
+  display: flex
+  align-items: center
+
+  .avatar
+    position: absolute
+    left: 1rem
+    bottom: 1rem
+
+    img
+      border-radius: 3px
+      width: 5rem
+      height: 5rem
+
+  .names
+    display: flex
+    flex-direction: column
+    justify-content: center
+
+    .nickname
+      font-size: 20px
+      font-weight: bolder
+
+    .username
+      margin-top: 2px
+      font-size: 12px
+      color: #ff3333
+
+  .statistics
+    margin-left: auto
+    display: flex
+    gap: 1.5rem
+    border-right: 1px solid #dcdcdc
+    padding: 0 1rem
+    margin-right: 1rem
+
+    .item
+      text-align: center
+
+
+    .value
+      font-size: 14px
+
+
+    .name
+      margin-top: 4px
+      color: #ff3333
+      font-size: 12px
+
+.history
+  margin: 1rem 0
+
+  .title
+    font-size: 14px
+    color: #ff3333
+
+
+  .list
+    .item
+      background-color: white
+      margin: .5rem 0
+      padding: .5rem
+      position: relative
+
+      &.tie
+        &:before
+          background-color: #ff3333
+        .vs
+          color: #ff3333
+
+
+
+      &.victory
+        &:before
+          background-color: #ff3333
+
+
+        .vs
+          color: #ff3333
+
+
+
+      &.defeat
+        &:before
+          background-color: #ff3333
+
+
+        .vs
+          color: #ff3333
+
+
+
+      &:before
+        content: ''
+        position: absolute
+        left: 0
+        bottom: 0
+        width: 6px
+        height: 100%
+
+
+      .info
+        display: flex
+        align-items: center
+
+        & > div
+          flex: 1
+
+
+        .time
+          text-align: center
+          color: #ff3333
+          font-size: 12px
+
+
+        .links
+          text-align: right
+
+
+        .base-tag
+          display: inline-flex
+          align-items: center
+          padding: 3px 6px
+          font-size: 11px
+          font-weight: 800
+          letter-spacing: .4px
+          border: 1px solid rgba(117, 117, 117, 0.32)
+          color: #7c7c7c
+          background: rgba(213, 213, 213, 0.08)
+          margin-left: 6px
+
+
+
+      .versus
+        padding: 6px 0
+        white-space: nowrap
+        overflow: hidden
+        display: grid
+        grid-template-columns: 1fr auto 1fr
+        width: fit-content
+        margin: auto
+
+        .player
+          flex: 1
+
+          &.left
+            text-align: right
+
+
+          &.right
+            text-align: left
+
+
+
+        .player-name
+          color: #ff3333
+          font-weight: bolder
+
+
+        .player-rating
+          margin-top: 4px
+          color: #ff3333
+          font-size: 12px
+
+
+        .vs
+          font-size: calc(1rem + 2px)
+          font-weight: bolder
+          margin: 0 1rem
+
+
+        .white-tag, .black-tag
+          display: inline-block
+          width: 1rem
+          height: 1rem
+          border-radius: 999px
+          flex-shrink: 0
+          border: 1px solid rgba(0, 0, 0, .05)
+
+
+        .white-tag
+          margin-left: 6px
+          background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, .95), rgba(230, 232, 240, .92) 55%, rgba(160, 168, 180, .30))
+
+
+        .black-tag
+          margin-right: 6px
+          background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, .16), rgba(16, 19, 23, .95) 55%, rgba(0, 0, 0, .88))
+
+
+
+      .secondary
+        position: absolute
+        bottom: 0
+        left: 0
+        width: 100%
+        padding: .5rem
+        display: flex
+        align-items: center
+        justify-content: space-between
+        font-size: 10px
+        color: #ff3333
+
+        .summer span
+          margin-left: 6px
+

@@ -1,6 +1,6 @@
-@import "@/assets/css/variable.less";
+@use "@/assets/css/variable" as *;
 
-@toggle-height: 2rem;
+$toggle-height: 2rem;
 
 .lobby-wrap {
   display: grid;
@@ -26,12 +26,12 @@
 }
 
 .lobby-side, .lobby-play {
-  padding-top: calc(@toggle-height + 1.5rem);
+  padding-top: calc($toggle-height + 1.5rem);
 }
 
 .lobby-table {
   min-height: 520px;
-  border-radius: @borderRadius;
+  border-radius: $borderRadius;
   background-color: white;
 }
 
@@ -56,7 +56,7 @@
 
 
   thead {
-    color: @c-dark-light;
+    color: $c-dark-light;
     font-size: 12px;
 
     td {
@@ -71,16 +71,16 @@
     background-position: center;
 
     tr {
-      @borderSize: 3px;
+      $borderSize: 3px;
       background-color: rgba(255, 255, 255, 0.95);
       cursor: pointer;
       font-size: 14px;
-      border-bottom: @borderSize solid #F7F7F7;
+      border-bottom: $borderSize solid #F7F7F7;
 
       &:hover {
         td {
           background-color: rgba(0, 0, 0, 0.05);
-          border-bottom: @borderSize solid #11a953;
+          border-bottom: $borderSize solid #11a953;
         }
       }
 
@@ -103,8 +103,8 @@
   justify-content: space-between;
 
   .btn-icon {
-    width: @toggle-height;
-    height: @toggle-height;
+    width: $toggle-height;
+    height: $toggle-height;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -134,27 +134,15 @@
 
     .btn-icon {
       background-color: #fff;
-      border-radius: @borderRadius;
+      border-radius: $borderRadius;
 
       &:hover {
-        background-color: @c-dark;
+        background-color: $c-dark;
 
         .icon {
           fill: #fff;
         }
       }
     }
-  }
-}
-
-.play-btn {
-  display: flex;
-  flex-direction: column;
-  margin-top: 1rem;
-
-  .button {
-    font-size: 14px;
-    margin: 6px 0;
-    border-radius: 2px;
   }
 }

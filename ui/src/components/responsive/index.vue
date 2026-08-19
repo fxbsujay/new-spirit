@@ -11,7 +11,7 @@
 const { aspectRatio } = defineProps(['aspectRatio'])
 </script>
 
-<style scoped lang="less">
+<style scoped lang="scss">
 
 .responsive {
   display: flex;

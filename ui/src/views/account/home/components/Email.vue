@@ -133,9 +133,9 @@ const sendCode = () => {
   </form>
 </template>
 
-<style scoped lang="less">
-@import "@/assets/css/variable.less";
-@import "./index.less";
+<style scoped lang="scss">
+@use "@/assets/css/variable" as *;
+@use "../index" as *;
 
 .form-group {
   margin-bottom: 2rem;

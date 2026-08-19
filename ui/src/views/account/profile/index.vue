@@ -77,7 +77,13 @@ const gameResult = (item) => {
         </div>
       </div>
       <router-link to="/account">
-        <button class="button border">编辑个人资料</button>
+        <v-btn
+            class="text-none"
+            color="blue-darken-4"
+            rounded="0"
+            variant="outlined"
+            text="编辑资料"
+        />
       </router-link>
     </div>
     <div class="history">
@@ -125,6 +131,6 @@ const gameResult = (item) => {
   </div>
 </template>
 
-<style scoped lang="less">
-@import "index.less";
+<style scoped lang="sass">
+@use "index.sass"
 </style>

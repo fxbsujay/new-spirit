@@ -1,0 +1,31 @@
+$contentWidth: 1400px;
+
+$headerHeight: 54px;
+
+$borderRadius: 3px;
+
+// 顶部栏
+$headerZIndex: 99;
+
+// 弹窗
+$dialogZIndex: $headerZIndex + 100;
+
+// 消息提示
+$messageZIndex: $dialogZIndex + 100;
+
+$c-black: #000;
+$c-white: #fff;
+$c-primary: #1976d2;
+$c-secondary: #26A69A;
+$c-accent: #9C27B0;
+$c-positive: #21BA45;
+$c-negative: #C10015;
+$c-info: #31CCEC;
+$c-warning: #F2C037;
+$c-dark: #1d1d1d;
+$c-dark-page: #121212;
+$c-dark-light: #3F3A36;
+$c-grey: #717171;
+
+$c-orange: #ff9800;
+$c-yellow: #ffeb3b;

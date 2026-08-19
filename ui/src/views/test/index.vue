@@ -11,6 +11,6 @@ const value2 = ref(20)
   </div>
 </template>
 
-<style scoped lang="less">
+<style scoped lang="scss">
 
 </style>

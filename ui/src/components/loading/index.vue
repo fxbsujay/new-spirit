@@ -26,7 +26,7 @@ const { color, size } = defineProps({
   </div>
 </template>
 
-<style scoped lang="less">
+<style scoped lang="scss">
 
 svg {
   animation: progress-circular-rotate 1.4s linear infinite;

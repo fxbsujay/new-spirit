@@ -13,8 +13,8 @@ const props = defineProps({
 const emits = defineEmits(['close'])
 </script>
 
-<style scoped lang="less">
-@import "@/assets/css/variable.less";
+<style scoped lang="scss">
+@use "@/assets/css/variable" as *;
 
 .dialog-modal {
   position: fixed;
@@ -25,7 +25,7 @@ const emits = defineEmits(['close'])
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: @dialogZIndex;
+  z-index: $dialogZIndex;
   padding: 1rem;
 
   .mask {

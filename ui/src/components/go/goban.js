@@ -1,9 +1,6 @@
-import { nextTick } from 'vue'
-
-
 /**
  * 生成棋盘
- * @param {svg} svg
+ * @param svg
  * @param {number} width  宽几列
  * @param {number} height  高几行
  * @param {number} squareSize  棋盘大小
@@ -146,15 +143,12 @@ export const computeBoard = (svg, width, height, squareSize, showLabel) => {
         }
     }
 
-    nextTick(() => {
-        svg.value.setAttribute('width', squareSize * (width + (showLabel ? 2 : 0)))
-        svg.value.setAttribute('height', squareSize * (height + (showLabel ? 2 : 0)))
-        if (showLabel) {
-            svg.value.prepend(labelsLayer)
-        }
-        svg.value.prepend(linesLayer)
-    })
-
+    svg.value.setAttribute('width', squareSize * (width + (showLabel ? 2 : 0)))
+    svg.value.setAttribute('height', squareSize * (height + (showLabel ? 2 : 0)))
+    if (showLabel) {
+        svg.value.prepend(labelsLayer)
+    }
+    svg.value.prepend(linesLayer)
     let mid = squareSize / 2
     if (squareSize % 2 === 0) {
         mid -= 0.5

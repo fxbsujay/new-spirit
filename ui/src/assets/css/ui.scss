@@ -1,4 +1,4 @@
-@import "./variable.less";
+@use "./variable" as *;
 
 .container {
   width: 100%;
