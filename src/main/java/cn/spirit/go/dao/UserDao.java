@@ -50,11 +50,11 @@ public class UserDao {
     }
 
     public Future<Long> updatePassword(String uid, String password) {
-        return client.updateOne("user", Filters.eq(MongoStream.ID_KEY, uid), JsonObject.of("password", password));
+        return client.updateOne("user", Filters.eq(MongoStream.ID_KEY, uid), Updates.set("password", password));
     }
 
     public Future<Long> updateEmail(String uid, String email) {
-        return client.updateOne("user", Filters.eq(MongoStream.ID_KEY, uid), JsonObject.of("email", email));
+        return client.updateOne("user", Filters.eq(MongoStream.ID_KEY, uid), Updates.set("email", email));
     }
 
     public Future<Long> updateAvatarAndNickname(String uid, String avatar, String nickname) {
@@ -68,7 +68,7 @@ public class UserDao {
         if (entries.isEmpty()) {
             return Future.failedFuture("nothing to update");
         }
-        return client.updateOne("user", Filters.eq(MongoStream.ID_KEY, uid), entries);
+        return client.updateOne("user", Filters.eq(MongoStream.ID_KEY, uid), JsonObject.of("$set", entries));
     }
 
     public Future<Integer> updateRating(String user1, Integer rating1, String user2, Integer rating2) {

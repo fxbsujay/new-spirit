@@ -4,6 +4,8 @@ import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.web.config.Config;
 import io.vertx.core.Future;
 import io.vertx.core.VerticleBase;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.launcher.application.VertxApplication;
 import org.slf4j.Logger;
@@ -15,19 +17,29 @@ public class Application extends VerticleBase {
 
     public static void main(String[] args) {
         log.info("Application starting...");
-        VertxApplication.main(new String[]{Application.class.getName(), "-conf", "config.json"});
+        String[] launcherArgs = new String[args.length + 1];
+        launcherArgs[0] = Application.class.getName();
+        System.arraycopy(args, 0, launcherArgs, 1, args.length);
+        VertxApplication.main(launcherArgs);
+
     }
 
     @Override
     public Future<?> start() {
-        JsonObject conf = config();
-        if (null == conf || conf.isEmpty()) {
-            throw new RuntimeException("Missing configuration file");
-        }
-        Config config = conf.mapTo(Config.class);
+        Config config = loadConfig();
         return vertx.createHttpServer()
                 .requestHandler(AppContext.init(vertx, config))
                 .listen(config.server.port)
                 .onSuccess(http -> log.info("HTTP server started on port {}", http.actualPort()));
+    }
+
+    private Config loadConfig() {
+        JsonObject conf = config();
+        if (conf != null && !conf.isEmpty()) {
+            return conf.mapTo(Config.class);
+        }
+
+        Buffer buffer = vertx.fileSystem().readFileBlocking("config.json");
+        return Json.decodeValue(buffer, Config.class);
     }
 }

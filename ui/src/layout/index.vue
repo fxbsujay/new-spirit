@@ -25,7 +25,7 @@
             </section>
           </nav>
         </div>
-        <PlayDrawer />
+        <PlayDrawer v-if="!user.visitor"/>
         <div class="tools flex-1-1-100">
           <RouterLink to="/sign-in" v-if="user.visitor">
             登录

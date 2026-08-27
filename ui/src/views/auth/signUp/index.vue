@@ -31,7 +31,8 @@ const formState = reactive({
 })
 
 const stage = ref(true)
-const loading = ref(false)
+const submitLoading = ref(false)
+const sendLoading = ref(false)
 const interval = ref()
 const outTime = ref(0)
 const strength = ref(0)
@@ -48,14 +49,14 @@ const error = reactive({
 const submitHandle = async (event) => {
     const { valid } = await event
     if (valid) {
+        submitLoading.value = true
         if (stage.value) {
             sendCodeHandler()
         } else {
-            loading.value = true
             http.post('/auth/signup', formState).then(() => {
                 router.push({ path: '/sign-up/success', query: { username: formState.username } })
             }).catch(err => {
-              loading.value = false
+                submitLoading.value = false
                 if (err && err.code) {
                     Object.assign(error, { ...err, show: true })
                 }
@@ -65,11 +66,11 @@ const submitHandle = async (event) => {
 }
 
 const sendCodeHandler = () => {
-    loading.value = true
-
+    sendLoading.value = true
     http.post('/auth/signup/code', formState).then(() => {
         stage.value = false
-        loading.value = false
+        sendLoading.value = false
+        submitLoading.value = false
         error.show = false
         formState.code = ''
         outTime.value = 60
@@ -83,7 +84,8 @@ const sendCodeHandler = () => {
         }, 1000)
     }).catch(err => {
         outTime.value = 0
-        loading.value = false
+        sendLoading.value = false
+        submitLoading.value = false
         if (err && err.code) {
             Object.assign(error, { ...err, show: true })
         }
@@ -91,7 +93,7 @@ const sendCodeHandler = () => {
 }
 
 const resendCodeHandler = () => {
-    if (outTime.value || loading.value) {
+    if (outTime.value || sendLoading.value || submitLoading.value) {
         return
     }
     sendCodeHandler()
@@ -122,7 +124,7 @@ const passwordInputHandler = (event) => {
         <div v-if="stage">
           <label class="text-label-large">用户名</label>
           <v-text-field
-              :readonly="loading"
+              :readonly="submitLoading"
               density="comfortable"
               v-model="formState.username"
               :rules="rules.username.value"
@@ -133,7 +135,7 @@ const passwordInputHandler = (event) => {
           />
           <label class="text-label-large">密码</label>
           <v-text-field
-              :readonly="loading"
+              :readonly="submitLoading"
               :type="passwordReveal ? 'text' : 'password'"
               density="comfortable"
               v-model="formState.password"
@@ -155,7 +157,7 @@ const passwordInputHandler = (event) => {
           </div>
           <label class="text-label-large">电子邮箱</label>
           <v-text-field
-              :readonly="loading"
+              :readonly="submitLoading"
               density="comfortable"
               v-model="formState.email"
               :rules="rules.email.value"
@@ -173,7 +175,7 @@ const passwordInputHandler = (event) => {
           <v-otp-input
               v-model="formState.code"
               length="5"
-              :loading="loading"
+              :disabled="submitLoading"
               :pattern="/[A-Z0-9]/"
               class="mt-3 ms-n2"
               variant="underlined"
@@ -181,12 +183,12 @@ const passwordInputHandler = (event) => {
 
           <div class="mb-8 text-body-medium font-weight-light d-flex align-center justify-space-between">
             <span >没有收到 <strong>验证码</strong>?</span>
-            <v-btn :loading="loading" color="blue-darken-4" size="small" variant="text" @click="resendCodeHandler">
+            <v-btn :loading="sendLoading" color="blue-darken-4" size="small" variant="text" @click="resendCodeHandler">
               {{ outTime ? `${ outTime } 秒后可重新发送` : '重新发送' }}
             </v-btn>
           </div>
         </div>
-        <v-btn :disabled="!stage && formState.code.length < 5" :loading="loading" class="mt-4 mb-2" type="submit" block color="black" size="large">
+        <v-btn :disabled="!stage && formState.code.length < 5" :loading="submitLoading" class="mt-4 mb-2" type="submit" block color="black" size="large">
           {{ stage ? '提交' : '验证' }}
         </v-btn>
       </v-form>

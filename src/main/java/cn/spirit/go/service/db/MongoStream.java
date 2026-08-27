@@ -2,6 +2,7 @@ package cn.spirit.go.service.db;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.*;
 import io.vertx.core.Future;
@@ -114,8 +115,12 @@ public class MongoStream {
      * 修改
      * @return  修改成功的文档数
      */
+    public Future<Long> updateOne(String collection, Bson query, Bson obj) {
+        return promiseOne(getCollection(collection).updateOne(query, obj)).map(UpdateResult::getModifiedCount);
+    }
+
     public Future<Long> updateOne(String collection, Bson query, JsonObject obj) {
-        return promiseOne(getCollection(collection).updateOne(query, wrap(obj))).map(UpdateResult::getModifiedCount);
+        return updateOne(collection, query, wrap(obj));
     }
 
     public <T> Future<T> promiseOne(Publisher<T> publisher) {
