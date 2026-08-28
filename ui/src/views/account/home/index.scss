@@ -28,7 +28,7 @@
       margin-bottom: 2em;
     }
 
-    &:last-child {
+    &:nth-child(4) {
       &:hover, &.active {
         background-color: #ff3333;
         border-color: $c-negative;

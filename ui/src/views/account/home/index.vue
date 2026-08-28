@@ -8,7 +8,7 @@ const tabs = [
     { name: '编辑资料', component: EditUser, sep: true },
     { name: '更改密码', component: Password, sep: false },
     { name: '更改邮箱', component: Email, sep: true },
-    { name: '注 销', component: h('div', '注销'), sep: false }
+    { name: '注 销', component: h('div', '注销'), sep: false },
 ]
 
 const selectedMenu = ref(tabs[0].name)

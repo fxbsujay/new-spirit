@@ -54,26 +54,26 @@ const gameResult = (item) => {
       <div class="avatar">
         <img alt="头像" :src="user.avatar ? '/api/static/avatar/' + user.avatar : '/avatar-error.jpg'"/>
       </div>
-      <div class="names">
-        <div class="nickname">{{ user.nickname }}</div>
-        <div class="username">@{{ user.username }}</div>
+      <div class="d-flex flex-column justify-center">
+        <div class="text-title-large font-weight-semibold">{{ user.nickname }}</div>
+        <div class="text-body-small text-grey-darken-3 mt-1">@{{ user.username }}</div>
       </div>
       <div class="statistics">
-        <div class="item">
-          <div class="value">{{ user.rating }}</div>
-          <div class="name">积分</div>
+        <div class="text-center">
+          <div class="text-body-medium font-weight-medium">{{ user.rating }}</div>
+          <div class="text-body-small text-grey-darken-3 mt-1">积分</div>
         </div>
-        <div class="item">
-          <div class="value">{{ user.count }}</div>
-          <div class="name">比赛</div>
+        <div class="text-center">
+          <div class="text-body-medium font-weight-medium">{{ user.count }}</div>
+          <div class="text-body-small text-grey-darken-3 mt-1">比赛</div>
         </div>
-        <div class="item">
-          <div class="value">{{ user.rate }}%</div>
-          <div class="name">胜率</div>
+        <div class="text-center">
+          <div class="text-body-medium font-weight-medium">{{ user.rate }}%</div>
+          <div class="text-body-small text-grey-darken-3 mt-1">胜率</div>
         </div>
-        <div class="item">
-          <div class="value">{{ user.time }}</div>
-          <div class="name">游戏时长</div>
+        <div class="text-center">
+          <div class="text-body-medium font-weight-medium">{{ user.time }}</div>
+          <div class="text-body-small text-grey-darken-3 mt-1">游戏时长</div>
         </div>
       </div>
       <router-link to="/account">
@@ -91,7 +91,7 @@ const gameResult = (item) => {
       <div class="list">
         <div class="item" v-for="item in history" :key="item.code" :class="gameResult(item).value">
           <div class="info">
-            <div class="base">
+            <div class="d-flex">
               <span class="base-tag">{{
                   item.mode === 'CASUAL' ? '休闲赛' : item.mode === 'RANK' ? '积分赛' : '人机对战'
                 }}</span>
@@ -100,7 +100,7 @@ const gameResult = (item) => {
                 }}</span>
               <span class="base-tag">{{ `${ item.boardSize }x${ item.boardSize }` }}</span>
             </div>
-            <div class="time">
+            <div class="text-body-small text-grey-darken-3 text-center">
               {{ formatTimeDiff(item.endTime - item.startTime) }}
             </div>
             <div class="links">
@@ -118,12 +118,12 @@ const gameResult = (item) => {
               <div class="player-rating">{{ item.bu.username }} ({{ item.bu.rating }})</div>
             </div>
           </div>
-          <div class="secondary">
+          <div class="secondary text-grey-darken-2">
             <div class="summer">
               <span>回合•12</span>
               <span>提子•4</span>
             </div>
-            <span class="start-time">{{ dayjs(item.startTime * 1000).format('YYYY-MM-DD HH:mm') }}</span>
+            <span>{{ dayjs(item.startTime * 1000).format('YYYY-MM-DD HH:mm') }}</span>
           </div>
         </div>
       </div>

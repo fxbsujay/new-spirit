@@ -9,7 +9,7 @@ const formState = reactive({
     nickname: '',
     username: ''
 })
-const success = ref(false)
+const success = ref(true)
 const loading = ref(false)
 const file = ref(null)
 const uploadRef = useTemplateRef('upload-input')
@@ -70,7 +70,18 @@ const uploadChangeHandle = e => {
       <Icon name="check-bold" color="#fff" size="2rem"/>
       <span>操作成功</span>
     </div>
-    <div class="row" style="align-items: end">
+    <v-alert
+        v-model="success"
+        class="mb-4"
+        color="success"
+        variant="tonal"
+        density="compact"
+        text="操作成功"
+        closable
+        icon="check-bold"
+        close-icon="custom:close"
+    />
+    <div class="d-flex ga-4 align-end">
       <div class="avatar-editor" @click="() => uploadRef.click()">
         <div class="avatar-img">
           <img width="100%" height="100%"
@@ -84,25 +95,28 @@ const uploadChangeHandle = e => {
           <div class="upload-btn">上传头像</div>
         </div>
       </div>
-      <div class="form-group col">
-        <div class="border-input-wrap">
-          <label class="label">
-            昵称
-          </label>
-          <input
-              class="input"
-              :disabled="success || loading"
-              required
-              pattern="^[a-zA-Z0-9@!._-+]{2,20}$"
-              title="请输入2-20位字母开头的字母数字，或有效的邮箱地址"
-              v-model="formState.nickname"
-          />
-        </div>
+      <div class="flex-1-1-100 mb-7">
+        <label class="text-label-large">
+          昵称
+        </label>
+        <v-text-field
+            density="comfortable"
+            v-model="formState.nickname"
+            variant="outlined"
+            hide-details="auto"
+            class="mt-1"
+        />
       </div>
     </div>
-    <button type="submit" class="submit-button button " :disabled="loading" :class="success ? 'border' : 'black'">
+    <v-btn
+        :loading="loading"
+        color="blue-darken-2"
+        rounded="2"
+        style="width: 150px"
+        class="float-right"
+    >
       {{ success ? '再次修改' : '保存' }}
-    </button>
+    </v-btn>
   </form>
 </template>
 
