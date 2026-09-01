@@ -9,7 +9,7 @@ const formState = reactive({
     nickname: '',
     username: ''
 })
-const success = ref(true)
+const success = ref(false)
 const loading = ref(false)
 const file = ref(null)
 const uploadRef = useTemplateRef('upload-input')
@@ -66,10 +66,6 @@ const uploadChangeHandle = e => {
 
 <template>
   <form class="form" @submit.prevent="submitHandle">
-    <div class="success-tip" v-if="success">
-      <Icon name="check-bold" color="#fff" size="2rem"/>
-      <span>操作成功</span>
-    </div>
     <v-alert
         v-model="success"
         class="mb-4"
@@ -103,6 +99,7 @@ const uploadChangeHandle = e => {
             density="comfortable"
             v-model="formState.nickname"
             variant="outlined"
+            :readonly="success"
             hide-details="auto"
             class="mt-1"
         />
@@ -111,6 +108,7 @@ const uploadChangeHandle = e => {
     <v-btn
         :loading="loading"
         color="blue-darken-2"
+        type="submit"
         rounded="2"
         style="width: 150px"
         class="float-right"
@@ -121,13 +119,6 @@ const uploadChangeHandle = e => {
 </template>
 
 <style scoped lang="scss">
-@use "@/assets/css/variable" as *;
-@use "../index" as *;
-
-.row {
-  gap: 1rem;
-}
-
 .avatar-editor {
   position: relative;
   vertical-align: top;
@@ -138,7 +129,7 @@ const uploadChangeHandle = e => {
     height: 100px;
 
     img {
-      border-radius: $borderRadius;
+      border-radius: 3px;
     }
   }
 
@@ -154,7 +145,7 @@ const uploadChangeHandle = e => {
       padding: 4px 6px;
       margin-top: 4px;
       font-size: 12px;
-      border-radius: $borderRadius;
+      border-radius: 3px;
       background-color: #f1f1f1;
       width: 100%;
       text-align: center;

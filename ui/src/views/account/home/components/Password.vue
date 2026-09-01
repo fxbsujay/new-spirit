@@ -142,37 +142,5 @@ const passwordInputHandler = (event) => {
 </template>
 
 <style scoped lang="scss">
-@use "@/assets/css/variable" as *;
-@use "../index" as *;
-
-.form-group {
-  margin-bottom: 2rem;
-}
-
-.password-complexity {
-  margin-top: -1rem;
-  margin-bottom: 2rem;
-
-  .form-help {
-    font-size: 12px;
-    color: $c-grey;
-  }
-}
-
-.password-complexity-meter {
-  display: flex;
-  grid-gap: .25rem;
-  height: .4rem;
-  margin-top: 1rem;
-
-  & > span {
-    background-color: #a4a4a4;
-    width: 25%;
-
-    &.action {
-      background-color: $c-positive;
-    }
-  }
-}
 
 </style>
