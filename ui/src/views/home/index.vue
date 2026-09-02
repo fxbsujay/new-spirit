@@ -1,7 +1,7 @@
 <script setup>
 import Icon from '@/components/icon/Icon.vue'
 import Responsive from '@/components/responsive/index.vue'
-import { TypeConstant } from '@/constant/index.js'
+import { TypeConstant } from '@/utils/constant.js'
 import router from '@/router/index.js'
 import { useUserStore } from '@/stores/user.js'
 import http from '@/utils/http'

@@ -1,19 +1,19 @@
 <script setup>
+import { Regex } from '@/utils/constant.js'
 import http from '@/utils/http.js'
 import { passwordStrength } from '@/utils/index.js'
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import Icon from "@/components/icon/Icon.vue";
 
 const rules = {
     username: {
         value: [
-            value => !value || !/^[A-Za-z][a-zA-Z0-9]{1,19}/.test(value) ? '请输入以英文字母开头，2-20位字母或数字': true,
+            value => !value || !Regex.USERNAME.test(value) ? '请输入以英文字母开头，2-20位字母或数字': true,
         ],
         message: ''
     },
     password: [
-        value => !value || !/^[a-zA-Z0-9@!$^.*_%]{6,30}$/.test(value) ? '请输入6-30位字母，数字或以下@!$^.*_%合法符号': true,
+        value => !value || !Regex.PASSWORD.test(value) ? '请输入6-30位字母，数字或以下@!$^.*_%合法符号': true,
     ],
     email: {
         value: [

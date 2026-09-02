@@ -1,14 +1,15 @@
 <script setup>
 import { useUserStore } from '@/stores/user.js'
 import http from '@/utils/http.js'
+import { Regex } from '@/utils/constant.js'
 import { reactive, ref } from 'vue'
 
 const rules = {
     username: [
-        value => !value || !/^[A-Za-z][A-Za-z0-9@!._+-]{1,19}$/.test(value) ? '请输入2-20位字母开头的字母数字，或有效的邮箱地址': true,
+        value => !value || !Regex.USERNAME.test(value) ? '请输入2-20位字母开头的字母数字，或有效的邮箱地址': true,
     ],
     password: [
-        value => !value || !/^[a-zA-Z0-9@!$^.*_%]{6,30}$/.test(value) ? '请输入6-30位字母，数字或以下@!$^.*_%合法符号': true,
+        value => !value || !Regex.PASSWORD.test(value) ? '请输入6-30位字母，数字或以下@!$^.*_%合法符号': true,
     ]
 }
 

@@ -1,7 +1,7 @@
 <script setup>
 import Icon from '@/components/icon/Icon.vue'
 import snackbar from '@/components/snackbar/index.js'
-import { TypeConstant } from '@/constant'
+import { TypeConstant } from '@/utils/constant.js'
 import { useUserStore } from '@/stores/user'
 import http from '@/utils/http'
 import { debounce } from '@/utils/index'

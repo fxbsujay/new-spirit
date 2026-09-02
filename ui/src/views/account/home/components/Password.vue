@@ -1,8 +1,11 @@
-<script setup lang="ts">
+<script setup>
 import { reactive, ref } from 'vue'
+import { Regex } from '@/utils/constant.js'
 import http from '@/utils/http.js'
 import snackbar from '@/components/snackbar/index.js'
 import { passwordStrength } from '@/utils/index.js'
+
+const rules = [ value => !value || !Regex.PASSWORD.test(value) ? '请输入6-30位字母，数字或以下@!$^.*_%合法符号': true ]
 
 const formState = reactive({
     oldPassword: '',
@@ -56,53 +59,34 @@ const passwordInputHandler = (event) => {
       <Icon name="check-bold" color="#fff" size="2rem"/>
       <span>操作成功</span>
     </div>
-    <div class="form-group">
-      <div class="border-input-wrap">
-        <label class="label">密码</label>
-        <div class="password-reveal">
-          <input
-              class="input"
-              required
-              pattern="[a-zA-Z0-9@!$^.*_%]{6,30}"
-              title="6-30位字母，数字或以下@!$^.*_%合法符号"
-              v-model="formState.oldPassword"
-              :disabled="loading || success"
-              :type="oldPasswordReveal ? 'input' : 'password'"
-              autocomplete="off"
-          />
-          <Icon
-              class="reveal-icon"
-              size="1rem"
-              :name="oldPasswordReveal ? 'eye-outline' : 'eye-off-outline'"
-              @click="oldPasswordReveal = !oldPasswordReveal"
-          />
-        </div>
-      </div>
-    </div>
-    <div class="form-group">
-      <div class="border-input-wrap">
-        <label class="label">新密码</label>
-        <div class="password-reveal">
-          <input
-              class="input"
-              required
-              pattern="[a-zA-Z0-9@!$^.*_%]{6,30}"
-              title="6-30位字母，数字或以下@!$^.*_%合法符号"
-              v-model="formState.newPassword"
-              :disabled="loading || success"
-              :type="newPasswordReveal ? 'input' : 'password'"
-              @input="passwordInputHandler"
-              autocomplete="off"
-          />
-          <Icon
-              class="reveal-icon"
-              size="1rem"
-              :name="newPasswordReveal ? 'eye-outline' : 'eye-off-outline'"
-              @click="newPasswordReveal = !newPasswordReveal"
-          />
-        </div>
-      </div>
-    </div>
+    <label class="text-label-large">密码</label>
+    <v-text-field
+        :readonly="loading"
+        :type="oldPasswordReveal ? 'text' : 'password'"
+        density="comfortable"
+        v-model="formState.oldPassword"
+        :rules="rules"
+        variant="outlined"
+        class="mb-2 mt-2"
+    >
+      <template #append-inner>
+        <v-icon @click="oldPasswordReveal = !oldPasswordReveal" :icon="oldPasswordReveal ? 'custom:eye' : 'custom:eye-off'"  size="small"/>
+      </template>
+    </v-text-field>
+    <label class="text-label-large">新密码</label>
+    <v-text-field
+        :readonly="loading"
+        :type="newPasswordReveal ? 'text' : 'password'"
+        density="comfortable"
+        v-model="formState.newPassword"
+        :rules="rules"
+        variant="outlined"
+        class="mb-2 mt-2"
+    >
+      <template #append-inner>
+        <v-icon @click="newPasswordReveal = !newPasswordReveal" :icon="newPasswordReveal ? 'custom:eye' : 'custom:eye-off'"  size="small"/>
+      </template>
+    </v-text-field>
     <div class="form-group password-complexity">
       <label class="form-help">密码强度</label>
       <div class="password-complexity-meter">
@@ -142,5 +126,26 @@ const passwordInputHandler = (event) => {
 </template>
 
 <style scoped lang="scss">
+@use "vuetify";
+@use "sass:map";
+
+.form {
+  max-width: 350px;
+}
+.password-complexity-meter {
+  display: flex;
+  grid-gap: .25rem;
+  height: .4rem;
+  & > span {
+    background-color: map.get(vuetify.$grey, 'lighten-2');
+    width: 25%;
+    &.action {
+      background-color: map.get(vuetify.$green, 'base')
+    }
+  }
+
+}
+
+
 
 </style>
