@@ -82,6 +82,7 @@ const passwordInputHandler = (event) => {
         :rules="rules"
         variant="outlined"
         class="mb-2 mt-2"
+        @blur="passwordInputHandler"
     >
       <template #append-inner>
         <v-icon @click="newPasswordReveal = !newPasswordReveal" :icon="newPasswordReveal ? 'custom:eye' : 'custom:eye-off'"  size="small"/>
