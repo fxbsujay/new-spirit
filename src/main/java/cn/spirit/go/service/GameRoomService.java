@@ -1,6 +1,7 @@
 package cn.spirit.go.service;
 
 import cn.spirit.go.common.LockConstant;
+import cn.spirit.go.common.enums.GameMode;
 import cn.spirit.go.common.enums.GameReason;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.GameWinner;
@@ -169,6 +170,10 @@ public class GameRoomService {
                     return Future.failedFuture("The game has not started");
                 }
             } else if (reason == GameReason.CANCEL) {
+                if (room.info.mode == GameMode.RANK) {
+                    // 排位赛不允许取消
+                    return Future.failedFuture("The RANK mode cannot cancel the match");
+                }
                 if (room.steps.size() > 1) {
                     // 棋局已经开始不允许取消
                     return Future.failedFuture("The game has begun");
@@ -190,6 +195,10 @@ public class GameRoomService {
             log.info("Game over, code = {}, winner = {}, reason = {}", code, winner, reason);
             send(code, SocketPackage.build(PackageType.GAME_END, JsonObject.of("winner", winner, "reason", reason)));
 
+            if (reason == GameReason.CANCEL) {
+                // 取消游戏不保存
+                return;
+            }
             JsonObject game = new JsonObject();
             game.put("code", code);
             game.put("boardSize", room.info.boardSize);
@@ -274,7 +283,7 @@ public class GameRoomService {
                     return;
                 }
                 switch (pck.type) {
-                    case ROOM_STEP:
+                    case ROOM_STEP -> {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> obj = (Map<String, Object>) pck.data;
                         Integer x = (Integer) obj.get("x");
@@ -294,23 +303,47 @@ public class GameRoomService {
                                     log.info("[{}] - Add a step to the game {}, uid={}, x = {}, y = {}", room.whiteUid.equals(session.uid) ? 'W' : 'B', code, session.uid, x, y);
                                     room.outPrintBoard();
                                 }).onFailure(e -> log.error("Adding step failed, code = {}, x = {}, y = {}, failure message = {},", code, x, y, e.getMessage()));
-                        break;
-                    case GAME_END:
+                    }
+                    case GAME_SURRENDER -> {
+                        // 投降，棋局未开始则取消
                         Room room = get(code);
                         if (room != null) {
                             GameReason reason = GameReason.valueOf((String) pck.data);
-                            if (reason == GameReason.SURRENDER || reason == GameReason.CANCEL) {
-                                // 允许投降或者取消
-                                GameWinner winner = room.whiteUid.equals(session.uid) ? GameWinner.BLACK : GameWinner.WHITE;
-                                end(code, winner, reason);
+                            if (reason == GameReason.SURRENDER) {
+                                if (room.steps.size() <= 1) {
+                                    // 棋局未开始不允许投降，可取消
+                                    return;
+                                }
+                            } else if (reason == GameReason.CANCEL) {
+                                if (room.info.mode == GameMode.RANK) {
+                                    // 排位赛不允许取消
+                                    return;
+                                }
+                                if (room.steps.size() > 1) {
+                                    // 棋局已经开始不允许取消
+                                    return;
+                                }
                             }
+                            GameWinner winner = room.whiteUid.equals(session.uid) ? GameWinner.BLACK : GameWinner.WHITE;
+                            end(code, winner, reason);
                         }
-                    case ROOM_CHAT:
-                        send(code, pck);
-                        break;
-                    default:
+                    }
+                    case GAME_PEACE -> {
+                        // 求和
+                        Room room = get(code);
+                        if (room != null) {
+                            if (room.steps.size() <= 1) {
+                                // 棋局未开始不允许求和
+                                return;
+                            }
+                            send(code, SocketPackage.build(PackageType.GAME_PEACE, ""));
+                        }
+                    }
+                    case ROOM_CHAT -> send(code, pck);
+                    default -> {
                         log.error("Illegal websocket message packet type, from: {}, sessionId: {}", session.uid, session.sId);
                         ws.close();
+                    }
                 }
             });
             ws.closeHandler(e -> disconnection(code, socket));
