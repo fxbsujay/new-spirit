@@ -17,34 +17,46 @@ const oldPasswordReveal = ref(false)
 const newPasswordReveal = ref(false)
 const confirmPasswordReveal = ref(false)
 const loading = ref(false)
-const success = ref(false)
-const submitHandle = () => {
+const result = reactive({
+    success: false,
+    message: ''
+})
+const submitHandle = async (event) => {
     if (loading.value) {
         return
     }
-    if (success.value) {
+    if (result.success) {
         Object.assign(formState, {
             oldPassword: '',
             newPassword: '',
             confirmPassword: ''
         })
-        success.value = false
-        return
-    }
-    if (formState.newPassword === formState.oldPassword) {
-        snackbar.warning('新密码不能与旧密码相同')
-        return
-    }
-
-    if (formState.newPassword !== formState.confirmPassword) {
-        snackbar.warning('两次输入的新密码不同')
+        result.success = false
         return
     }
     loading.value = true
-    http.post('/account/password', formState).then(() => {
+    const { valid } = await event
+    if (valid) {
+        if (formState.newPassword === formState.oldPassword) {
+            snackbar.warning('新密码不能与旧密码相同')
+            loading.value = false
+            return
+        }
+
+        if (formState.newPassword !== formState.confirmPassword) {
+            snackbar.warning('两次输入的新密码不同')
+            loading.value = false
+            return
+        }
+        loading.value = true
+        http.post('/account/password', formState).then(() => {
+            loading.value = false
+            result.success = true
+        }).catch(() => loading.value = false)
+    } else {
         loading.value = false
-        success.value = true
-    }).catch(() => loading.value = false)
+    }
+
 }
 
 const passwordInputHandler = (event) => {
@@ -54,16 +66,23 @@ const passwordInputHandler = (event) => {
 </script>
 
 <template>
-  <form class="form" @submit.prevent="submitHandle">
-    <div class="success-tip" v-if="success">
-      <Icon name="check-bold" color="#fff" size="2rem"/>
-      <span>操作成功</span>
-    </div>
+  <v-form validate-on="blur" @submit.prevent="submitHandle">
+    <v-alert
+        v-model="success"
+        class="mb-4"
+        color="success"
+        variant="tonal"
+        density="compact"
+        text="操作成功"
+        closable
+        icon="check-bold"
+        close-icon="custom:close"
+    />
     <label class="text-label-large">密码</label>
     <v-text-field
         :readonly="loading"
         :type="oldPasswordReveal ? 'text' : 'password'"
-        density="comfortable"
+        density="compact"
         v-model="formState.oldPassword"
         :rules="rules"
         variant="outlined"
@@ -77,62 +96,56 @@ const passwordInputHandler = (event) => {
     <v-text-field
         :readonly="loading"
         :type="newPasswordReveal ? 'text' : 'password'"
-        density="comfortable"
+        density="compact"
         v-model="formState.newPassword"
         :rules="rules"
         variant="outlined"
         class="mb-2 mt-2"
-        @blur="passwordInputHandler"
+        @input="passwordInputHandler"
     >
       <template #append-inner>
         <v-icon @click="newPasswordReveal = !newPasswordReveal" :icon="newPasswordReveal ? 'custom:eye' : 'custom:eye-off'"  size="small"/>
       </template>
     </v-text-field>
-    <div class="form-group password-complexity">
-      <label class="form-help">密码强度</label>
-      <div class="password-complexity-meter">
-        <span :class="strength > 0 ? 'action' : ''"></span>
-        <span :class="strength > 1 ? 'action' : ''"></span>
-        <span :class="strength > 2 ? 'action' : ''"></span>
-        <span :class="strength > 3 ? 'action' : ''"></span>
-      </div>
+    <label class="text-label-large">密码强度</label>
+    <div class="password-complexity-meter mb-8 mt-2">
+      <span :class="strength > 0 ? 'action' : ''"></span>
+      <span :class="strength > 1 ? 'action' : ''"></span>
+      <span :class="strength > 2 ? 'action' : ''"></span>
+      <span :class="strength > 3 ? 'action' : ''"></span>
     </div>
-    <div class="form-group">
-      <div class="border-input-wrap">
-        <label class="label">新密码（再次输入）</label>
-        <div class="password-reveal">
-          <input
-              class="input"
-              required
-              pattern="[a-zA-Z0-9@!$^.*_%]{6,30}"
-              title="6-30位字母，数字或以下@!$^.*_%合法符号"
-              v-model="formState.confirmPassword"
-              :disabled="loading || success"
-              :type="confirmPasswordReveal ? 'input' : 'password'"
-              autocomplete="off"
-          />
-          <Icon
-              class="reveal-icon"
-              size="1rem"
-              :name="confirmPasswordReveal ? 'eye-outline' : 'eye-off-outline'"
-              @click="confirmPasswordReveal = !confirmPasswordReveal"
-          />
-        </div>
-      </div>
-    </div>
-    <button type="submit" class="submit-button button " :disabled="loading" :class="success ? 'border' : 'black'">
+    <label class="text-label-large">再次输入新密码</label>
+    <v-text-field
+        :readonly="loading"
+        :type="confirmPasswordReveal ? 'text' : 'password'"
+        density="compact"
+        v-model="formState.confirmPassword"
+        :rules="rules"
+        variant="outlined"
+        class="mb-2 mt-2"
+    >
+      <template #append-inner>
+        <v-icon @click="confirmPasswordReveal = !confirmPasswordReveal" :icon="confirmPasswordReveal ? 'custom:eye' : 'custom:eye-off'"  size="small"/>
+      </template>
+    </v-text-field>
+    <v-btn
+        :loading="loading"
+        color="blue-darken-2"
+        type="submit"
+        rounded="2"
+        style="width: 150px"
+        class="float-right"
+    >
       {{ success ? '再次修改' : '保存' }}
-    </button>
-  </form>
+    </v-btn>
+  </v-form>
 </template>
 
 <style scoped lang="scss">
 @use "vuetify";
 @use "sass:map";
 
-.form {
-  max-width: 350px;
-}
+
 .password-complexity-meter {
   display: flex;
   grid-gap: .25rem;

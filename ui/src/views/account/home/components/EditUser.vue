@@ -27,7 +27,7 @@ const getUserInfo = () => {
 }
 getUserInfo()
 
-const submitHandle = () => {
+const submitHandle = async (event) => {
     if (loading.value) {
         return
     }
@@ -37,23 +37,29 @@ const submitHandle = () => {
         getUserInfo()
         return
     }
-    const formData = new FormData()
     loading.value = true
-    if (file.value) {
-        formData.append('file', file.value)
+    const { valid } = await event
+    if (valid) {
+        const formData = new FormData()
+        if (file.value) {
+            formData.append('file', file.value)
+        }
+
+        formData.append('nickname', formState.nickname)
+        http.api('/account/edit', {
+            method: Method.POST,
+            body: formData
+        }).then(() => {
+            loading.value = false
+            success.value = true
+            store.refreshInfo()
+        }).catch(() => {
+            loading.value = false
+        })
+    } else {
+        loading.value = false
     }
 
-    formData.append('nickname', formState.nickname)
-    http.api('/account/edit', {
-        method: Method.POST,
-        body: formData
-    }).then(() => {
-        loading.value = false
-        success.value = true
-        store.refreshInfo()
-    }).catch(() => {
-        loading.value = false
-    })
 }
 
 const uploadChangeHandle = e => {
@@ -65,7 +71,7 @@ const uploadChangeHandle = e => {
 </script>
 
 <template>
-  <form class="form" @submit.prevent="submitHandle">
+  <v-form @submit.prevent="submitHandle">
     <v-alert
         v-model="success"
         class="mb-4"
@@ -96,7 +102,7 @@ const uploadChangeHandle = e => {
           昵称
         </label>
         <v-text-field
-            density="comfortable"
+            density="compact"
             v-model="formState.nickname"
             variant="outlined"
             :readonly="success"
@@ -115,7 +121,7 @@ const uploadChangeHandle = e => {
     >
       {{ success ? '再次修改' : '保存' }}
     </v-btn>
-  </form>
+  </v-form>
 </template>
 
 <style scoped lang="scss">
