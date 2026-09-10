@@ -51,15 +51,17 @@ class Http {
                         resolve(res.text())
                     }
                 } else if (res.status === 500) {
+                    const code = parseInt(res.statusText)
                     if (Number.isInteger(parseInt(res.statusText))) {
-                        res.json().then(err => {
-                            reject(err)
-                        }).catch(() => {
-                            reject()
+                        reject({
+                            code,
+                            message: RestStatus[code],
                         })
                     } else {
-                        snackbar.error('网络异常')
-                        reject()
+                        reject({
+                            code: 500,
+                            message:'服务器异常',
+                        })
                     }
                 } else {
                     switch (res.status) {
@@ -76,7 +78,7 @@ class Http {
                             snackbar.error('网络异常')
                             break
                     }
-                    reject()
+                    reject({ code: res.status, message: res.status })
                 }
 
             })
@@ -108,3 +110,18 @@ class Http {
 const http = new Http('/api')
 
 export default http
+
+
+const RestStatus = {
+    10001: '邮箱已被注册',
+    10002: '用户名已被注册',
+    10003: '账户不存在',
+    10004: '密码错误',
+    10005: '账户已被封禁',
+    10006: '验证码过期或已失效',
+    10007: '验证码错误',
+    10008: '验证码已发送',
+    20001: '已创建对局',
+    20002: '对局不存在',
+    20003: '对局已开始',
+}

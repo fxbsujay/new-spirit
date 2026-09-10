@@ -1,5 +1,5 @@
 import './assets/css/index.scss'
-import { icons} from '@/assets/icons/icon.js'
+import { icons } from '@/assets/icons/icon.js'
 import { createPinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import { createApp } from 'vue'

@@ -2,7 +2,6 @@
 import { reactive, ref } from 'vue'
 import { Regex } from '@/utils/constant.js'
 import http from '@/utils/http.js'
-import snackbar from '@/components/snackbar/index.js'
 import { passwordStrength } from '@/utils/index.js'
 
 const rules = [ value => !value || !Regex.PASSWORD.test(value) ? '请输入6-30位字母，数字或以下@!$^.*_%合法符号': true ]
@@ -17,7 +16,8 @@ const oldPasswordReveal = ref(false)
 const newPasswordReveal = ref(false)
 const confirmPasswordReveal = ref(false)
 const loading = ref(false)
-const result = reactive({
+const alert = reactive({
+    show: false,
     success: false,
     message: ''
 })
@@ -25,34 +25,53 @@ const submitHandle = async (event) => {
     if (loading.value) {
         return
     }
-    if (result.success) {
-        Object.assign(formState, {
-            oldPassword: '',
-            newPassword: '',
-            confirmPassword: ''
+    if (alert.show) {
+        Object.assign(alert, {
+            show: false,
+            success: false,
+            message: ''
         })
-        result.success = false
         return
     }
     loading.value = true
     const { valid } = await event
     if (valid) {
         if (formState.newPassword === formState.oldPassword) {
-            snackbar.warning('新密码不能与旧密码相同')
             loading.value = false
+            Object.assign(alert, {
+                show: true,
+                success: false,
+                message: '新密码不能与旧密码相同'
+            })
             return
         }
 
         if (formState.newPassword !== formState.confirmPassword) {
-            snackbar.warning('两次输入的新密码不同')
             loading.value = false
+            Object.assign(alert, {
+                show: true,
+                success: false,
+                message: '两次输入的新密码不同'
+            })
             return
         }
         loading.value = true
         http.post('/account/password', formState).then(() => {
             loading.value = false
-            result.success = true
-        }).catch(() => loading.value = false)
+            Object.assign(alert, {
+                show: true,
+                success: true,
+                message: '修改成功'
+            })
+            event.target.reset()
+        }).catch(res => {
+            loading.value = false
+            Object.assign(alert, {
+                show: true,
+                success: false,
+                message: res.message
+            })
+        })
     } else {
         loading.value = false
     }
@@ -66,21 +85,21 @@ const passwordInputHandler = (event) => {
 </script>
 
 <template>
-  <v-form validate-on="blur" @submit.prevent="submitHandle">
+  <v-form @submit.prevent="submitHandle">
     <v-alert
-        v-model="success"
+        v-model="alert.show"
         class="mb-4"
-        color="success"
+        :color="alert.success ? 'success' : 'warning'"
         variant="tonal"
         density="compact"
-        text="操作成功"
+        :text="alert.message"
         closable
-        icon="check-bold"
-        close-icon="custom:close"
+        :icon="alert.success ? 'check-bold' : 'warning'"
+        close-icon="close"
     />
     <label class="text-label-large">密码</label>
     <v-text-field
-        :readonly="loading"
+        :readonly="loading || alert.show"
         :type="oldPasswordReveal ? 'text' : 'password'"
         density="compact"
         v-model="formState.oldPassword"
@@ -94,7 +113,7 @@ const passwordInputHandler = (event) => {
     </v-text-field>
     <label class="text-label-large">新密码</label>
     <v-text-field
-        :readonly="loading"
+        :readonly="loading || alert.show"
         :type="newPasswordReveal ? 'text' : 'password'"
         density="compact"
         v-model="formState.newPassword"
@@ -116,7 +135,7 @@ const passwordInputHandler = (event) => {
     </div>
     <label class="text-label-large">再次输入新密码</label>
     <v-text-field
-        :readonly="loading"
+        :readonly="loading || alert.show"
         :type="confirmPasswordReveal ? 'text' : 'password'"
         density="compact"
         v-model="formState.confirmPassword"
@@ -136,7 +155,7 @@ const passwordInputHandler = (event) => {
         style="width: 150px"
         class="float-right"
     >
-      {{ success ? '再次修改' : '保存' }}
+      {{ alert.show ? '再次修改' : '保存' }}
     </v-btn>
   </v-form>
 </template>

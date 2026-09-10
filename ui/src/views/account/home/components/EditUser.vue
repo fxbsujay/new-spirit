@@ -9,20 +9,27 @@ const formState = reactive({
     nickname: '',
     username: ''
 })
-const success = ref(false)
 const loading = ref(false)
 const file = ref(null)
 const uploadRef = useTemplateRef('upload-input')
+const alert = reactive({
+    show: false,
+    success: false,
+    message: ''
+})
 
 const getUserInfo = () => {
+    loading.value = true
     http.post('/user/info').then(res => {
         Object.assign(formState, res)
+        loading.value = false
     }).catch(() => {
         Object.assign(formState, {
             avatar: '',
             nickname: '',
             username: ''
         })
+        loading.value = false
     })
 }
 getUserInfo()
@@ -31,13 +38,18 @@ const submitHandle = async (event) => {
     if (loading.value) {
         return
     }
-    if (success.value) {
+    if (alert.show) {
         file.value = null
-        success.value = false
+        Object.assign(alert, {
+            show: false,
+            success: false,
+            message: ''
+        })
         getUserInfo()
         return
     }
     loading.value = true
+
     const { valid } = await event
     if (valid) {
         const formData = new FormData()
@@ -51,21 +63,28 @@ const submitHandle = async (event) => {
             body: formData
         }).then(() => {
             loading.value = false
-            success.value = true
+            Object.assign(alert, {
+                show: true,
+                success: true,
+                message: '操作成功'
+            })
             store.refreshInfo()
-        }).catch(() => {
+        }).catch(err => {
             loading.value = false
+            Object.assign(alert, {
+                show: true,
+                success: false,
+                message: err.message,
+            })
         })
     } else {
         loading.value = false
     }
-
 }
 
 const uploadChangeHandle = e => {
     formState.avatar = URL.createObjectURL(e.target.files[0])
     file.value = e.target.files[0]
-    console.log(file.value)
     return false
 }
 </script>
@@ -73,15 +92,15 @@ const uploadChangeHandle = e => {
 <template>
   <v-form @submit.prevent="submitHandle">
     <v-alert
-        v-model="success"
+        v-model="alert.show"
         class="mb-4"
-        color="success"
+        :color="alert.success ? 'success' : 'warning'"
         variant="tonal"
         density="compact"
-        text="操作成功"
+        :text="alert.message"
         closable
-        icon="check-bold"
-        close-icon="custom:close"
+        :icon="alert.success ? 'check-bold' : 'warning'"
+        close-icon="close"
     />
     <div class="d-flex ga-4 align-end">
       <div class="avatar-editor" @click="() => uploadRef.click()">
@@ -91,7 +110,7 @@ const uploadChangeHandle = e => {
                alt="头像上传">
         </div>
         <div class="upload-wrapper">
-          <input :disabled="success || loading" @change="uploadChangeHandle" type="file"
+          <input :disabled="alert.show || loading" @change="uploadChangeHandle" type="file"
                  accept="image/png,image/jpeg"
                  class="upload-input" ref="upload-input"/>
           <div class="upload-btn">上传头像</div>
@@ -105,7 +124,7 @@ const uploadChangeHandle = e => {
             density="compact"
             v-model="formState.nickname"
             variant="outlined"
-            :readonly="success"
+            :readonly="alert.show || loading"
             hide-details="auto"
             class="mt-1"
         />
@@ -114,12 +133,13 @@ const uploadChangeHandle = e => {
     <v-btn
         :loading="loading"
         color="blue-darken-2"
+        :disabled="!formState.nickname"
         type="submit"
         rounded="2"
         style="width: 150px"
         class="float-right"
     >
-      {{ success ? '再次修改' : '保存' }}
+      {{ alert.show ? '再次修改' : '保存' }}
     </v-btn>
   </v-form>
 </template>
