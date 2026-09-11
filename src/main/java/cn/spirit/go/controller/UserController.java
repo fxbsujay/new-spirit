@@ -252,7 +252,7 @@ public class UserController {
 
         userDao.findOneById(session.uid, MongoStream.fields("password")).onSuccess(user -> {
             if (!SecurityUtils.matchesBCrypt(password, user.getString("password"))) {
-                RestContext.fail(ctx, RestStatus.EMAIL_CODE_IS_INVALID);
+                RestContext.fail(ctx, RestStatus.PASSWORD_FAIL);
             } else {
                 AppContext.REDIS.get(key).onSuccess(v -> {
                     if (null == v) {
@@ -327,7 +327,7 @@ public class UserController {
         UserSession session = SessionStore.sessionUser(ctx);
         userDao.findOneById(session.uid,  MongoStream.fields("password")).onSuccess(user -> {
             if (!SecurityUtils.matchesBCrypt(oldPassword, user.getString("password"))) {
-                RestContext.fail(ctx, RestStatus.EMAIL_CODE_IS_INVALID);
+                RestContext.fail(ctx, RestStatus.PASSWORD_FAIL);
             } else {
                 userDao.updatePassword(session.uid, SecurityUtils.bCrypt(newPassword)).onSuccess(count -> {
                     RestContext.success(ctx);

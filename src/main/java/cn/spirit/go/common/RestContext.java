@@ -1,6 +1,5 @@
 package cn.spirit.go.common;
 
-import cn.spirit.go.common.enums.RestStatus;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -23,10 +22,8 @@ public class RestContext {
         ctx.response().setStatusCode(status.code()).end();
     }
 
-    public static void fail(RoutingContext ctx, RestStatus status) {
-        ctx.response().setStatusCode(500)
-                .putHeader(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_HTML + ";charset=utf-8")
-                .setStatusMessage(status.getCode().toString()).end(status.toString());
+    public static void fail(RoutingContext ctx, int status) {
+        ctx.response().setStatusCode(500).setStatusMessage(String.valueOf(status));
     }
 
     public static void fail(RoutingContext ctx) {

@@ -73,7 +73,7 @@ public class AuthController {
             }
 
             if (!SecurityUtils.matchesBCrypt(password, user.getString("password"))) {
-                RestContext.fail(ctx, RestStatus.EMAIL_CODE_IS_INVALID);
+                RestContext.fail(ctx, RestStatus.PASSWORD_FAIL);
                 return;
             }
 
