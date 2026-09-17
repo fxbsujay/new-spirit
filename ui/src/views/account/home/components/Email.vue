@@ -1,32 +1,37 @@
 <script setup lang="ts">
 import { reactive, ref, useTemplateRef } from 'vue'
 import http from '@/utils/http.js'
+import { Regex } from '@/utils/constant.js'
 import { useUserStore } from '@/stores/user'
 import snackbar from '@/components/snackbar/index.js'
 
 const store = useUserStore()
 const formState = reactive({
     password: '',
-    email: '',
+    email: store.user.email,
     code: ''
 })
-formState.email = store.user.email
+
+const rules = {
+  password: [ value => !value || !Regex.PASSWORD.test(value) ? '请输入6-30位字母，数字或以下@!$^.*_%合法符号': true ]
+}
+
 const formEmail = useTemplateRef('form-email')
 const passwordReveal = ref(false)
 const loading = ref(false)
 const success = ref(false)
 const sender = ref(0)
+const alert = reactive({
+  show: false,
+  success: false,
+  message: ''
+})
 
 const submitHandle = () => {
     if (loading.value) {
         return
     }
     if (success.value) {
-        Object.assign(formState, {
-            password: '',
-            email: '',
-            code: ''
-        })
         success.value = false
         return
     }
@@ -67,34 +72,33 @@ const sendCode = () => {
 </script>
 
 <template>
-  <form class="form" @submit.prevent="submitHandle" autocomplete="off">
-    <div class="success-tip" v-if="success">
-      <Icon name="check-bold" color="#fff" size="2rem"/>
-      <span>操作成功</span>
-    </div>
-    <div class="form-group">
-      <div class="border-input-wrap">
-        <label class="label">密码</label>
-        <div class="password-reveal">
-          <input
-              class="input"
-              required
-              pattern="[a-zA-Z0-9@!$^.*_%]{6,30}"
-              title="6-30位字母，数字或以下@!$^.*_%合法符号"
-              v-model="formState.password"
-              :disabled="loading || success"
-              :type="passwordReveal ? 'input' : 'password'"
-              autocomplete="off"
-          />
-          <Icon
-              class="reveal-icon"
-              size="1rem"
-              :name="passwordReveal ? 'eye-outline' : 'eye-off-outline'"
-              @click="passwordReveal = !passwordReveal"
-          />
-        </div>
-      </div>
-    </div>
+  <v-form @submit.prevent="submitHandle">
+    <v-alert
+        v-model="alert.show"
+        class="mb-4"
+        :color="alert.success ? 'success' : 'warning'"
+        variant="tonal"
+        density="compact"
+        :text="alert.message"
+        closable
+        :icon="alert.success ? 'check-bold' : 'warning'"
+        close-icon="close"
+    />
+    <label class="text-label-large">密码</label>
+    <v-text-field
+        :readonly="loading || alert.show"
+        :type="passwordReveal ? 'text' : 'password'"
+        density="compact"
+        v-model="formState.password"
+        :rules="rules.password"
+        variant="outlined"
+        class="mb-2 mt-2"
+    >
+      <template #append-inner>
+        <v-icon @click="passwordReveal = !passwordReveal" :icon="passwordReveal ? 'eye' : 'eye-off'"  size="small"/>
+      </template>
+    </v-text-field>
+
     <div class="form-group">
       <div class="border-input-wrap">
         <label class="label">邮箱</label>
@@ -130,7 +134,7 @@ const sendCode = () => {
     <button type="submit" class="submit-button button " :disabled="loading" :class="success ? 'border' : 'black'">
       {{ success ? '再次修改' : '保存' }}
     </button>
-  </form>
+  </v-form>
 </template>
 
 <style scoped lang="scss">

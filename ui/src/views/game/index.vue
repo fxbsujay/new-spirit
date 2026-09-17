@@ -86,11 +86,9 @@ const endHandler = () => {
       </div>
     </div>
     <div class="board">
-      <Responsive :aspect-ratio="1">
-        <div class="A">
-          <Go :onBoardClick="onBoardClick" :points="game.steps"/>
-        </div>
-      </Responsive>
+      <v-responsive :aspect-ratio="1" class="border pa-4">
+        <Go :onBoardClick="onBoardClick" :points="game.steps"/>
+      </v-responsive>
     </div>
     <div class="side controller-side">
       <div class="game-time">

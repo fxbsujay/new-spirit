@@ -94,7 +94,7 @@ export class GameSocket {
      * @returns {boolean}
      */
     isOpen() {
-        return this.socket && this.socket.readyState === WebSocket.OPEN
+        return this.success && this.socket && this.socket.readyState === WebSocket.OPEN
     }
 
     /**
@@ -103,7 +103,7 @@ export class GameSocket {
      * @param y 纵坐标
      */
     addStep(x, y) {
-        if (this.success && this.isOpen() && !this.game.steps.find(step => step.x === x && step.y === y)) {
+        if (this.isOpen() && !this.game.steps.find(step => step.x === x && step.y === y)) {
             this.socket.send(JSON.stringify({
                 type: 'ROOM_STEP',
                 data: {
@@ -114,14 +114,29 @@ export class GameSocket {
         }
     }
 
+
     /**
-     * 游戏结束 投降认输
+     * 取消对局
      */
-    end() {
-        this.socket.send(JSON.stringify({
-            type: 'GAME_END',
-            data: 'SURRENDER'
-        }))
+    cancel() {
+        if (this.isOpen() && !this.game.steps.length <= 1) {
+            this.socket.send(JSON.stringify({
+                type: 'GAME_SURRENDER',
+                data: 'CANCEL'
+            }))
+        }
+    }
+
+    /**
+     * 投降
+     */
+    surrender() {
+        if (this.isOpen() && !this.game.steps.length > 1) {
+            this.socket.send(JSON.stringify({
+                type: 'GAME_SURRENDER',
+                data: 'SURRENDER'
+            }))
+        }
     }
 }
 

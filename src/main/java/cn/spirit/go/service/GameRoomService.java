@@ -48,6 +48,100 @@ public class GameRoomService {
         router.route("/api/ws/:code").handler(this::handle);
     }
 
+    private void handle(RoutingContext ctx) {
+        ctx.request().toWebSocket().onSuccess(ws -> SessionStore.validate(ctx).onSuccess(session -> {
+            String code = ctx.pathParam("code");
+            if (RegexUtils.mismatchGameCode(code)) {
+                ws.close();
+                return;
+            }
+            RoomSocket socket = new RoomSocket(session, ws);
+            boolean flag = connection(code, socket);
+            if (!flag) {
+                // 一个用户只能有一个会话在此房间内
+                socket.send(Json.encode(SocketPackage.build(PackageType.ROOM_CONNECTION_EXISTS, code)));
+                ws.close();
+                return;
+            }
+            log.info("game socket join success, code: {}, uid: {}", code, session.uid);
+            ws.textMessageHandler(text -> {
+                SocketPackage pck;
+                try {
+                    pck = Json.decodeValue(text, SocketPackage.class);
+                } catch (DecodeException e) {
+                    log.error("Failed to parse websocket message packet, from: {}, sessionId: {}", session.uid, session.sId);
+                    ws.close();
+                    return;
+                }
+                switch (pck.type) {
+                    case ROOM_STEP -> {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> obj = (Map<String, Object>) pck.data;
+                        Integer x = (Integer) obj.get("x");
+                        Integer y = (Integer) obj.get("y");
+                        if (x == null || y == null) {
+                            ws.close();
+                            return;
+                        }
+                        move(session.uid, code, x, y)
+                                .onSuccess(room -> {
+                                    JsonObject data = JsonObject.of(
+                                            "whiteRemainder", room.whiteRemainder,
+                                            "blackRemainder", room.blackRemainder,
+                                            "step", room.steps.get(room.steps.size() - 1)
+                                    );
+                                    send(code, SocketPackage.build(PackageType.ROOM_STEP, data));
+                                    log.info("[{}] - Add a step to the game {}, uid={}, x = {}, y = {}", room.whiteUid.equals(session.uid) ? 'W' : 'B', code, session.uid, x, y);
+                                    room.outPrintBoard();
+                                }).onFailure(e -> log.error("Adding step failed, code = {}, x = {}, y = {}, failure message = {},", code, x, y, e.getMessage()));
+                    }
+                    case GAME_SURRENDER -> {
+                        // 投降，棋局未开始则取消
+                        Room room = get(code);
+                        if (room != null) {
+                            GameReason reason = GameReason.valueOf((String) pck.data);
+                            if (reason == GameReason.SURRENDER) {
+                                if (room.steps.size() <= 1) {
+                                    // 棋局未开始不允许投降，可取消
+                                    return;
+                                }
+                            } else if (reason == GameReason.CANCEL) {
+                                if (room.info.mode == GameMode.RANK) {
+                                    // 排位赛不允许取消
+                                    return;
+                                }
+                                if (room.steps.size() > 1) {
+                                    // 棋局已经开始不允许取消
+                                    return;
+                                }
+                            }
+                            GameWinner winner = room.whiteUid.equals(session.uid) ? GameWinner.BLACK : GameWinner.WHITE;
+                            end(code, winner, reason);
+                        }
+                    }
+                    case GAME_PEACE -> {
+                        // 求和
+                        Room room = get(code);
+                        if (room != null) {
+                            if (room.steps.size() <= 1) {
+                                // 棋局未开始不允许求和
+                                return;
+                            }
+                            send(code, SocketPackage.build(PackageType.GAME_PEACE, ""));
+                        }
+                    }
+                    case ROOM_CHAT -> send(code, pck);
+                    default -> {
+                        log.error("Illegal websocket message packet type, from: {}, sessionId: {}", session.uid, session.sId);
+                        ws.close();
+                    }
+                }
+            });
+            ws.closeHandler(e -> disconnection(code, socket));
+        }).onFailure(e -> ws.close()));
+    }
+
+
     /**
      * 创建房间
      *
@@ -255,99 +349,6 @@ public class GameRoomService {
 
     public Set<String> getUserRoomCodes(String uid) {
         return userRooms.get(uid);
-    }
-
-    private void handle(RoutingContext ctx) {
-        ctx.request().toWebSocket().onSuccess(ws -> SessionStore.validate(ctx).onSuccess(session -> {
-            String code = ctx.pathParam("code");
-            if (RegexUtils.mismatchGameCode(code)) {
-                ws.close();
-                return;
-            }
-            RoomSocket socket = new RoomSocket(session, ws);
-            boolean flag = connection(code, socket);
-            if (!flag) {
-                // 一个用户只能有一个会话在此房间内
-                socket.send(Json.encode(SocketPackage.build(PackageType.ROOM_CONNECTION_EXISTS, code)));
-                ws.close();
-                return;
-            }
-            log.info("game socket join success, code: {}, uid: {}", code, session.uid);
-            ws.textMessageHandler(text -> {
-                SocketPackage pck;
-                try {
-                    pck = Json.decodeValue(text, SocketPackage.class);
-                } catch (DecodeException e) {
-                    log.error("Failed to parse websocket message packet, from: {}, sessionId: {}", session.uid, session.sId);
-                    ws.close();
-                    return;
-                }
-                switch (pck.type) {
-                    case ROOM_STEP -> {
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> obj = (Map<String, Object>) pck.data;
-                        Integer x = (Integer) obj.get("x");
-                        Integer y = (Integer) obj.get("y");
-                        if (x == null || y == null) {
-                            ws.close();
-                            return;
-                        }
-                        move(session.uid, code, x, y)
-                                .onSuccess(room -> {
-                                    JsonObject data = JsonObject.of(
-                                            "whiteRemainder", room.whiteRemainder,
-                                            "blackRemainder", room.blackRemainder,
-                                            "step", room.steps.get(room.steps.size() - 1)
-                                    );
-                                    send(code, SocketPackage.build(PackageType.ROOM_STEP, data));
-                                    log.info("[{}] - Add a step to the game {}, uid={}, x = {}, y = {}", room.whiteUid.equals(session.uid) ? 'W' : 'B', code, session.uid, x, y);
-                                    room.outPrintBoard();
-                                }).onFailure(e -> log.error("Adding step failed, code = {}, x = {}, y = {}, failure message = {},", code, x, y, e.getMessage()));
-                    }
-                    case GAME_SURRENDER -> {
-                        // 投降，棋局未开始则取消
-                        Room room = get(code);
-                        if (room != null) {
-                            GameReason reason = GameReason.valueOf((String) pck.data);
-                            if (reason == GameReason.SURRENDER) {
-                                if (room.steps.size() <= 1) {
-                                    // 棋局未开始不允许投降，可取消
-                                    return;
-                                }
-                            } else if (reason == GameReason.CANCEL) {
-                                if (room.info.mode == GameMode.RANK) {
-                                    // 排位赛不允许取消
-                                    return;
-                                }
-                                if (room.steps.size() > 1) {
-                                    // 棋局已经开始不允许取消
-                                    return;
-                                }
-                            }
-                            GameWinner winner = room.whiteUid.equals(session.uid) ? GameWinner.BLACK : GameWinner.WHITE;
-                            end(code, winner, reason);
-                        }
-                    }
-                    case GAME_PEACE -> {
-                        // 求和
-                        Room room = get(code);
-                        if (room != null) {
-                            if (room.steps.size() <= 1) {
-                                // 棋局未开始不允许求和
-                                return;
-                            }
-                            send(code, SocketPackage.build(PackageType.GAME_PEACE, ""));
-                        }
-                    }
-                    case ROOM_CHAT -> send(code, pck);
-                    default -> {
-                        log.error("Illegal websocket message packet type, from: {}, sessionId: {}", session.uid, session.sId);
-                        ws.close();
-                    }
-                }
-            });
-            ws.closeHandler(e -> disconnection(code, socket));
-        }).onFailure(e -> ws.close()));
     }
 
     /**
