@@ -108,15 +108,21 @@ const boardSetting = reactive({
 
 const render = () => {
     nextTick(() => {
-        const squareSize = svg.value.parentNode.offsetWidth / size
+        const squareSize = svg.value.parentNode.offsetWidth / (size + (label ? 2 : 0))
         const setting = computeBoard(svg, size, size, parseInt(squareSize), label)
         Object.assign(boardSetting, setting)
+        // 通过 viewBox + CSS 100% 尺寸，让棋盘随容器自动等比缩放
+        const total = setting.squareSize * (setting.w + (setting.showLabel ? 2 : 0))
+        svg.value.setAttribute('viewBox', `0 0 ${total} ${total}`)
     })
 }
 
 const boardClickHandle = event => {
-    const x = parseInt((event.offsetX - boardSetting.ox + boardSetting.mid) / boardSetting.ss)
-    const y = parseInt((event.offsetY - boardSetting.oy + boardSetting.mid) / boardSetting.ss)
+    const rect = svg.value.getBoundingClientRect()
+    const total = boardSetting.squareSize * (boardSetting.w + (boardSetting.showLabel ? 2 : 0))
+    const scale = total / rect.width
+    const x = parseInt(((event.clientX - rect.left) * scale - boardSetting.ox + boardSetting.mid) / boardSetting.ss)
+    const y = parseInt(((event.clientY - rect.top) * scale - boardSetting.oy + boardSetting.mid) / boardSetting.ss)
     onBoardClick(x, y)
 }
 
@@ -129,9 +135,15 @@ render()
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: url(./bg.jpg);
+  width: 100%;
+  height: 100%;
   svg {
-    background-color: rgb(220, 179, 92);
+    max-width: 100%;
+    max-height: 100%;
+    background-image: url(./bg.jpg);
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 100% 100%;
   }
 }
 </style>

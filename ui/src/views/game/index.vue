@@ -6,7 +6,7 @@ import Responsive from '@/components/responsive/index.vue'
 import Switch from '@/components/switch/index.vue'
 import { useUserStore } from '@/stores/user.js'
 import { formatTimeDiff } from '@/utils/time.js'
-import { ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { GameSocket } from './index'
 
@@ -16,6 +16,25 @@ const userStore = useUserStore()
 const socket = new GameSocket(router.params.code)
 
 const { game, loading, success } = socket
+
+// 棋盘盒子 = 容器宽高的较小值（横屏占满高度，竖屏占满宽度），保证正方形
+const boardWrap = ref(null)
+const boardSize = ref(0)
+
+const updateBoardSize = () => {
+  const el = boardWrap.value
+  if (!el) return
+  boardSize.value = Math.min(el.clientWidth, el.clientHeight)
+}
+
+onMounted(() => {
+    updateBoardSize()
+    window.addEventListener('resize', updateBoardSize)
+})
+
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', updateBoardSize)
+})
 
 const onBoardClick = (x, y) => {
     socket.addStep(x, y)
@@ -86,9 +105,11 @@ const endHandler = () => {
       </div>
     </div>
     <div class="board">
-      <v-responsive :aspect-ratio="1" class="border pa-4">
-        <Go :onBoardClick="onBoardClick" :points="game.steps"/>
-      </v-responsive>
+      <Responsive :aspect-ratio="1">
+        <div class="A">
+          <Go :onBoardClick="onBoardClick" :points="game.steps"/>
+        </div>
+      </Responsive>
     </div>
     <div class="side controller-side">
       <div class="game-time">
