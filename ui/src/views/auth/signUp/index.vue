@@ -30,7 +30,7 @@ const formState = reactive({
     code: ''
 })
 
-const stage = ref(false)
+const stage = ref(true)
 const submitLoading = ref(false)
 const sendLoading = ref(false)
 const interval = ref()

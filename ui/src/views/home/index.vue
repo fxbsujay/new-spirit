@@ -79,15 +79,17 @@ const tab = ref(1)
         <v-tabs-window-item :value="3">
           <v-container fluid>
             <v-row>
-              <v-col v-for="item in ongoingRooms" :key="item.info.code" cols="12" md="4">
+              <v-col v-for="item in ongoingRooms" :key="item.info.code" cols="12" md="4" class="text-center">
                 <RouterLink :to="`/${item.info.code}`" class="text-body-small text-black">
                   <div class="d-flex justify-space-between" style="margin-bottom: 2px">
                     <span>{{ item.black.nickname }} <img width="10px" src="@/assets/img/w.png" alt="白棋"/></span>
                     <span>vs</span>
                     <span><img width="10px" src="@/assets/img/b.png" alt="黑棋"/> {{ item.white.nickname }}</span>
                   </div>
-                  <Go :points="item.steps" :size="item.info.boardSize" :label="false"/>
-                  <div class="d-flex justify-space-between" style="margin-top: 2px">
+                  <v-responsive :aspect-ratio="1">
+                    <Go :points="item.steps" :size="item.info.boardSize" :label="false"/>
+                  </v-responsive>
+                  <div class="d-flex justify-space-between">
                     <span>1目•57s</span>
                     <span>12s•12目</span>
                   </div>

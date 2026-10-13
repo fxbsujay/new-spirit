@@ -38,17 +38,26 @@ export class GameSocket {
         this.game.black.remainder = data.blackRemainder
         this.game.white.remainder = data.whiteRemainder
         console.log('B', this.game.black.remainder, 'W', this.game.white.remainder)
+
+        // 提子
     }
 
     /**
      * 计时器
      */
     timerStart() {
-        requestAnimationFrame(() => this.timerStart())
+        if (this.game.info.type === 'NONE') {
+            this.game.black.remainder = -1
+            this.game.white.remainder = -1
+            return;
+        }
         const size = this.game.steps.length
-        if (this.game.info.type === 'NONE' || size <= 1) {
+        if (size <= 1) {
+            this.game.black.remainder = 0
+            this.game.white.remainder = 0
             return
         }
+        requestAnimationFrame(() => this.timerStart())
         const player = size % 2 === 0 ? 'black' : 'white'
         if (!this.lastTime) {
             this.lastTime = this.game.steps[size - 1].timestamp

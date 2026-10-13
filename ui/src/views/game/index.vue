@@ -47,7 +47,7 @@ const endHandler = () => {
 
 <template>
   <div class="main-container">
-    <div class="side">
+    <div class="side side-info">
       <div class="card">
         <div class="game-info">
           <img class="mode-icon" src="@/assets/img/game-rank.png" alt="排位">
@@ -105,11 +105,7 @@ const endHandler = () => {
       </div>
     </div>
     <div class="board">
-      <Responsive :aspect-ratio="1">
-        <div class="A">
-          <Go :onBoardClick="onBoardClick" :points="game.steps"/>
-        </div>
-      </Responsive>
+        <Go :onBoardClick="onBoardClick" :points="game.steps"/>
     </div>
     <div class="side controller-side">
       <div class="game-time">

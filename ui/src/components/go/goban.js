@@ -70,9 +70,9 @@ export const computeBoard = (svg, width, height, squareSize, showLabel) => {
             [6, 6]
         ]
     }
-
+    svg.value.querySelectorAll('.coordinate-lines').forEach(el => el.remove())
     const linesLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-
+    linesLayer.setAttribute('class', 'coordinate-lines')
     if (points) {
         const r = squareSize < 5 ? 0.5 : Math.max(2, squareSize * 0.075)
         for (let i = 0; i < points.length; ++i) {
@@ -102,6 +102,7 @@ export const computeBoard = (svg, width, height, squareSize, showLabel) => {
     linesLayer.appendChild(linesPath)
 
 
+    svg.value.querySelectorAll('.coordinate-labels').forEach(el => el.remove())
     let labelsLayer = null
     if (showLabel) {
         labelsLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g')
