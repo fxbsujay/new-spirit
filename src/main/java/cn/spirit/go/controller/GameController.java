@@ -12,6 +12,7 @@ import cn.spirit.go.web.SessionStore;
 import cn.spirit.go.web.config.AppContext;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -105,24 +106,46 @@ public class GameController {
         }
         Room room = gameManager.getRoom(code);
         Future<JsonObject> findInfo;
+        String[] uidArray = new String[2];
 
         if (null == room) {
-            findInfo = gameDao.selectByCode(code).compose(game -> Future.succeededFuture(JsonObject.of("info", game, "steps", game.getJsonArray("steps"))));
+            findInfo = gameDao.selectByCode(code)
+                    .compose(game -> {
+                        if (null == game) {
+                            return Future.failedFuture("Not found");
+                        }
+                        JsonObject res = JsonObject.of("steps", game.getJsonArray("steps"));
+                        uidArray[0] = game.getString("whiteUid");
+                        uidArray[1] = game.getString("blackUid");
+                        game.remove("steps");
+                        game.remove("board");
+                        game.remove("whiteUid");
+                        game.remove("blackUid");
+                        res.put("info", game);
+                        return Future.succeededFuture(res);
+                    });
         } else {
+            uidArray[0] = room.whiteUid;
+            uidArray[1] = room.blackUid;
             findInfo = Future.succeededFuture(JsonObject.of("info", room.info, "steps", room.steps));
         }
 
         findInfo.onSuccess(res -> {
-            userDao.findAllByUids(Set.of(room.whiteUid, room.blackUid), MongoStream.fields(false, "username", "nickname", "avatar", "rating")).onSuccess(users -> {
+            userDao.findAllByUids(Arrays.asList(uidArray), MongoStream.fields(false, "username", "nickname", "avatar", "rating")).onSuccess(users -> {
+                String whiteUid = null == room ? uidArray[0] : room.whiteUid;
                 for (JsonObject user : users) {
-                    if (room.whiteUid.equals(user.getString(MongoStream.ID_KEY))) {
-                        user.put("remainder", room.whiteRemainder);
-                        user.put("captured", room.whiteCaptured);
+                    if (whiteUid.equals(user.getString(MongoStream.ID_KEY))) {
+                        if (null != room) {
+                            user.put("remainder", room.whiteRemainder);
+                            user.put("captured", room.whiteCaptured);
+                        }
                         user.remove(MongoStream.ID_KEY);
                         res.put("white", user);
                     } else {
-                        user.put("remainder", room.blackRemainder);
-                        user.put("captured", room.blackCaptured);
+                        if (null != room) {
+                            user.put("remainder", room.blackRemainder);
+                            user.put("captured", room.blackCaptured);
+                        }
                         user.remove(MongoStream.ID_KEY);
                         res.put("black", user);
                     }
@@ -132,6 +155,9 @@ public class GameController {
                 log.error(cause.getMessage(), cause);
                 RestContext.fail(ctx);
             });
+        }).onFailure(cause -> {
+            log.error(cause.getMessage(), cause);
+            RestContext.fail(ctx);
         });
     }
 

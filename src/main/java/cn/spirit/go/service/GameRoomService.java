@@ -10,6 +10,7 @@ import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.*;
 import cn.spirit.go.web.SessionStore;
+import cn.spirit.go.web.UserSession;
 import cn.spirit.go.web.config.AppContext;
 import cn.spirit.go.web.socket.PackageType;
 import cn.spirit.go.web.socket.SocketPackage;
@@ -20,6 +21,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;
@@ -62,6 +64,15 @@ public class GameRoomService {
                 socket.send(Json.encode(SocketPackage.build(PackageType.ROOM_CONNECTION_EXISTS, code)));
                 ws.close();
                 return;
+            } else {
+                // 连接成功
+                Room room = get(code);
+                if (null != room) {
+                    // 是否有求和的请求
+                    if (room.initiatingPeace) {
+                        send(socket, SocketPackage.build(PackageType.GAME_PEACE, room.peacePerson[room.peacePerson.length - 1]));
+                    }
+                }
             }
             log.info("game socket join success, code: {}, uid: {}", code, session.uid);
             ws.textMessageHandler(text -> {
@@ -91,12 +102,16 @@ public class GameRoomService {
                                             "step", room.steps.get(room.steps.size() - 1)
                                     );
                                     send(code, SocketPackage.build(PackageType.ROOM_STEP, data));
-                                    log.info("[{}] - Add a step to the game {}, uid={}, x = {}, y = {}", room.whiteUid.equals(session.uid) ? 'W' : 'B', code, session.uid, x, y);
+                                    log.info("[{}] - Add a step to the game {}, uid={}, x = {}, y = {}", getRequestCamp(room, session), code, session.uid, x, y);
                                     room.outPrintBoard();
+                                    if (room.initiatingPeace && !session.username.equals(room.peacePerson[room.peacePerson.length -1])) {
+                                        // 如果发起了求和并且发起人不是自己，自己落子则表示拒绝求和
+                                        replyPeaceRequest(code, session.username, false);
+                                    }
                                 }).onFailure(e -> log.error("Adding step failed, code = {}, x = {}, y = {}, failure message = {},", code, x, y, e.getMessage()));
                     }
                     case GAME_SURRENDER -> {
-                        // 投降，棋局未开始则取消
+                        // 投降或取消对局
                         Room room = get(code);
                         if (room != null) {
                             GameReason reason = GameReason.valueOf((String) pck.data);
@@ -120,15 +135,40 @@ public class GameRoomService {
                         }
                     }
                     case GAME_PEACE -> {
-                        // 求和
-                        Room room = get(code);
-                        if (room != null) {
-                            if (room.steps.size() <= 1) {
-                                // 棋局未开始不允许求和
-                                return;
+                        // 发起求和和取消求和
+                        lock(code, () -> {
+                            Room room = get(code);
+                            if (null == room) {
+                                return Future.failedFuture("Room not found");
                             }
-                            send(code, SocketPackage.build(PackageType.GAME_PEACE, ""));
-                        }
+                            // 棋局未开始不允许求和, 已经有人发起了不能再次发起， 已经发起过求和了，不能再次发起
+                            if (room.steps.size() < 2 || room.initiatingPeace || Arrays.asList(room.peacePerson).contains(session.username)) {
+                                return Future.failedFuture("The game cannot initiate a peace request");
+                            }
+
+                            // 发起求和请求
+                            String[] newArr = Arrays.copyOf(room.peacePerson, room.peacePerson.length + 1);
+                            newArr[newArr.length - 1] = session.username;
+                            room.peacePerson = newArr;
+                            room.initiatingPeace = true;
+
+                            return Future.succeededFuture(room);
+                        }).onSuccess(room -> send(code, SocketPackage.build(PackageType.GAME_PEACE, session.username)));
+                    }
+                    case GAME_REPLY_PEACE -> {
+                        // 回应求和
+                        lock(code, () -> {
+                            Room room = get(code);
+                            if (room == null) {
+                                return Future.failedFuture("Room not found");
+                            }
+                            // 棋局未开始不允许求和, 没有发起过求和无法回应求和
+                            if (room.steps.size() < 2 && !room.initiatingPeace) {
+                                return Future.failedFuture("This game cannot reply to the request for peace");
+                            }
+                            room.initiatingPeace = false;
+                            return Future.succeededFuture(room);
+                        }).onSuccess(room -> replyPeaceRequest(code, session.username, (Boolean) pck.data));
                     }
                     case ROOM_CHAT -> send(code, pck);
                     default -> {
@@ -141,6 +181,24 @@ public class GameRoomService {
         }).onFailure(e -> ws.close()));
     }
 
+    private void replyPeaceRequest(String code, String username, boolean isAgree) {
+        // 通知回应结果
+        send(code, SocketPackage.build(
+                PackageType.GAME_REPLY_PEACE,
+                JsonObject.of("sender", username, "isAgree", isAgree))
+        );
+        if (isAgree) {
+            // 同意求和
+            end(code, GameWinner.TIE, GameReason.PEACE);
+        }
+    }
+
+    /**
+     * 获取当然用户属于哪个阵营
+     */
+    private char getRequestCamp(Room room, UserSession session) {
+        return room.whiteUid.equals(session.uid) ? Room.WHITE : Room.BLACK;
+    }
 
     /**
      * 创建房间
@@ -287,7 +345,11 @@ public class GameRoomService {
             return Future.succeededFuture(room);
         }).onSuccess(room -> {
             log.info("Game over, code = {}, winner = {}, reason = {}", code, winner, reason);
-            send(code, SocketPackage.build(PackageType.GAME_END, JsonObject.of("winner", winner, "reason", reason)));
+
+            SocketPackage pck = SocketPackage.build(PackageType.GAME_END, JsonObject.of("winner", winner, "reason", reason));
+            for (RoomSocket socket : room.sockets) {
+                send(socket, pck);
+            }
 
             if (reason == GameReason.CANCEL) {
                 // 取消游戏不保存
@@ -400,6 +462,11 @@ public class GameRoomService {
         for (RoomSocket socket : room.sockets) {
             socket.send(msg);
         }
+    }
+
+    private void send(RoomSocket socket, SocketPackage pack) {
+        String msg = Json.encode(pack);
+        socket.send(msg);
     }
 
     /**

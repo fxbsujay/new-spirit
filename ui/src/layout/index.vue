@@ -25,7 +25,7 @@
             </section>
           </nav>
         </div>
-        <PlayDrawer v-if="!user.visitor"/>
+        <PlayDrawer v-if="!user.visitor && !waitGame.status"/>
         <div class="tools flex-1-1-100">
           <RouterLink to="/sign-in" v-if="user.visitor">
             登录
@@ -62,7 +62,7 @@ import { ref } from 'vue'
 import PlayDrawer from './PlayDrawer.vue'
 import WaitPlayPanels from './WaitPlayPanels.vue'
 
-const { user, logout, refreshInfo } = useUserStore()
+const { user, waitGame, logout, refreshInfo } = useUserStore()
 
 refreshInfo()
 </script>

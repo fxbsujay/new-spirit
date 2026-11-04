@@ -70,6 +70,16 @@ public class Room {
      */
     public Set<RoomSocket> sockets = new HashSet<>();
 
+    /**
+     * 发起求和的人
+     */
+    public String[] peacePerson = new String[2];
+
+    /**
+     * 是否正在发起求和请求
+     */
+    public boolean initiatingPeace = false;
+
     public Room(int size) {
         board = new char[size][size];
         for (char[] chars : board) {
@@ -106,8 +116,7 @@ public class Room {
     }
 
     /**
-     * 落子，返回是否成功
-     */
+     * 落子，返回是否成功     */
     public boolean place(int x, int y, char color) {
         int size = board.length;
         if (x < 0 || x >= size || y < 0 || y >= size || board[x][y] != EMPTY) {

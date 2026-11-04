@@ -1,4 +1,6 @@
 @use "@/assets/css/variable" as *;
+@use "vuetify";
+@use "sass:map";
 
 $gap: 1rem;
 $textColor: #545050;
@@ -51,7 +53,7 @@ $textColor: #545050;
 .game-info {
   display: flex;
   align-items: center;
-  margin-bottom: 4px;
+  margin-bottom: 10px;
 
   .mode-icon {
     height: auto;
@@ -67,20 +69,28 @@ $textColor: #545050;
 }
 
 .player {
-  color: $textColor;
-  font-size: 12px;
+  margin-top: 2px;
+  font-size: 13px;
   display: flex;
   align-items: center;
-  padding: 0 4px;
+  padding: 0 4px 0 6px;
+  cursor: pointer;
+
+
+  &:hover {
+    color: #0f63ff;
+  }
 
   .player-icon {
-    width: 20px;
-    height: auto;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
   }
 
   .player-name {
     margin: 0 4px;
     flex: 1;
+
   }
 }
 
@@ -270,7 +280,7 @@ $textColor: #545050;
   }
 
   .source-label {
-    color: rgba(172, 177, 192, 1);
+    color: rgb(65 66 66);
     font-size: 12px;
   }
 
@@ -338,12 +348,59 @@ $textColor: #545050;
 
       &:hover {
         cursor: pointer;
-        background-color: #F7F6F5;
+        color: #fff;
+        background-color: #3395cb;
       }
     }
 
     &:last-child .pos:last-child {
-      background-color: rgba(85, 216, 246, 0.22);
+      background-color: rgba(85, 216, 246, 0.4);
+    }
+  }
+}
+
+.controls {
+  .controls-disabled {
+    pointer-events: none;
+    i {
+      color: #adadad;
+    }
+  }
+  .controls-icon {
+    cursor: pointer;
+    &:hover {
+      i {
+        color: #fff;
+      }
+    }
+
+    &.flag-icon:hover {
+      background-color: #d95e5e;
+    }
+    &.fraction-icon:hover {
+      background-color: #61dc61
+    }
+  }
+
+}
+
+.peace {
+  .peace-no,.peace-yes {
+    height: 100%;
+  }
+
+  .peace-no:hover {
+    cursor: pointer;
+    background: map.get(vuetify.$red, 'darken-4');
+    i {
+      color: #fff;
+    }
+  }
+  .peace-yes:hover {
+    background: map.get(vuetify.$green, 'darken-1');
+    cursor: pointer;
+    i {
+      color: #fff;
     }
   }
 }

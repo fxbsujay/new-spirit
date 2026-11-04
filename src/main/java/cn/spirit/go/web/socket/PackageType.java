@@ -9,6 +9,8 @@ public enum PackageType {
     GAME_SURRENDER,
     // 求和
     GAME_PEACE,
+    // 回应求和
+    GAME_REPLY_PEACE,
 
     // 加入房间通知
     ROOM_CONNECTION,

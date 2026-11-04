@@ -80,13 +80,13 @@ const tab = ref(1)
           <v-container fluid>
             <v-row>
               <v-col v-for="item in ongoingRooms" :key="item.info.code" cols="12" md="4" class="text-center">
-                <RouterLink :to="`/${item.info.code}`" class="text-body-small text-black">
+                <RouterLink :to="`/${item.info.code}`" class="text-body-small text-black" @click.stop>
                   <div class="d-flex justify-space-between" style="margin-bottom: 2px">
                     <span>{{ item.black.nickname }} <img width="10px" src="@/assets/img/w.png" alt="白棋"/></span>
                     <span>vs</span>
                     <span><img width="10px" src="@/assets/img/b.png" alt="黑棋"/> {{ item.white.nickname }}</span>
                   </div>
-                  <v-responsive :aspect-ratio="1">
+                  <v-responsive :aspect-ratio="1" style="pointer-events: none;">
                     <Go :points="item.steps" :size="item.info.boardSize" :label="false"/>
                   </v-responsive>
                   <div class="d-flex justify-space-between">
