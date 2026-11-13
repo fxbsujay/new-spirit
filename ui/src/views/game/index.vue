@@ -5,14 +5,16 @@ import Icon from '@/components/icon/Icon.vue'
 import Switch from '@/components/switch/index.vue'
 import { useUserStore } from '@/stores/user.js'
 import { formatTimeDiff } from '@/utils/time.js'
-import { computed, ref } from 'vue'
+import { computed, ref, useTemplateRef, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { GameSocket } from './index'
 
-const value = ref(false)
+
 const router = useRoute()
 const userStore = useUserStore()
 const peaceSender = ref('')
+const chartOpen = ref(false)
+const chartMessageRef = useTemplateRef('chartMessage')
 const chartMessage = ref('')
 const chartMessageLoading = ref(false)
 
@@ -31,6 +33,14 @@ const socket = new GameSocket(router.params.code, pck => {
                 chartMessageLoading.value = false
                 chartMessage.value = ''
             }
+            nextTick(() => {
+                chartMessageRef.value.scrollTop = chartMessageRef.value.scrollHeight;
+            })
+            break
+        case 'ROOM_CHAT_MESSAGE':
+            nextTick(() => {
+                chartMessageRef.value.scrollTop = chartMessageRef.value.scrollHeight;
+            })
             break
     }
 })
@@ -120,12 +130,12 @@ const sendChatClickHandler = () => {
           <span class="player-score">{{ game.black.rating }}</span>
         </div>
       </div>
-      <div class="chat-wrap">
+      <div class="chat-wrap" v-if="!socket.isEnd()">
         <div class="header card">
           <span>聊天室</span>
-          <Switch v-model="value"/>
+          <Switch v-model="chartOpen"/>
         </div>
-        <div class="message-box card">
+        <div class="message-box card overflow-y-auto scrollbar" ref="chartMessage">
           <div v-for="item in socket.chatMessages.value" class="message-item" :class="item.sender === userStore.user.username ? 'receive' : ''">
             <img :src="'/api/static/avatar/' + (item.sender === game.black.username ? game.black.avatar : game.white.avatar)" class="avatar" alt="头像"/>
             <div class="info">
@@ -137,19 +147,22 @@ const sendChatClickHandler = () => {
             </div>
           </div>
         </div>
-        <v-text-field
-            class="mt-2"
-            style="background: white"
-            v-model="chartMessage"
-            :loading="chartMessageLoading"
-            append-inner-icon="send"
-            density="compact"
-            label="恶语伤人六月寒..."
-            variant="outlined"
-            hide-details
-            single-line
-            @click:append-inner="sendChatClickHandler"
-        />
+        <div>
+          <v-text-field
+              class="mt-2 border-0"
+              style="background: white"
+
+              v-model="chartMessage"
+              :loading="chartMessageLoading"
+              append-inner-icon="send"
+              density="compact"
+              label="恶语伤人六月寒..."
+              variant="outlined"
+              hide-details
+              single-line
+              @click:append-inner="sendChatClickHandler"
+          />
+        </div>
       </div>
     </div>
     <div class="board">

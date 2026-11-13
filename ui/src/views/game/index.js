@@ -15,9 +15,13 @@ export class GameSocket {
         this.refresh()
     }
 
+    /**
+     * 刷新
+     */
     refresh() {
         this.loading.value = true
         this.success.value = false
+        this.chatMessages.value = []
         http.get('/room/info/' + this.code).then(res => {
             Object.assign(this.game, res)
             this.updateBoard()
@@ -130,6 +134,9 @@ export class GameSocket {
                         break
                     case 'ROOM_CHAT_MESSAGE':
                         that.chatMessages.value = pck.data
+                        break
+                    case 'GAME_END':
+                        that.refresh()
                         break
                 }
                 if (that.readMsgHandle) {

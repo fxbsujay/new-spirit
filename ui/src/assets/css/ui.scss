@@ -5,3 +5,27 @@
   margin: 0 auto;
   max-width: 1440px;
 }
+
+.scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #fff;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: #fff;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #c1c1c1;
+    border-radius: 3px;
+
+    &:hover {
+      background-color: #a8a8a8;
+    }
+  }
+}
