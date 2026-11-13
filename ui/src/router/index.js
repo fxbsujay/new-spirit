@@ -43,6 +43,12 @@ const router = createRouter({
                     path: '/:code([A-Z0-9]{4,8})',
                     name: 'Game',
                     component: () => import('@/views/game/index.vue')
+                },
+                {
+                    // 兜底路由：所有未匹配的地址都渲染 404 页面，需放在 children 最后
+                    path: '/:pathMatch(.*)*',
+                    name: '404',
+                    component: () => import('@/components/404/index.vue')
                 }
             ]
         },

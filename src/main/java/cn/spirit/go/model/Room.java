@@ -1,6 +1,8 @@
 package cn.spirit.go.model;
 
 import cn.spirit.go.common.enums.GameType;
+import cn.spirit.go.web.socket.SocketPackage;
+
 import java.util.*;
 
 public class Room {
@@ -74,6 +76,11 @@ public class Room {
      * 发起求和的人
      */
     public String[] peacePerson = new String[2];
+
+    /**
+     * 聊天记录
+     */
+    public Queue<RoomChatMessage> chatHistory = new ArrayDeque<>(30);
 
     /**
      * 是否正在发起求和请求

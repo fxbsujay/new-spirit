@@ -114,10 +114,15 @@ public class GameController {
                         if (null == game) {
                             return Future.failedFuture("Not found");
                         }
-                        JsonObject res = JsonObject.of("steps", game.getJsonArray("steps"));
+                        List<GameStep> steps = new ArrayList<>();
+                        for (Object step : game.getJsonArray("steps")) {
+                            steps.add(GameStep.parse(step.toString()));
+                        }
+                        JsonObject res = JsonObject.of("steps", steps);
                         uidArray[0] = game.getString("whiteUid");
                         uidArray[1] = game.getString("blackUid");
                         game.remove("steps");
+                        game.remove("_id");
                         game.remove("board");
                         game.remove("whiteUid");
                         game.remove("blackUid");

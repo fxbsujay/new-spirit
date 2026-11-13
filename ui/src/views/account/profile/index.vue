@@ -4,7 +4,7 @@ import http from '@/utils/http.js'
 import { formatTimeDiff } from '@/utils/time.js'
 import dayjs from 'dayjs'
 import { reactive, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const user = reactive({
     avatar: '',
@@ -17,8 +17,11 @@ const user = reactive({
     username: ''
 })
 const history = ref([])
-const router = useRoute()
-const username = router.params.username
+const route = useRoute()
+const router = useRouter()
+const username = route.params.username
+
+const historyItemClickHandler = code => router.push(`/${code}`)
 
 http.post('/user/profile/' + username).then(res => {
     Object.assign(user, res)
@@ -89,7 +92,7 @@ const gameResult = (item) => {
     <div class="history">
       <div class="title">历史对局</div>
       <div class="list">
-        <div class="item" v-for="item in history" :key="item.code" :class="gameResult(item).value">
+        <div class="item" v-for="item in history" :key="item.code" :class="gameResult(item).value" @click="historyItemClickHandler(item.code)">
           <div class="info">
             <div class="d-flex">
               <span class="base-tag">{{

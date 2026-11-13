@@ -191,31 +191,9 @@ $textColor: #545050;
 
   .send-input {
     margin-top: 8px;
-    padding: 4px;
     background-color: #fff;
     display: flex;
-
-    .input {
-      height: 2rem;
-      padding: 0 6px;
-      flex: 1;
-      outline: none;
-      border: none;
-      background: #F7F7F7;
-    }
-
-    .icon-box {
-      background-color: $c-dark-light;
-      cursor: pointer;
-      width: 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      &:hover {
-        background-color: $c-dark;
-      }
-    }
+    border-radius: 4px;
   }
 }
 

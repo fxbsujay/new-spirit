@@ -22,5 +22,7 @@ public enum PackageType {
     ROOM_STEP,
     // 游戏聊天
     ROOM_CHAT,
+    // 获取历史聊天记录
+    ROOM_CHAT_MESSAGE,
 
 }

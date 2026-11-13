@@ -60,7 +60,7 @@
 </template>
 <script setup>
 import { computeBoard } from '@/components/go/goban'
-import { nextTick, reactive, ref, useTemplateRef, onMounted, onUnmounted } from 'vue'
+import { nextTick, reactive, ref, useTemplateRef, watch, onUnmounted } from 'vue'
 
 const { onBoardClick, showHintPointFunc, points, size, label } = defineProps({
     onBoardClick: {
@@ -74,7 +74,7 @@ const { onBoardClick, showHintPointFunc, points, size, label } = defineProps({
         type: Array
     },
     size: {
-        default: 19,
+        default: 0,
         type: Number
     },
     label: {
@@ -122,17 +122,20 @@ const render = () => {
         })
     }
 
-    nextTick(() => {
-        const w = svg.value.parentNode.offsetWidth
-        const h = svg.value.parentNode.offsetHeight
-        const maxSize = Math.min(w, h)
-        const squareSize = maxSize / (size + (label ? 2 : 0))
-        const setting = computeBoard(svg, size, size, parseInt(squareSize), label)
-        Object.assign(boardSetting, setting)
-        const total = setting.squareSize * (setting.w + (setting.showLabel ? 2 : 0))
-        svg.value.setAttribute('viewBox', `0 0 ${ total } ${ total }`)
-        observer.observe(svg.value.parentNode)
-    })
+    if (size) {
+        nextTick(() => {
+            const w = svg.value.parentNode.offsetWidth
+            const h = svg.value.parentNode.offsetHeight
+            const maxSize = Math.min(w, h)
+            const squareSize = maxSize / (size + (label ? 2 : 0))
+            const setting = computeBoard(svg, size, size, parseInt(squareSize), label)
+            Object.assign(boardSetting, setting)
+            const total = setting.squareSize * (setting.w + (setting.showLabel ? 2 : 0))
+            svg.value.setAttribute('viewBox', `0 0 ${ total } ${ total }`)
+            observer.observe(svg.value.parentNode)
+        })
+    }
+
 }
 
 const getPoint = event => {
@@ -173,7 +176,7 @@ const boardLeaveHandler = () => {
     hintPoint.y = 0
 }
 
-render()
+watch(() => size, () => render())
 </script>
 
 <style scoped lang="scss">

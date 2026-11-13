@@ -6,6 +6,7 @@ import cn.spirit.go.common.enums.GameReason;
 import cn.spirit.go.common.enums.GameType;
 import cn.spirit.go.common.enums.GameWinner;
 import cn.spirit.go.common.util.RegexUtils;
+import cn.spirit.go.common.util.StringUtils;
 import cn.spirit.go.dao.GameDao;
 import cn.spirit.go.dao.UserDao;
 import cn.spirit.go.model.*;
@@ -170,7 +171,30 @@ public class GameRoomService {
                             return Future.succeededFuture(room);
                         }).onSuccess(room -> replyPeaceRequest(code, session.username, (Boolean) pck.data));
                     }
-                    case ROOM_CHAT -> send(code, pck);
+                    case ROOM_CHAT -> {
+                        if (StringUtils.isNotBlank((String) pck.data)) {
+                            Room room = get(code);
+                            if (null != room) {
+                                RoomChatMessage message = new RoomChatMessage();
+                                message.content = (String) pck.data;
+                                message.sender = session.username;
+                                message.timestamp = pck.timestamp;
+                                message.type = RoomChatMessage.RoomChatMessageType.CHAT;
+                                if (room.chatHistory.size() > 30) {
+                                    room.chatHistory.poll();
+                                }
+                                room.chatHistory.offer(message);
+                                pck.data = message;
+                                send(code, pck);
+                            }
+                        }
+                    }
+                    case ROOM_CHAT_MESSAGE -> {
+                        Room room = get(code);
+                        if (null != room) {
+                            send(socket, SocketPackage.build(PackageType.ROOM_CHAT_MESSAGE, room.chatHistory));
+                        }
+                    }
                     default -> {
                         log.error("Illegal websocket message packet type, from: {}, sessionId: {}", session.uid, session.sId);
                         ws.close();
@@ -349,6 +373,7 @@ public class GameRoomService {
             SocketPackage pck = SocketPackage.build(PackageType.GAME_END, JsonObject.of("winner", winner, "reason", reason));
             for (RoomSocket socket : room.sockets) {
                 send(socket, pck);
+                socket.getConnection().close();
             }
 
             if (reason == GameReason.CANCEL) {

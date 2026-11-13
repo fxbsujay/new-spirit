@@ -1,4 +1,5 @@
 import http from '@/utils/http.js'
+import router from '@/router/index.js'
 import { reactive, ref } from 'vue'
 
 export class GameSocket {
@@ -6,9 +7,9 @@ export class GameSocket {
     constructor(code, readMsgHandle) {
         this.code = code
         this.readMsgHandle = readMsgHandle
-        console.log(readMsgHandle)
         this.board = ref([])
         this.game = reactive({ info: {}, white: {}, black: {}, steps: [] })
+        this.chatMessages = ref([])
         this.loading = ref(false)
         this.success = ref(false)
         this.refresh()
@@ -22,14 +23,11 @@ export class GameSocket {
             this.updateBoard()
             this.loading.value = false
             this.success.value = true
-            this.reconnect()
-            this.timerStart()
-        }).catch(err => {
-            console.log(err)
-            Object.assign(this.game, { info: {}, white: {}, black: {}, steps: [] })
-            this.loading.value = false
-            this.success.value = false
-        })
+            if (!this.isEnd()) {
+                this.reconnect()
+                this.timerStart()
+            }
+        }).catch(err => router.replace({ path: '/404', query: { code: this.code } }))
     }
 
     /**
@@ -45,40 +43,6 @@ export class GameSocket {
 
         // 执行提子更新棋盘
         this.updateBoard()
-    }
-
-    /**
-     * 棋盘边长
-     */
-    boardSize() {
-        return this.game.info.size || 19
-    }
-
-    /**
-     * 当前落子一方
-     */
-    currentColor() {
-        return this.stepLength() % 2 === 0 ? 'black' : 'white'
-    }
-
-    /**
-     * 判断坐标是否在棋盘内
-     */
-    inBoard(x, y) {
-        const n = this.boardSize()
-        return x >= 0 && y >= 0 && x < n && y < n
-    }
-
-    /**
-     * 获取某坐标的棋子颜色
-     * @param board 棋子数组
-     * @param x 横坐标
-     * @param y 纵坐标
-     * @returns {string|null} 'black' | 'white' | null
-     */
-    stoneAt(board, x, y) {
-        const stone = board.find(s => s.x === x && s.y === y)
-        return stone ? stone.type : null
     }
 
     /**
@@ -109,6 +73,232 @@ export class GameSocket {
         this.game.white.captured = whiteCaptured
         this.game.black.captured = blackCaptured
         console.log('提子数 - 白:', whiteCaptured, '黑:', blackCaptured)
+    }
+
+    /**
+     * 计时器
+     */
+    timerStart() {
+        if (this.isEnd()) {
+            return;
+        }
+        if (this.game.info.type === 'NONE') {
+            this.game.black.remainder = -1
+            this.game.white.remainder = -1
+            return;
+        }
+        const size = this.stepLength()
+        if (size <= 1) {
+            this.game.black.remainder = 0
+            this.game.white.remainder = 0
+            return
+        }
+        requestAnimationFrame(() => this.timerStart())
+        const player = size % 2 === 0 ? 'black' : 'white'
+        if (!this.lastTime) {
+            this.lastTime = this.game.steps[size - 1].timestamp
+        }
+        const now = Date.now()
+        const time = (now - this.lastTime)
+        this.game[player].remainder -= time
+        if (this.game[player].remainder < 0) {
+            this.game[player].remainder = 0
+        }
+        this.lastTime = now
+    }
+
+    /**
+     * 创建连接
+     */
+    reconnect() {
+        if (this.isOpen()) {
+            this.socket.close()
+        }
+        const socket = new WebSocket(`${ window.location.protocol === 'https:' ? 'wss:' : 'ws:' }//${ window.location.host }/api/ws/${ this.code }`)
+        const that = this
+        socket.onopen = function (event) {
+            console.log('[socket open]', event)
+            socket.onmessage = function (event) {
+                const pck = JSON.parse(event.data)
+                console.log('[socket msg]', pck)
+                switch (pck.type) {
+                    case 'ROOM_STEP':
+                        that.updateStep(pck.data)
+                        break
+                    case 'ROOM_CHAT':
+                        that.chatMessages.value.push(pck.data)
+                        break
+                    case 'ROOM_CHAT_MESSAGE':
+                        that.chatMessages.value = pck.data
+                        break
+                }
+                if (that.readMsgHandle) {
+                    that.readMsgHandle(pck)
+                }
+            }
+
+            that.sendGetChatMessages()
+        }
+        socket.onclose = function (event) {
+            console.log('[socket close]', event)
+        }
+        this.socket = socket
+    }
+
+    /**
+     * 是否连接成功
+     * @returns {boolean}
+     */
+    isOpen() {
+        return this.success && this.socket && this.socket.readyState === WebSocket.OPEN
+    }
+
+    /**
+     * 游戏是否已经结束
+     * @returns {boolean}
+     */
+    isEnd() {
+        return !!this.game.info.winner
+    }
+
+    /**
+     * 游戏目前步骤数
+     */
+    stepLength() {
+        return this.game.steps.length
+    }
+
+    /**
+     * 走棋
+     * @param type black 黑棋 white 白棋
+     * @param x 横坐标
+     * @param y 纵坐标
+     */
+    sendAddStep(type, x, y) {
+        if (this.currentColor() !== type) {
+            return;
+        }
+        // 判气/提子：先判断该位置是否可以落子（在棋盘内、为空、且非"自杀"），通过后再发送
+        if (!this.canPlace(x, y)) {
+            console.warn('非法落子:', x, y)
+            return
+        }
+        if (this.isOpen() && !this.game.steps.find(step => step.x === x && step.y === y)) {
+            this.socket.send(JSON.stringify({
+                type: 'ROOM_STEP',
+                data: {
+                    x,
+                    y
+                }
+            }))
+        }
+    }
+
+
+    /**
+     * 取消对局
+     */
+    sendCancel() {
+        if (this.isOpen() && this.stepLength() < 2) {
+            this.socket.send(JSON.stringify({
+                type: 'GAME_SURRENDER',
+                data: 'CANCEL'
+            }))
+        }
+    }
+
+    /**
+     * 发起求和
+     */
+    sendPeace() {
+        if (this.isOpen() && this.stepLength() > 1) {
+            this.socket.send(JSON.stringify({
+                type: 'GAME_PEACE'
+            }))
+        }
+    }
+
+    /**
+     * 是否同意求和
+     * @param {boolean} isAgree 是否同意
+     */
+    sendReplyPeace(isAgree) {
+        if (this.isOpen() && this.stepLength() > 1) {
+            this.socket.send(JSON.stringify({
+                type: 'GAME_REPLY_PEACE',
+                data: isAgree
+            }))
+        }
+    }
+
+    /**
+     * 发送认输投降
+     */
+    sendSurrender() {
+        if (this.isOpen() && this.stepLength() > 1) {
+            this.socket.send(JSON.stringify({
+                type: 'GAME_SURRENDER',
+                data: 'SURRENDER'
+            }))
+        }
+    }
+
+    /**
+     * 发送聊天消息
+     * @param {String} message 消息文本
+     */
+    sendChat(message) {
+        if (message && this.isOpen()) {
+            this.socket.send(JSON.stringify({
+                type: 'ROOM_CHAT',
+                data: message
+            }))
+        }
+    }
+
+    /**
+     * 获取聊天消息
+     */
+    sendGetChatMessages() {
+        if (this.isOpen()) {
+            this.socket.send(JSON.stringify({
+                type: 'ROOM_CHAT_MESSAGE',
+            }))
+        }
+    }
+
+    /**
+     * 棋盘边长
+     */
+    boardSize() {
+        return this.game.info.boardSize || 19
+    }
+
+    /**
+     * 当前落子一方
+     */
+    currentColor() {
+        return this.stepLength() % 2 === 0 ? 'black' : 'white'
+    }
+
+    /**
+     * 判断坐标是否在棋盘内
+     */
+    inBoard(x, y) {
+        const n = this.boardSize()
+        return x >= 0 && y >= 0 && x < n && y < n
+    }
+
+    /**
+     * 获取某坐标的棋子颜色
+     * @param board 棋子数组
+     * @param x 横坐标
+     * @param y 纵坐标
+     * @returns {string|null} 'black' | 'white' | null
+     */
+    stoneAt(board, x, y) {
+        const stone = board.find(s => s.x === x && s.y === y)
+        return stone ? stone.type : null
     }
 
     /**
@@ -215,152 +405,5 @@ export class GameSocket {
         return libs > 0
     }
 
-    /**
-     * 计时器
-     */
-    timerStart() {
-        if (this.game.info.type === 'NONE') {
-            this.game.black.remainder = -1
-            this.game.white.remainder = -1
-            return;
-        }
-        const size = this.stepLength()
-        if (size <= 1) {
-            this.game.black.remainder = 0
-            this.game.white.remainder = 0
-            return
-        }
-        requestAnimationFrame(() => this.timerStart())
-        const player = size % 2 === 0 ? 'black' : 'white'
-        if (!this.lastTime) {
-            this.lastTime = this.game.steps[size - 1].timestamp
-        }
-        const now = Date.now()
-        const time = (now - this.lastTime)
-        this.game[player].remainder -= time
-        if (this.game[player].remainder < 0) {
-            this.game[player].remainder = 0
-        }
-        this.lastTime = now
-    }
-
-    /**
-     * 创建连接
-     */
-    reconnect() {
-        if (this.isOpen()) {
-            this.socket.close()
-        }
-        const socket = new WebSocket(`${ window.location.protocol === 'https:' ? 'wss:' : 'ws:' }//${ window.location.host }/api/ws/${ this.code }`)
-        const that = this
-        socket.onopen = function (event) {
-            console.log('[socket open]', event)
-            socket.onmessage = function (event) {
-                const pck = JSON.parse(event.data)
-                console.log('[socket msg]', pck)
-                switch (pck.type) {
-                    case 'ROOM_STEP':
-                        that.updateStep(pck.data)
-                        break
-                }
-                if (that.readMsgHandle) {
-                    that.readMsgHandle(pck)
-                }
-            }
-        }
-        socket.onclose = function (event) {
-            console.log('[socket close]', event)
-        }
-        this.socket = socket
-    }
-
-    /**
-     * 是否连接成功
-     * @returns {boolean}
-     */
-    isOpen() {
-        return this.success && this.socket && this.socket.readyState === WebSocket.OPEN
-    }
-
-    /**
-     * 走棋
-     * @param type black 黑棋 white 白棋
-     * @param x 横坐标
-     * @param y 纵坐标
-     */
-    addStep(type, x, y) {
-        if (this.currentColor() !== type) {
-            return;
-        }
-        // 判气/提子：先判断该位置是否可以落子（在棋盘内、为空、且非"自杀"），通过后再发送
-        if (!this.canPlace(x, y)) {
-            console.warn('非法落子:', x, y)
-            return
-        }
-        if (this.isOpen() && !this.game.steps.find(step => step.x === x && step.y === y)) {
-            this.socket.send(JSON.stringify({
-                type: 'ROOM_STEP',
-                data: {
-                    x,
-                    y
-                }
-            }))
-        }
-    }
-
-    /**
-     * 游戏是否开始
-     */
-    stepLength() {
-        return this.game.steps.length
-    }
-
-    /**
-     * 取消对局
-     */
-    cancel() {
-        if (this.isOpen() && this.stepLength() < 2) {
-            this.socket.send(JSON.stringify({
-                type: 'GAME_SURRENDER',
-                data: 'CANCEL'
-            }))
-        }
-    }
-
-    /**
-     * 发起求和
-     */
-    peace() {
-        if (this.isOpen() && this.stepLength() > 1) {
-            this.socket.send(JSON.stringify({
-                type: 'GAME_PEACE'
-            }))
-        }
-    }
-
-    /**
-     * 是否同意求和
-     * @param {boolean} isAgree 是否同意
-     */
-    replyPeace(isAgree) {
-        if (this.isOpen() && this.stepLength() > 1) {
-            this.socket.send(JSON.stringify({
-                type: 'GAME_REPLY_PEACE',
-                data: isAgree
-            }))
-        }
-    }
-
-    /**
-     * 认输投降
-     */
-    surrender() {
-        if (this.isOpen() && this.stepLength() > 1) {
-            this.socket.send(JSON.stringify({
-                type: 'GAME_SURRENDER',
-                data: 'SURRENDER'
-            }))
-        }
-    }
 }
 

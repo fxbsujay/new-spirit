@@ -5,7 +5,7 @@ import Icon from '@/components/icon/Icon.vue'
 import Switch from '@/components/switch/index.vue'
 import { useUserStore } from '@/stores/user.js'
 import { formatTimeDiff } from '@/utils/time.js'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { GameSocket } from './index'
 
@@ -13,6 +13,8 @@ const value = ref(false)
 const router = useRoute()
 const userStore = useUserStore()
 const peaceSender = ref('')
+const chartMessage = ref('')
+const chartMessageLoading = ref(false)
 
 const socket = new GameSocket(router.params.code, pck => {
     switch (pck.type) {
@@ -21,6 +23,14 @@ const socket = new GameSocket(router.params.code, pck => {
             break
         case 'GAME_REPLY_PEACE':
             peaceSender.value = ''
+            break
+        case 'ROOM_CHAT':
+            if (socket.chatMessages.value.find(
+                item => item.content === chartMessage.value && item.sender === userStore.user.username)
+            ) {
+                chartMessageLoading.value = false
+                chartMessage.value = ''
+            }
             break
     }
 })
@@ -33,14 +43,14 @@ const isWhite = computed(() => userStore.user.username === game.white.username)
  */
 const onBoardClick = (x, y) => {
     const type = userStore.user.username === game.white.username ? 'white' : 'black'
-    socket.addStep(type, x, y)
+    socket.sendAddStep(type, x, y)
 }
 
 /**
  * 显示预落子
  */
 const showHintPointFunc = (x, y) => {
-    if (socket.stoneAt(socket.board.value, x, y)) {
+    if (socket.isEnd() || socket.stoneAt(socket.board.value, x, y) || !socket.inBoard(x, y)) {
         return {
             show: false
         }
@@ -61,16 +71,23 @@ const showHintPointFunc = (x, y) => {
 
 const controlsClickHandler = type => {
     if (type === 'CANCEL') {
-        socket.cancel()
+        socket.sendCancel()
     } else if (type === 'PEACE') {
-        socket.peace()
+        socket.sendPeace()
     } else if (type === 'SURRENDER') {
-        socket.surrender()
+        socket.sendSurrender()
     }
 }
 
 const peaceClickHandler = isAgree => {
-    socket.replyPeace(isAgree)
+    socket.sendReplyPeace(isAgree)
+}
+
+const sendChatClickHandler = () => {
+    if (!chartMessageLoading.value) {
+        socket.sendChat(chartMessage.value)
+        chartMessageLoading.value = true
+    }
 }
 
 </script>
@@ -82,7 +99,10 @@ const peaceClickHandler = isAgree => {
         <div class="game-info">
           <img class="mode-icon" src="@/assets/img/game-rank.png" alt="排位">
           <div class="info">
-            <div>10h+6s • 休闲 • 通讯棋</div>
+            <div>
+              {{ game.info.mode === 'CASUAL' ? '休闲赛' :  game.info.mode === 'RANK' ? '积分赛' : '人机对战' }} •
+              {{ game.info.type === 'SHORT' ? `实时棋局 • ${ game.info.duration / 1000 / 60 }+${ game.info.stepDuration / 1000 }` : game.info.type === 'LONG' ? '通讯棋 • 1天' : '无限制' }}
+             </div>
             <div>9分钟前</div>
           </div>
           <Icon name="star" size="1.5rem" color="#F0B01A"/>
@@ -106,43 +126,40 @@ const peaceClickHandler = isAgree => {
           <Switch v-model="value"/>
         </div>
         <div class="message-box card">
-          <div class="message-item">
-            <img src="@/assets/img/w.png" class="avatar" alt="头像"/>
+          <div v-for="item in socket.chatMessages.value" class="message-item" :class="item.sender === userStore.user.username ? 'receive' : ''">
+            <img :src="'/api/static/avatar/' + (item.sender === game.black.username ? game.black.avatar : game.white.avatar)" class="avatar" alt="头像"/>
             <div class="info">
-              <div class="username">Evan Guzman</div>
+              <div class="username">{{ item.sender === game.black.username ? game.black.nickname : game.white.nickname }}</div>
               <div class="content">
                 <span class="tag"/>
-                <span class="text">send message send12222222222222222222222133432123123124 </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="message-item receive">
-            <img src="@/assets/img/b.png" class="avatar" alt="头像"/>
-            <div class="info">
-              <div class="username">Gou Dan</div>
-              <div class="content">
-                <span class="tag"/>
-                <span class="text">Send message send12222222222222222222222133432123123124</span>
+                <span class="text">{{ item.content }}</span>
               </div>
             </div>
           </div>
         </div>
-        <div class="send-input">
-          <input class="input" placeholder="恶语伤人六月寒..."/>
-          <div class="icon-box">
-            <Icon name="send" size="1rem" color="#fff"/>
-          </div>
-        </div>
+        <v-text-field
+            class="mt-2"
+            style="background: white"
+            v-model="chartMessage"
+            :loading="chartMessageLoading"
+            append-inner-icon="send"
+            density="compact"
+            label="恶语伤人六月寒..."
+            variant="outlined"
+            hide-details
+            single-line
+            @click:append-inner="sendChatClickHandler"
+        />
       </div>
     </div>
     <div class="board">
-      <Go :points="board" :onBoardClick="onBoardClick" :showHintPointFunc="showHintPointFunc"/>
+      <Go :size="game.info.boardSize" :points="board" :onBoardClick="onBoardClick" :showHintPointFunc="showHintPointFunc"/>
     </div>
     <div class="side controller-side">
       <div class="game-time">
         <div class="time">
-          <time>{{ formatTimeDiff(isWhite ? game.black.remainder : game.white.remainder) }}
+          <time v-if="!socket.isEnd()">
+            {{ formatTimeDiff(isWhite ? game.black.remainder : game.white.remainder) }}
           </time>
         </div>
         <Icon name="signal" size="20px" color="#F0B01A"/>
@@ -180,6 +197,13 @@ const peaceClickHandler = isAgree => {
           </div>
         </div>
         <div class="step-wrap">
+          <div v-if="socket.stepLength() < 1" class="opening-tips d-flex align-center h-100 text-body-medium text-grey-darken-3">
+            <v-icon class="mx-5" icon="bell-alert" size="2.5rem" color="grey-darken-2"></v-icon>
+            <div class="message">
+              {{ isWhite ? '您执白棋' : '您执黑棋' }}<br/>
+              <strong v-if="!isWhite">该您走棋了！</strong>
+            </div>
+          </div>
           <div class="step" v-for="index in Math.ceil(socket.stepLength() / 2)">
             <span class="number">{{ index }}</span>
             <span class="pos">
@@ -190,43 +214,45 @@ const peaceClickHandler = isAgree => {
             </span>
           </div>
         </div>
-        <div v-if="!peaceSender" class="controls d-flex justify-center align-center ga-2 py-1">
-          <div :class="socket.stepLength() < 2 ? 'controls-icon' : 'controls-disabled'" class=" flag-icon py-1 px-2 rounded-md" @click="controlsClickHandler('CANCEL')">
-            <v-icon icon="close" size="2rem" color="grey-darken-3"></v-icon>
-            <v-tooltip
-                activator="parent"
-                location="top"
-                text="取消对局"
-            />
+        <template v-if="!socket.isEnd()">
+          <div v-if="!peaceSender" class="controls d-flex justify-center align-center ga-2 py-1">
+            <div :class="socket.stepLength() < 2 ? 'controls-icon' : 'controls-disabled'" class=" flag-icon py-1 px-2 rounded-md" @click="controlsClickHandler('CANCEL')">
+              <v-icon icon="close" size="2rem" color="grey-darken-3"></v-icon>
+              <v-tooltip
+                  activator="parent"
+                  location="top"
+                  text="取消对局"
+              />
+            </div>
+            <div :class="socket.stepLength() > 1 ? 'controls-icon' : 'controls-disabled'" class="fraction-icon py-1 px-2 rounded-md" @click="controlsClickHandler('PEACE')">
+              <v-icon icon="fraction-one-half" size="1.7rem" color="grey-darken-3"></v-icon>
+              <v-tooltip
+                  activator="parent"
+                  location="top"
+                  text="和棋"
+              />
+            </div>
+            <div :class="socket.stepLength() > 1 ? 'controls-icon' : 'controls-disabled'" class="flag-icon py-1 px-2 rounded-md" @click="controlsClickHandler('SURRENDER')">
+              <v-icon icon="flag" size="2rem" color="grey-darken-3"></v-icon>
+              <v-tooltip
+                  activator="parent"
+                  location="top"
+                  text="认输"
+              />
+            </div>
           </div>
-          <div :class="socket.stepLength() > 1 ? 'controls-icon' : 'controls-disabled'" class="fraction-icon py-1 px-2 rounded-md" @click="controlsClickHandler('PEACE')">
-            <v-icon icon="fraction-one-half" size="1.7rem" color="grey-darken-3"></v-icon>
-            <v-tooltip
-                activator="parent"
-                location="top"
-                text="和棋"
-            />
+          <div v-else class="peace d-flex align-center text-center bg-grey-lighten-3">
+            <div v-if="peaceSender !== userStore.user.username" class="peace-no bg-white py-4 px-5" @click="peaceClickHandler(false)">
+              <v-icon icon="close" size="1.7rem" color="red-darken-4"></v-icon>
+            </div>
+            <div class="peace-text py-2 flex-1-1-100 text-body-medium text-grey-darken-2">
+              {{ peaceSender !== userStore.user.username ? '对方请求和棋' : '和棋请求已发送' }}
+            </div>
+            <div v-if="peaceSender !== userStore.user.username" class="peace-yes bg-white py-4 px-5" @click="peaceClickHandler(true)">
+              <v-icon icon="fraction-one-half" size="1.7rem" color="green-accent-4"></v-icon>
+            </div>
           </div>
-          <div :class="socket.stepLength() > 1 ? 'controls-icon' : 'controls-disabled'" class="flag-icon py-1 px-2 rounded-md" @click="controlsClickHandler('SURRENDER')">
-            <v-icon icon="flag" size="2rem" color="grey-darken-3"></v-icon>
-            <v-tooltip
-                activator="parent"
-                location="top"
-                text="认输"
-            />
-          </div>
-        </div>
-        <div class="peace d-flex align-center text-center bg-grey-lighten-3" v-else>
-          <div v-if="peaceSender !== userStore.user.username" class="peace-no bg-white py-4 px-5" @click="peaceClickHandler(false)">
-            <v-icon icon="close" size="1.7rem" color="red-darken-4"></v-icon>
-          </div>
-          <div class="peace-text py-2 flex-1-1-100 text-body-medium text-grey-darken-2">
-           {{ peaceSender !== userStore.user.username ? '对方请求和棋' : '和棋请求已发送' }}
-          </div>
-          <div v-if="peaceSender !== userStore.user.username" class="peace-yes bg-white py-4 px-5" @click="peaceClickHandler(true)">
-            <v-icon icon="fraction-one-half" size="1.7rem" color="green-accent-4"></v-icon>
-          </div>
-        </div>
+        </template>
       </div>
       <div class="user-info">
         <img v-if="isWhite" src="@/assets/img/w.png" class="avatar" alt="白棋玩家"/>
@@ -238,7 +264,8 @@ const peaceClickHandler = isAgree => {
       <div class="time-progress"></div>
       <div class="game-time">
         <div class="time">
-          <time>{{ formatTimeDiff(isWhite ? game.white.remainder : game.black.remainder) }}
+          <time v-if="!socket.isEnd()">
+            {{ formatTimeDiff(isWhite ? game.white.remainder : game.black.remainder) }}
           </time>
         </div>
       </div>

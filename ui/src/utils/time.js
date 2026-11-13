@@ -10,7 +10,7 @@ import { padStartTwo } from '@/utils/index.js'
  *   - 超过24小时："3天 01:02:03"
  */
 export const formatTimeDiff = ms => {
-    if (ms < 0) return  ''
+    if (!ms || ms < 0) return  ''
     if (ms === 0) return '0'
 
     const totalSeconds = Math.floor(ms / 1000)
