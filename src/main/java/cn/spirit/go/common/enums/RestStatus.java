@@ -4,10 +4,10 @@ public interface RestStatus {
 
     // ===================== 账户相关 =====================
 
-    // 邮箱已被注册
+    // 邮箱已被使用
     int EMAIL_IS_EXIST = 10001;
 
-    // 用户名已被注册
+    // 用户名已被使用
     int USERNAME_IS_EXIST = 10002;
 
     // 账户不存在

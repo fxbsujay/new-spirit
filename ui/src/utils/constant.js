@@ -6,7 +6,9 @@ export const TypeConstant = [
 
 export const Regex = {
     PASSWORD: /^[a-zA-Z0-9@!$^.*_%]{6,30}$/,
-    USERNAME: /^[A-Za-z][a-zA-Z0-9]{1,19}/
+    USERNAME: /^[A-Za-z][a-zA-Z0-9]{1,19}/,
+    EMAIL_CODE: /^[A-Z0-9]{5}$/,
+    EMAIL: /.+@.+\..+/,
 }
 
 export const GameReason = [

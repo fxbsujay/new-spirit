@@ -247,35 +247,45 @@ public class UserController {
             return;
         }
 
-        UserSession session = SessionStore.sessionUser(ctx);
-        String key = RedisConstant.AUTH_CODE_EMAIL + email;
-
-        userDao.findOneById(session.uid, MongoStream.fields("password")).onSuccess(user -> {
-            if (!SecurityUtils.matchesBCrypt(password, user.getString("password"))) {
-                RestContext.fail(ctx, RestStatus.PASSWORD_FAIL);
+        userDao.existsEmail(email).onSuccess(isExists -> {
+            if (isExists) {
+                RestContext.fail(ctx, RestStatus.EMAIL_IS_EXIST);
             } else {
-                AppContext.REDIS.get(key).onSuccess(v -> {
-                    if (null == v) {
-                        RestContext.fail(ctx, RestStatus.CODE_INVALID);
+                UserSession session = SessionStore.sessionUser(ctx);
+                String key = RedisConstant.AUTH_CODE_EMAIL + email;
+
+                userDao.findOneById(session.uid, MongoStream.fields("password")).onSuccess(user -> {
+                    if (!SecurityUtils.matchesBCrypt(password, user.getString("password"))) {
+                        RestContext.fail(ctx, RestStatus.PASSWORD_FAIL);
                     } else {
-                        if (code.equals(v.toString())) {
-                            userDao.updateEmail(session.uid, email).onSuccess(count -> {
-                                RestContext.success(ctx);
-                                AppContext.REDIS.del(List.of(key));
-                            }).onFailure(e -> {
-                                log.error(e.getMessage(), e.getCause());
-                                RestContext.fail(ctx);
-                            });
-                        } else {
-                            RestContext.fail(ctx, RestStatus.CODE_ERROR);
-                        }
+                        AppContext.REDIS.get(key).onSuccess(v -> {
+                            if (null == v) {
+                                RestContext.fail(ctx, RestStatus.CODE_INVALID);
+                            } else {
+                                if (code.equals(v.toString())) {
+                                    userDao.updateEmail(session.uid, email).onSuccess(count -> {
+                                        RestContext.success(ctx);
+                                        AppContext.REDIS.del(List.of(key));
+                                    }).onFailure(e -> {
+                                        log.error(e.getMessage(), e.getCause());
+                                        RestContext.fail(ctx);
+                                    });
+                                } else {
+                                    RestContext.fail(ctx, RestStatus.CODE_ERROR);
+                                }
+                            }
+                        }).onFailure(e -> RestContext.fail(ctx, RestStatus.CODE_INVALID));
                     }
-                }).onFailure(e -> RestContext.fail(ctx, RestStatus.CODE_INVALID));
+                }).onFailure(e -> {
+                    log.error(e.getMessage(), e.getCause());
+                    RestContext.fail(ctx);
+                });
             }
         }).onFailure(e -> {
             log.error(e.getMessage(), e.getCause());
             RestContext.fail(ctx);
         });
+
     }
 
     /**

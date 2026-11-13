@@ -23,7 +23,7 @@ public class RestContext {
     }
 
     public static void fail(RoutingContext ctx, int status) {
-        ctx.response().setStatusCode(500).setStatusMessage(String.valueOf(status));
+        ctx.response().setStatusCode(500).setStatusMessage(String.valueOf(status)).end();
     }
 
     public static void fail(RoutingContext ctx) {
