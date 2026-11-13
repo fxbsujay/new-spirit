@@ -134,6 +134,6 @@ const gameResult = (item) => {
   </div>
 </template>
 
-<style scoped lang="sass">
-@use "index.sass"
+<style scoped lang="scss">
+@use "index.scss";
 </style>

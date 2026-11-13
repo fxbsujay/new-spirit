@@ -44,7 +44,7 @@ export class GameSocket {
         this.game.black.remainder = data.blackRemainder
         this.game.white.remainder = data.whiteRemainder
         console.log('[B 剩余时间]', this.game.black.remainder, '[W 剩余时间]', this.game.white.remainder)
-
+        this.lastTime = 0
         // 执行提子更新棋盘
         this.updateBoard()
     }
@@ -91,13 +91,11 @@ export class GameSocket {
             this.game.white.remainder = -1
             return;
         }
+        requestAnimationFrame(() => this.timerStart())
         const size = this.stepLength()
         if (size <= 1) {
-            this.game.black.remainder = 0
-            this.game.white.remainder = 0
             return
         }
-        requestAnimationFrame(() => this.timerStart())
         const player = size % 2 === 0 ? 'black' : 'white'
         if (!this.lastTime) {
             this.lastTime = this.game.steps[size - 1].timestamp

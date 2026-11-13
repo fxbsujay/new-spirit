@@ -196,7 +196,7 @@ const passwordInputHandler = (event) => {
   </div>
 </template>
 
-<style lang="sass" scoped>
-@use 'index.sass'
+<style lang="scss" scoped>
+@use 'index.scss';
 </style>
 

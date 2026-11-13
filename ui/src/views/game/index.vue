@@ -4,10 +4,11 @@ import { PRETTY_COORDINATE_SEQUENCE } from '@/components/go/goban.js'
 import Icon from '@/components/icon/Icon.vue'
 import Switch from '@/components/switch/index.vue'
 import { useUserStore } from '@/stores/user.js'
-import { formatTimeDiff } from '@/utils/time.js'
+import { formatTimeAgo, formatTimeDiff } from '@/utils/time.js'
 import { computed, ref, useTemplateRef, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { GameSocket } from './index'
+import { getGameEnding } from '@/utils/constant.js'
 
 
 const router = useRoute()
@@ -109,11 +110,13 @@ const sendChatClickHandler = () => {
         <div class="game-info">
           <img class="mode-icon" src="@/assets/img/game-rank.png" alt="排位">
           <div class="info">
-            <div>
+            <div class="text-grey-darken-4">
               {{ game.info.mode === 'CASUAL' ? '休闲赛' :  game.info.mode === 'RANK' ? '积分赛' : '人机对战' }} •
               {{ game.info.type === 'SHORT' ? `实时棋局 • ${ game.info.duration / 1000 / 60 }+${ game.info.stepDuration / 1000 }` : game.info.type === 'LONG' ? '通讯棋 • 1天' : '无限制' }}
              </div>
-            <div>9分钟前</div>
+            <div class="text-grey-darken-1 text-label-medium">
+              {{ socket.isEnd() ? '对局已结束' : game.steps.length > 0 ? formatTimeAgo(game.steps[game.steps.length - 1].timestamp) + (socket.currentColor() === 'black' ? '黑棋落子' : '白棋落子') : '正在进行中' }}
+            </div>
           </div>
           <Icon name="star" size="1.5rem" color="#F0B01A"/>
         </div>
@@ -151,7 +154,6 @@ const sendChatClickHandler = () => {
           <v-text-field
               class="mt-2 border-0"
               style="background: white"
-
               v-model="chartMessage"
               :loading="chartMessageLoading"
               append-inner-icon="send"
@@ -227,9 +229,14 @@ const sendChatClickHandler = () => {
             </span>
           </div>
         </div>
-        <template v-if="!socket.isEnd()">
+        <template v-if="socket.isEnd()">
+          <div class="text-center mb-4 text-grey-darken-3">
+            {{ getGameEnding(game.info.winner, game.info.reason) }}
+          </div>
+        </template>
+        <template v-else>
           <div v-if="!peaceSender" class="controls d-flex justify-center align-center ga-2 py-1">
-            <div :class="socket.stepLength() < 2 ? 'controls-icon' : 'controls-disabled'" class=" flag-icon py-1 px-2 rounded-md" @click="controlsClickHandler('CANCEL')">
+            <div :class="socket.stepLength() < 2 ? 'controls-icon' : 'controls-disabled'" class="flag-icon py-1 px-2 rounded-md" @click="controlsClickHandler('CANCEL')">
               <v-icon icon="close" size="2rem" color="grey-darken-3"></v-icon>
               <v-tooltip
                   activator="parent"

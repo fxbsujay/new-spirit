@@ -313,8 +313,7 @@ public class GameRoomService {
                         if (null != room.timerId) {
                             AppContext.vertx.cancelTimer(room.timerId);
                         }
-                        AppContext.vertx.setTimer(time, id -> {
-                            room.timerId = id;
+                        room.timerId =  AppContext.vertx.setTimer(room.isWhiteNow() ? room.blackRemainder : room.whiteRemainder, id -> {
                             // 超时结束
                             end(code, winner, GameReason.TIMEOUT);
                         });

@@ -24,6 +24,6 @@ if (route.query.username) {
 }
 </script>
 
-<style scoped lang="sass">
-@use 'index.sass'
+<style scoped lang="scss">
+@use 'index.scss';
 </style>

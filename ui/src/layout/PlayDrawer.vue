@@ -260,6 +260,6 @@ const cancelCreateHandle = () => {
 
 </template>
 
-<style scoped lang="sass">
-@use "palyDrawer.sass"
+<style scoped lang="scss">
+@use "palyDrawer.scss";
 </style>
